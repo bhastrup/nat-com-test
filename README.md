@@ -9,8 +9,7 @@ Preprint (Version 1) available on [Research Square](https://doi.org/10.21203/rs.
 
 
 
-<img src="resources/image-grid.png" width="40%">
-<img src="https://raw.githubusercontent.com/bhastrup/nar-com-test/main/resources/image-grid.png" width="40%">
+<img src="resources/image_grid.png" width="40%">
 
 
 

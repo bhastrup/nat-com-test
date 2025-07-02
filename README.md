@@ -9,6 +9,8 @@ Preprint (Version 1) available on [Research Square](https://doi.org/10.21203/rs.
 
 
 
+<img src="resources/image-grid.png" width="40%">
+
 
 
 ## Installation Guide
@@ -56,7 +58,7 @@ For QM7 training, run the following commands:
 python scripts/prep/preprocess_data.py
 python scripts/prep/split_train_test.py
 ```
-This creates saves a dataset of QM7 structures into the data/ folder (along with XTB energies, SMILES representations and additional meta data).
+This saves a dataset of QM7 structures into the data/ folder (along with XTB energies, SMILES representations and additional meta-data).
 QM9 is available also - see preprocess_data.py for arguments.
 
 

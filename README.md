@@ -50,9 +50,7 @@ python -c "import torch, rdkit, ase, gym, pandas, numpy, matplotlib, scipy, stre
 
 
 
-
 ## Dataset preparation
-
 For QM7 training, run the following commands:
 ``` bash
 python scripts/prep/preprocess_data.py
@@ -63,8 +61,7 @@ QM9 is available also - see preprocess_data.py for arguments.
 
 
 ## Launch RL training
-
-Training scripts are available in the scripts/train/ folder. Specifically, a training job can be launched as
+Training scripts are available in the *scripts/train/* folder. Specifically, a training job can be launched as
 ``` bash
 python scripts/train/experiments/nat-com-version/a.py
 ```
@@ -72,8 +69,8 @@ This files launches a training of "Agent A" from the paper. The script contains 
 
 
 ## Analyse trainings (isomer discovery campaings):
-Analysis scripts are available in scripts/
+Analysis scripts are available in the *scripts/analyse/* folder, which is further subdivided into.
 
-``` bash
-python solutions/part2/run.py
-```
+
+
+# An interactive webapp for molecular generation

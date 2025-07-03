@@ -38,7 +38,7 @@ conda env create -f env.yaml
 Once the installation is complete, activate the environment:
 
 ```bash
-conda activate renewables
+conda activate rl-env
 ```
 
 ### 5. Verify Installation

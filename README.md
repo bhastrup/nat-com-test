@@ -26,37 +26,56 @@ cd isomer-discovery-rl
 ```
 
 
-
-### 3. Create the Conda Environment
-Run the following command to create the environment from `env.yaml`:
-
+### 3. Install Mamba (if not already installed)
 ```bash
-conda env create -f env.yaml
+conda install -n base -c conda-forge mamba
+```
+
+### 4. Create the Environment using Mamba
+Run the following command to create the environment from `env.yaml`:
+```bash
+mamba env create -f env.yaml
 ```
 
 ### 4. Activate the Environment
 Once the installation is complete, activate the environment:
-
 ```bash
-conda activate rl-env
+eval "$(mamba shell hook --shell bash)"
+mamaba activate rl-env
 ```
 
 ### 5. Verify Installation
 Check that the required packages are installed:
 
 ```bash
-python -c "import torch, rdkit, ase, gym, pandas, numpy, matplotlib, scipy, streamlit; print('✅ Environment is ready!')"
+python -c 'import torch, ase, rdkit, streamlit, pandas; print("✅ All core packages are working!")'
 ```
+
+### Set Up PYTHONPATH (One-Time)
+
+To ensure Python can locate the `src/` package, set the `PYTHONPATH` automatically when activating the environment:
+
+Run the following **from the root of the project directory** (where `src/` is located):
+
+```bash
+# Set PYTHONPATH when the Conda environment is activated
+mkdir -p $CONDA_PREFIX/etc/conda/activate.d
+echo "export PYTHONPATH=\$(pwd)" > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
+
+# Optionally unset it on deactivate
+mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
+echo "unset PYTHONPATH" > $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
+
 
 
 
 ## Dataset preparation
-For QM7 training, run the following commands:
+For QM7 training, run the following commands (takes 1-2 minutes)
 ``` bash
 python scripts/prep/preprocess_data.py
 python scripts/prep/split_train_test.py
 ```
-This saves a dataset of QM7 structures into the data/ folder (along with XTB energies, SMILES representations and additional meta-data).
+This saves a dataset of QM7 structures into the *data/* folder (along with XTB energies, SMILES representations and additional meta-data).
 QM9 is available also - see preprocess_data.py for arguments.
 
 

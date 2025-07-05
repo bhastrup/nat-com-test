@@ -14,7 +14,7 @@ def parse_cmd():
     parser.add_argument(
         "--mol_dataset",
         type=str,
-        choices=["qm7", "qm9", "tmqm", "tmqm-small"],
+        choices=["qm7", "qm9"],
         default="qm7",
         help="Dataset to preprocess (default: qm7)"
     )
@@ -55,4 +55,4 @@ if __name__ == '__main__':
     processor.preprocess()
     processor.print_success_ratio()
     processor.save_data()
-    processor.view_bad_molecules()
+    #processor.view_bad_molecules()

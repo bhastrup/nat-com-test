@@ -10,21 +10,7 @@ from src.rl.spaces import ObservationSpace, ActionSpace
 from src.tools.util import count_vars
 
 from src.agents.base import AbstractActorCritic
-# from src.agents.covariant.agent import CovariantAC
-from src.agents.internal.agent import SchNetAC
 from src.agents.painn.agent import PainnAC
-from src.agents.painn.agent_schnet_edge import SchNetEdgeAC
-from src.agents.painn.agent_painn_internal_multimodal import PainnInternalMultiModal
-from src.agents.painn.kappa_entropy_agent import KappaEntropyAC
-from src.agents.painn.discrete_dihedral_agent import DiscreteDihedralAC
-from src.agents.painn.benja import BenjaAC
-from src.agents.painn.simple_equiv import SimpleEquivAC
-from src.agents.painn.new_model import NewAC
-from src.agents.painn.emma import EmmaAC
-from src.agents.painn.molcode import MolCodeAC
-from src.agents.painn.reveal_nn import PainnRevealAC
-from src.rl.explorer.agent_random import ExplorerAC as ExplorerAC_random
-from src.rl.explorer.agent import ExplorerAC
 
 
 @dataclass
@@ -175,16 +161,7 @@ def get_model(
 
 def build_model(config: dict, observation_space: ObservationSpace, action_space: ActionSpace,
                 device: torch.device) -> AbstractActorCritic:
-    if config['model'] == 'internal':
-        return SchNetAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            device=device,
-        )
-    elif config['model'] == 'covariant':
-
+    if config['model'] == 'covariant':
         raise NotImplementedError("Covariant model is not implemented")
         return CovariantAC(
             observation_space=observation_space,
@@ -213,164 +190,6 @@ def build_model(config: dict, observation_space: ObservationSpace, action_space:
             hydrogen_delay=config["hydrogen_delay"],
             no_hydrogen_focus=config["no_hydrogen_focus"],
             rms_norm_update=config["rms_norm_update"],
-            device=device,
-        )
-    elif config['model'] == 'schnet_edge':
-        return SchNetEdgeAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            update_edges=True,
-            cutoff=config["cutoff"],
-            device=device,
-        )
-    elif config['model'] == 'schnet':
-        return SchNetEdgeAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            update_edges=False,
-            cutoff=config["cutoff"],
-            device=device,
-        )
-    elif config['model'] == 'painn_internal_multimodal':
-        return PainnInternalMultiModal(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'kappa_entropy':
-        return KappaEntropyAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'discrete_dihedral':
-        return DiscreteDihedralAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'benja':
-        return BenjaAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'simple_equiv':
-        return SimpleEquivAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'new_ac':
-        return NewAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'emma':
-        return EmmaAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-
-            bag_in_mpnn=config['bag_in_mpnn'],
-            use_GEB=config['use_GEB'],
-
-            multi_modal=config['multi_modal'],
-            num_gaussians_direction=config['num_gaussians_direction'],
-            gmm_coef_direction_type=config['gmm_coef_direction_type'],
-            use_GMM=config['use_GMM'],
-
-            reduced_v_dim=config['reduced_v_dim'],
-            reduced_s_dim=config['reduced_s_dim'],
-            chunk_s=config['chunk_s'],
-
-            device=device,
-        )
-    elif config['model'] == 'molcode':
-        return MolCodeAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config['model'] == 'reveal_nn':
-        return PainnRevealAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            rms_norm_update=config["rms_norm_update"],
-            device=device,
-        )
-    elif config['model'] == 'explorer':
-        return ExplorerAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            num_interactions=config["num_interactions"],
-            cutoff=config["cutoff"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            rms_norm_update=config["rms_norm_update"],
-            num_trials=config["num_trials"],
             device=device,
         )
     else:

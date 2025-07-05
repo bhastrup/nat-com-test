@@ -1,0 +1,128 @@
+# IDE
+.idea/
+
+# mypy
+.mypy_cache/
+.pytest_cache/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Distribution and packaging
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Ignore everything in the data/ directory
+data/*
+!src/data/
+!src/data/*
+
+log/
+tf_log/
+output/
+# *.ipynb
+*.out
+
+
+logs/
+results/
+runs/
+slurm_outputs/
+*.prof
+*.traj
+
+*.xyz
+
+*.1
+wandb/
+pretrain_runs/
+
+junk/
+
+submitit_logs/
+
+c-profile/
+
+*.log
+sublog*
+kill*
+*prof*
+from_niflheim/
+xtb-python/
+saved_playgrounds/
+app_store/pages/trash/# IDE
+.idea/
+
+# mypy
+.mypy_cache/
+.pytest_cache/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# Distribution and packaging
+*.egg-info/
+.eggs/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Ignore everything in the data/ directory
+data/*
+!src/data/
+!src/data/*
+
+log/
+tf_log/
+output/
+# *.ipynb
+*.out
+
+
+logs/
+#models/
+results/
+runs/
+slurm_outputs/
+*.prof
+*.traj
+
+*.xyz
+
+*.1
+wandb/
+pretrain_runs/
+junk/
+submitit_logs/
+c-profile/
+
+*.log
+sublog*
+kill*
+*prof*
+from_niflheim/
+xtb-python/
+saved_playgrounds/
+app_store/pages/trash/
+
+nul
+Pipfile
+temp_ASE_optimizer_log_file
+outputs/
+model_objects/
+visualization_outputs/
+version-0/
+
+
+nul
+Pipfile
+
+cormorant/
+
+.env
+SCRATCH/

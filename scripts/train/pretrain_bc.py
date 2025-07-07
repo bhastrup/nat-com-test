@@ -5,20 +5,18 @@ from copy import deepcopy
 import numpy as np
 import torch
 from torch.optim.optimizer import Optimizer
-from torch.utils.data import DataLoader
 
 from src.tools.model_util import ModelIO
 from src.tools.util import RolloutSaver, InfoSaver, compute_gradient_norm
 from src.agents.base import AbstractActorCritic
 from src.rl.env_container import VecEnv
 from src.rl.buffer_container import PPOBufferContainer, PPOBufferContainerDeploy
-from src.rl.buffer import get_batch_generator
 from src.rl.rollouts import batch_rollout_with_logging, rollout_n_eps_per_env
 from src.rl.losses import (
     compute_loss, compute_loss_MARWIL, compute_loss_BC, train, EntropySchedule
 )
 from src.performance.single_cpkt.evaluator import SingleCheckpointEvaluator, launch_eval_jobs
-from src.performance.cumulative.performance_summary import Logger, MultibagLogger, FinetuneLogger
+from src.performance.cumulative.performance_summary import Logger
 
 
 def optimize_agent(ac: AbstractActorCritic, data_batch: dict, optimizer: Optimizer, 

@@ -9,21 +9,15 @@ from src.rl.reward import InteractionReward
 from src.rl.env_container import SimpleEnvContainer
 from src.rl.envs.environment import tmqmEnv, HeavyFirst
 from src.rl.envs.env_no_reward import HeavyFirstNoReward
-from src.rl.envs.env_partial_canvas import PartialCanvasEnv
-from src.rl.explorer.spaces import ObservationSpace, ActionSpace
+from src.rl.spaces import ObservationSpace, ActionSpace
 
 from src.rl.reward import InteractionReward, RaeReward
 from src.tools import util
 
-from src.rl.envs.env_with_bond import HeavyFirst2d
-from src.rl.envs.env_partial_canvas_2d import PartialCanvasEnv2d
 from src.data.reference_dataloader import ReferenceDataLoader
 from src.data.io_handler import IOHandler
 from src.data.data_util import get_benchmark_energies_from_df
 
-from src.rl.explorer.env import NumAtomsToGoRangeEnv
-# def get_benchmark_energies_from_vec_env(envs: SimpleEnvContainer) -> Dict[str, float]:
-#     return envs.environments[0].reward.benchmark_energies.copy()
 
 
 class EnvMaker:
@@ -99,8 +93,7 @@ class EnvMaker:
     def make_envs(self, ) -> Tuple[SimpleEnvContainer, SimpleEnvContainer]:
         """ Main class method which creates the training and evaluation environments. """
 
-        self.formula_data = self._make_data_dict() #if self.cf['partial_canvas'] \
-            #else self._get_partial_canvas_data() #else self._get_multibag_data()
+        self.formula_data = self._make_data_dict()
 
         training_envs, eval_envs, eval_envs_big = self._build_envs(self.formula_data)
         return training_envs, eval_envs, eval_envs_big
@@ -238,138 +231,75 @@ class EnvMaker:
                 energy_unit=self.cf['energy_unit']
             )
 
-        if self.cf['model'] == 'explorer':
 
-            
-            from src.rl.explorer.explorer_vec import GNNEnvContainer
-
-
-            interval = (5, 23)
-
-            training_envs = GNNEnvContainer([
-                NumAtomsToGoRangeEnv(
-                    reward=reward,
-                    observation_space=self.observation_space,
-                    action_space=self.action_space,
-                    num_atoms_to_go_interval=interval, # TODO: Change to Empirical Distribution
-                    min_atomic_distance=self.cf['min_atomic_distance'],
-                    max_solo_distance=self.cf['max_solo_distance'],
-                    min_reward=self.cf['min_reward'],
-                    energy_unit=self.cf['energy_unit'],
-                    worker_id=id
-                ) for id in range(self.cf['num_envs'])
-            ])
-
-            eval_envs = eval_envs_big = None
-            
-
-        elif self.cf['partial_canvas']:
-
-            # TODO: Remove when switching to hydra. Should simply have a decom_params config_dict from YAML.
-            decom_keys = [
-                'mol_dataset', 
-                'decom_method', 
-                'decom_cutoff', 
-                'decom_shuffle', 
-                'decom_mega_shuffle', 
-                'hydrogen_delay', 
-                'cutoff',
-                'decom_p_random',
-                'buffer_capacity',
-                'n_atoms_to_place',
-                'no_hydrogen_focus'
-            ]
-
-            decom_params = {k: self.cf[k] for k in decom_keys}
-
-            training_envs = SimpleEnvContainer([
-                PartialCanvasEnv(
-                    reward=reward, # rewards[0],
-                    observation_space=self.observation_space,
-                    action_space=self.action_space,
-                    molecule_df=df_train,
-                    decom_params=decom_params,
-                    min_atomic_distance=self.cf['min_atomic_distance'],
-                    max_solo_distance=self.cf['max_solo_distance'],
-                    min_reward=self.cf['min_reward'],
-                    worker_id=id
-                ) for id in range(self.cf['num_envs'])
-            ])
-
-            eval_envs = None
-
-            logging.info(f"Number of parallel training environments: {training_envs.get_size()}")
-
+        if self.cf['mol_dataset'] == 'TMQM':
+            RLEnvironment = tmqmEnv
+        elif self.cf['mol_dataset'] == 'QM7' or self.cf['mol_dataset'] == 'QM9':
+            RLEnvironment = HeavyFirst if self.cf['calc_rew'] == True else HeavyFirstNoReward
         else:
+            raise ValueError(f'Unknown molecule dataset: {self.cf["mol_dataset"]}')
 
-            if self.cf['mol_dataset'] == 'TMQM':
-                RLEnvironment = tmqmEnv
-            elif self.cf['mol_dataset'] == 'QM7' or self.cf['mol_dataset'] == 'QM9':
-                RLEnvironment = HeavyFirst if self.cf['calc_rew'] == True else HeavyFirstNoReward
-            else:
-                raise ValueError(f'Unknown molecule dataset: {self.cf["mol_dataset"]}')
+        use_prop = False
+        if use_prop:
+            # Proportional sampling of formulas (wrt reference bag sizes)
+            smiles_len_dict = {k: len(v) for k, v in self.get_reference_smiles(train_formulas).items()}
+            train_formulas_prop = [f for f, n in smiles_len_dict.items() for _ in range(n)]
+            f_prop_shuffled = np.random.permutation(train_formulas_prop)
+            online_formulas = [util.string_to_formula(f) for f in f_prop_shuffled]
+        else:
+            online_formulas = [util.string_to_formula(f) for f in train_formulas]
 
-            use_prop = False
+        training_envs = []
+        for i in range(self.cf['num_envs']):
             if use_prop:
-                # Proportional sampling of formulas (wrt reference bag sizes)
-                smiles_len_dict = {k: len(v) for k, v in self.get_reference_smiles(train_formulas).items()}
-                train_formulas_prop = [f for f, n in smiles_len_dict.items() for _ in range(n)]
-                f_prop_shuffled = np.random.permutation(train_formulas_prop)
-                online_formulas = [util.string_to_formula(f) for f in f_prop_shuffled]
-            else:
-                online_formulas = [util.string_to_formula(f) for f in train_formulas]
- 
-            training_envs = []
-            for i in range(self.cf['num_envs']):
-                if use_prop:
-                    shuffled_formulas = [online_formulas[i] for i in np.random.permutation(len(online_formulas))]
-                training_envs.append(
-                    RLEnvironment(
-                        reward=reward, # rewards[i],
-                        observation_space=self.observation_space,
-                        action_space=self.action_space,
-                        formulas=shuffled_formulas if use_prop else online_formulas,
-                        min_atomic_distance=self.cf['min_atomic_distance'],
-                        max_solo_distance=self.cf['max_solo_distance'],
-                        min_reward=self.cf['min_reward'],
-                        energy_unit=self.cf['energy_unit'],
-                        worker_id=i,
-                    )
-                )
-            training_envs = SimpleEnvContainer(training_envs)
-            logging.info(f'Number of training bags: {len(online_formulas)}')
-
-
-            benchmark_energies_eval_list = [benchmark_energies_eval[f] for f in eval_formulas]
-            eval_envs = SimpleEnvContainer([
+                shuffled_formulas = [online_formulas[i] for i in np.random.permutation(len(online_formulas))]
+            training_envs.append(
                 RLEnvironment(
-                    reward=eval_reward,
+                    reward=reward, # rewards[i],
                     observation_space=self.observation_space,
                     action_space=self.action_space,
-                    formulas=[util.string_to_formula(eval_formulas[i])],
+                    formulas=shuffled_formulas if use_prop else online_formulas,
                     min_atomic_distance=self.cf['min_atomic_distance'],
                     max_solo_distance=self.cf['max_solo_distance'],
                     min_reward=self.cf['min_reward'],
                     energy_unit=self.cf['energy_unit'],
-                    benchmark_energy=[benchmark_energies_eval_list[i]],
-                ) for i in range(len(eval_formulas))
-            ])
-            logging.info(f'Number of evaluation environments: {eval_envs.get_size()}')
-            logging.info(f'eval formulas: {eval_formulas}')
+                    worker_id=i,
+                )
+            )
+        training_envs = SimpleEnvContainer(training_envs)
+        logging.info(f'Number of training bags: {len(online_formulas)}')
 
-            eval_envs_big = SimpleEnvContainer([
-                HeavyFirstNoReward(
-                    reward=eval_big_reward,
-                    observation_space=self.observation_space,
-                    action_space=self.action_space,
-                    formulas=[util.string_to_formula(eval_formulas[i])],
-                    min_atomic_distance=self.cf['min_atomic_distance'],
-                    max_solo_distance=self.cf['max_solo_distance'],
-                    min_reward=self.cf['min_reward'],
-                    energy_unit=self.cf['energy_unit'],
-                    benchmark_energy=[benchmark_energies_eval_list[i]],
-                ) for i in range(len(eval_formulas))
-            ])
+
+        benchmark_energies_eval_list = [benchmark_energies_eval[f] for f in eval_formulas]
+        eval_envs = SimpleEnvContainer([
+            RLEnvironment(
+                reward=eval_reward,
+                observation_space=self.observation_space,
+                action_space=self.action_space,
+                formulas=[util.string_to_formula(eval_formulas[i])],
+                min_atomic_distance=self.cf['min_atomic_distance'],
+                max_solo_distance=self.cf['max_solo_distance'],
+                min_reward=self.cf['min_reward'],
+                energy_unit=self.cf['energy_unit'],
+                benchmark_energy=[benchmark_energies_eval_list[i]],
+            ) for i in range(len(eval_formulas))
+        ])
+        logging.info(f'Number of evaluation environments: {eval_envs.get_size()}')
+        logging.info(f'eval formulas: {eval_formulas}')
+
+        eval_envs_big = SimpleEnvContainer([
+            HeavyFirstNoReward(
+                reward=eval_big_reward,
+                observation_space=self.observation_space,
+                action_space=self.action_space,
+                formulas=[util.string_to_formula(eval_formulas[i])],
+                min_atomic_distance=self.cf['min_atomic_distance'],
+                max_solo_distance=self.cf['max_solo_distance'],
+                min_reward=self.cf['min_reward'],
+                energy_unit=self.cf['energy_unit'],
+                benchmark_energy=[benchmark_energies_eval_list[i]],
+            ) for i in range(len(eval_formulas))
+        ])
 
 
         return training_envs, eval_envs, eval_envs_big

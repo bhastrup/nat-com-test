@@ -19,7 +19,7 @@ from src.performance.single_cpkt.stats import (
 )
 
 
-from launchers.launch_utils import submit_jobs
+from src.tools.launch_utils import submit_jobs
 
 
 def get_num_episodes(

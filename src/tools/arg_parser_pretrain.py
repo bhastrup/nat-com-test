@@ -56,16 +56,12 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
     parser.add_argument('--min_reward', help='minimum reward given by environment', type=float, default=-3)
     parser.add_argument('--calc_rew', help='calc reward during rollouts', type=str2bool, nargs='?', const=True, default=True)
 
-    parser.add_argument('--partial_canvas', help='partial canvas', type=str2bool, nargs='?', const=True, default=True)
+    parser.add_argument('--partial_canvas', help='partial canvas', type=str2bool, nargs='?', const=True, default=False)
     parser.add_argument('--buffer_capacity', help='buffer size for canvas generator', type=int, default=5000)
 
 
     # Model
-    parser.add_argument('--model',
-                        help='model representation',
-                        type=str,
-                        default='painn',
-                        choices=['internal', 'covariant', 'painn', 'schnet_edge', 'painn_internal_multimodal', 'kappa_entropy', 'benja', 'simple_equiv', 'simple_equiv_multimodal', 'emma', 'reveal_nn'])
+    parser.add_argument('--model', type=str, default='painn', choices=['internal', 'covariant', 'painn'])
     parser.add_argument('--min_mean_distance', help='minimum mean distance', type=float, default=1.0)
     parser.add_argument('--max_mean_distance', help='maximum mean distance', type=float, default=1.6)
     parser.add_argument('--network_width', help='width of FC layers', type=int, default=128)
@@ -151,10 +147,9 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
     
 
     parser.add_argument('--train_mode',
-                        help='how does the agent learn across bags?',
                         type=str,
                         default='pretrain',
-                        choices=['singlebag', 'multibag', 'sequential_independent', 'finetuning', 'pretrain'])
+                        choices=['finetuning', 'pretrain', 'tabula_rasa', 'combined'])
     parser.add_argument('--config_ft', help='config for finetuning jobs', type=json.loads, default=None)
     parser.add_argument("--launch_finetune", help="", type=str2bool, nargs='?', const=True, default=False)
     parser.add_argument('--expert_suffix', help='File extension for already preprocessed expert data', type=str, default='pkl')

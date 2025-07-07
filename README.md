@@ -21,7 +21,7 @@ Make sure you have [Miniconda](https://docs.conda.io/en/latest/miniconda.html) o
 
 ### 2. Clone the Repository
 ```bash
-git clone https://github.com/yourusername/isomer-discovery-rl.git
+git clone https://github.com/bhastrup/isomer-discovery-rl.git
 cd isomer-discovery-rl
 ```
 
@@ -62,9 +62,10 @@ Run the following **from the root of the project directory** (where `src/` is lo
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d
 echo "export PYTHONPATH=\$(pwd)" > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 
-# Optionally unset it on deactivate
+# Unset it on deactivate
 mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
 echo "unset PYTHONPATH" > $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
+```
 
 
 

@@ -81,11 +81,31 @@ QM9 is available also - see preprocess_data.py for arguments.
 
 
 ## Launch RL training
+### Weights & Biases (WandB) Setup
+
+This project uses [Weights & Biases](https://wandb.ai/) for experiment tracking.
+
+#### 🔐 Login
+
+Before running training or analysis scripts that use WandB, you need to log in from your terminal:
+```bash
+wandb login
+```
+This will prompt you to paste an API key from your WandB account settings.
+
+If you're running on a remote machine (e.g., cluster), you can use:
+```bash
+wandb login YOUR_API_KEY
+```
+
+
 Training scripts are available in the *scripts/train/* folder. Specifically, a training job can be launched as
 ``` bash
 python scripts/train/experiments/nat-com-version/a.py
 ```
 This files launches a training of "Agent A" from the paper. The script contains further instructions for how to setup the other agent trainings.
+
+
 
 
 ## Analyse trainings (isomer discovery campaings):

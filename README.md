@@ -1,4 +1,4 @@
-# Isomer Discovery with Reinforcement Learning
+# Rediscovering Chemical Space from First Principles with Reinforcement Learning
 
 This repository contains the training and analysis code used in the study:
 
@@ -51,11 +51,9 @@ Check that the required packages are installed:
 python -c 'import torch, ase, rdkit, streamlit, pandas; print("✅ All core packages are working!")'
 ```
 
-### Set Up PYTHONPATH (One-Time)
+### 6. Set Up PYTHONPATH (One-Time)
 
-To ensure Python can locate the `src/` package, set the `PYTHONPATH` automatically when activating the environment:
-
-Run the following **from the root of the project directory** (where `src/` is located):
+To ensure Python can locate the `src/` package, set the `PYTHONPATH` automatically when activating the environment: Run the following **from the root of the project directory** (where `src/` is located):
 
 ```bash
 # Set PYTHONPATH when the Conda environment is activated
@@ -66,12 +64,12 @@ echo "export PYTHONPATH=\$(pwd)" > $CONDA_PREFIX/etc/conda/activate.d/env_vars.s
 mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
 echo "unset PYTHONPATH" > $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 ```
-
+and reactivate the *rl-env*.
 
 
 
 ## Dataset preparation
-For QM7 training, run the following commands (takes 1-2 minutes)
+For QM7 training, run the following commands (takes 1-2 minutes):
 ``` bash
 python scripts/prep/preprocess_data.py
 python scripts/prep/split_train_test.py
@@ -80,25 +78,22 @@ This saves a dataset of QM7 structures into the *data/* folder (along with XTB e
 QM9 is available also - see preprocess_data.py for arguments.
 
 
-## Launch RL training
+## RL training
 ### Weights & Biases (WandB) Setup
 
 This project uses [Weights & Biases](https://wandb.ai/) for experiment tracking.
 
 #### 🔐 Login
-
 Before running training or analysis scripts that use WandB, you need to log in from your terminal:
 ```bash
 wandb login
 ```
-This will prompt you to paste an API key from your WandB account settings.
-
-If you're running on a remote machine (e.g., cluster), you can use:
+This will prompt you to paste an API key from your WandB account settings. If you're running on a remote machine (e.g., cluster), you can use:
 ```bash
 wandb login YOUR_API_KEY
 ```
 
-
+### Launch trainging jobs
 Training scripts are available in the *scripts/train/* folder. Specifically, a training job can be launched as
 ``` bash
 python scripts/train/experiments/nat-com-version/a.py
@@ -107,10 +102,11 @@ This files launches a training of "Agent A" from the paper. The script contains 
 
 
 
-
 ## Analyse trainings (isomer discovery campaings):
-Analysis scripts are available in the *scripts/analyse/* folder, which is further subdivided into.
-
+Analysis scripts are available in the *scripts/analyse/* folder, which is further subdivided into
+* exp1: Containing single bag evaluation (Q1 in the paper).
+* exp2: Multibag evaluations on hold-out formulas (Q2 in the paper).
+* exp3: Cumulative discovery analysis where the entire training is seen as a discovery campaign (Q3 in the paper).
 
 
 # An interactive webapp for molecular generation

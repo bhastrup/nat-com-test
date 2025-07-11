@@ -114,6 +114,6 @@ To interact with the trained agents, we provide a Streamlit-based web app that c
 ``` bash
 streamlit run app_store/About.py
 ```
-<img src="resources/image_grid.png" width="100%">
+<img src="resources/wep-app.png" width="100%">
 
 Here you can select one of the pretrained agents that are available in the *model_objects/* folder.

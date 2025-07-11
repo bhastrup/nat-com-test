@@ -108,8 +108,9 @@ Analysis scripts are available in the *scripts/analyse/* folder, which is furthe
 * exp2: Multibag evaluations on hold-out formulas (Q2 in the paper).
 * exp3: Cumulative discovery analysis where the entire training is seen as a discovery campaign (Q3 in the paper).
 
+$\\$
 
-### Web app
+# Web app
 To interact with the trained agents, we provide a Streamlit-based web app that can be launched using
 ``` bash
 streamlit run app_store/About.py

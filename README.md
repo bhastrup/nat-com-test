@@ -109,9 +109,11 @@ Analysis scripts are available in the *scripts/analyse/* folder, which is furthe
 * exp3: Cumulative discovery analysis where the entire training is seen as a discovery campaign (Q3 in the paper).
 
 
-## A web app for molecular generation
-To interact with the training agents, we provide a Streamlit based web app that can be launched using
+### Web app
+To interact with the trained agents, we provide a Streamlit-based web app that can be launched using
 ``` bash
 streamlit run app_store/About.py
 ```
+<img src="resources/image_grid.png" width="100%">
+
 Here you can select one of the pretrained agents that are available in the *model_objects/* folder.

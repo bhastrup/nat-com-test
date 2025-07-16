@@ -108,7 +108,6 @@ Analysis scripts are available in the *scripts/analyse/* folder, which is furthe
 * exp2: Multibag evaluations on hold-out formulas (Q2 in the paper).
 * exp3: Cumulative discovery analysis where the entire training is seen as a discovery campaign (Q3 in the paper).
 
-$\\$
 
 # Web app
 To interact with the trained agents, we provide a Streamlit-based web app that can be launched using
@@ -117,4 +116,11 @@ streamlit run app_store/About.py
 ```
 <img src="resources/web-app.png" width="100%">
 
-Here you can select one of the pretrained agents that are available in the *model_objects/* folder.
+In the sidebar on the left-hand side, navigate to the **Generator** page. This page is split into three columns, *Agents* (model checkpoints), *Environments* (chemical compositions) and *PlayGrounds* which is the inference module that takes an (agent, environment)-pair as input and samples new molecules according to the agent policy.
+### How to use:
+* Click *New Playground 💫* button in . This creates a new playground named *"Playground 0"* that opens in *edit* mode. Before we can **"Deploy"** this playground and use **Generator 🚀** functionality, we must provide it with agent and env objects.
+* *Agents*: Loaded agents are displayed in the **All agents** expander (left column). We have pre-loaded 5 agent checkpoints from the paper, namely agents *A, AV, F, FV and AFV*. These are named according to the abbreviations of the three core reward terms they are trained on. These are *A: Atomization energy, F: Formation energy, V: Validity*. See paper for explanations.
+* *Environments*: Loaded envs are displayed in the **All envs** expander (right column).
+
+
+

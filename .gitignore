@@ -114,7 +114,6 @@ nul
 Pipfile
 temp_ASE_optimizer_log_file
 outputs/
-model_objects/
 visualization_outputs/
 version-0/
 

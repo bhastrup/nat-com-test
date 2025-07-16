@@ -47,7 +47,7 @@ class ModelIO:
 
     def _parse_model_path(self, path: str) -> Optional[ModelPathInfo]:
         filename = os.path.basename(path)
-        regex = re.compile(rf'(?P<tag>.+){self._steps_string}(?P<num_steps>\d+){self._suffix}')
+        regex = re.compile(rf'(?P<tag>.*){self._steps_string}(?P<num_steps>\d+){self._suffix}')
         match = regex.match(filename)
         if not match:
             return None

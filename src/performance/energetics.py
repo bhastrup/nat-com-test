@@ -1,9 +1,11 @@
 import logging
+import multiprocessing as mp
+from enum import Enum
+
 import numpy as np
 from ase import Atoms
-from xtb.ase.calculator import XTB
 from ase.optimize import BFGS, FIRE
-from enum import Enum
+from xtb.ase.calculator import XTB
 
 
 class EnergyUnit(Enum):
@@ -30,13 +32,13 @@ class EnergyConverter:
         (EnergyUnit.KCAL_MOL, EnergyUnit.EV): 27.21140 / 627.50960,
         (EnergyUnit.EV, EnergyUnit.KCAL_MOL): 627.50960 / 27.21140,
     }
-    
+
     @staticmethod
     def convert(values: np.ndarray, old_unit: EnergyUnit, new_unit: EnergyUnit) -> float:
         """Convert value from old_unit to new_unit."""
         if old_unit == new_unit:
             return values
-        
+
         try:
             factor = EnergyConverter.conversion_factors[(old_unit, new_unit)]
             return values * factor
@@ -44,17 +46,13 @@ class EnergyConverter:
             raise ValueError(f"Unknown conversion from {old_unit} to {new_unit}")
 
 
-
-import multiprocessing as mp
-import logging
-
 class XTBOptimizer:
     old_energy_unit = EnergyUnit.EV
-    
+
     def __init__(
-        self, 
+        self,
         method: str = 'GFN2-xTB',
-        energy_unit: EnergyUnit = EnergyUnit.HARTREE, 
+        energy_unit: EnergyUnit = EnergyUnit.HARTREE,
         use_mp: bool = False,
         timeout: int = 60
     ):
@@ -62,13 +60,24 @@ class XTBOptimizer:
         self.energy_unit = energy_unit
         self.use_mp = use_mp
         self.timeout = timeout
-        self.pool = mp.Pool(1) if use_mp else None # Create a persistent pool with 1 worker
-
+        self.pool = mp.Pool(1) if use_mp else None  # Create a persistent pool with 1 worker
 
     def get_max_force(self, atoms: Atoms) -> float:
         forces = atoms.get_forces()
         max_force = ((forces ** 2).sum(axis=1) ** 0.5).max()
         return EnergyConverter.convert(max_force, self.old_energy_unit, self.energy_unit)
+    
+    def calc_dipole(self, atoms: Atoms) -> float:
+        atoms = atoms.copy()
+        try:
+            ase_xtb_calculator = XTB(method=self.method)
+            ase_xtb_calculator.calculate(atoms=atoms, properties=['dipole'])
+            dipole_moment = ase_xtb_calculator.results["dipole"]
+            dipole_magnitude = np.linalg.norm(dipole_moment)
+        except Exception as e:
+            logging.error(f"Error calculating dipole moment: {e}")
+            dipole_magnitude = None
+        return dipole_magnitude
 
     def _calculate_energy(self, atoms: Atoms) -> float:
         atoms = atoms.copy()
@@ -76,7 +85,7 @@ class XTBOptimizer:
         return atoms.get_potential_energy()
 
     def calc_potential_energy(self, atoms: Atoms) -> float:
-        """ Wrapper around _calculate_energy() to handle mp, timeouts and energy unit conversion."""
+        """Wrapper around _calculate_energy() to handle mp, timeouts and energy unit conversion."""
         try:
             if self.use_mp:
                 result = self.pool.apply_async(self._calculate_energy, (atoms,))
@@ -92,7 +101,6 @@ class XTBOptimizer:
             logging.error(f"Error in XTB calculation: {e}")
             return None
 
-
     def optimize_atoms(self, atoms: Atoms, max_steps: int = 50, fmax: float = 0.10, redirect_logfile: bool = True) -> dict:
         atoms = atoms.copy()
         atoms.calc = XTB(method=self.method)
@@ -101,7 +109,7 @@ class XTBOptimizer:
 
         if energy_before is not None:
             try:
-                dyn = FIRE(atoms, logfile='temp_ASE_optimizer_log_file' if redirect_logfile else None)  # dyn = BFGS(atoms)
+                dyn = FIRE(atoms, logfile='temp_ASE_optimizer_log_file' if redirect_logfile else None)
                 dyn.run(fmax=fmax, steps=max_steps)
                 energy_after = self.calc_potential_energy(atoms)
             except Exception as e:

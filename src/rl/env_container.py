@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
-import gym
+import gymnasium as gym
 import numpy as np
 
 # The class is based on: Baselines https://github.com/openai/baselines.

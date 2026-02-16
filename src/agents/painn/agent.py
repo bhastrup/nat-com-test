@@ -383,6 +383,8 @@ class PainnAC(AbstractActorCritic):
         # focus_mask: n_obs x n_atoms
         # element_count: n_obs x n_zs
 
+        # print(f'observations: {observations}')
+
         atomic_feats, focus_mask_perceive, focus_mask_next, element_count, action_mask = self.make_atomic_tensors(observations)
         element_mask = (element_count > 0).int()
 
@@ -408,6 +410,9 @@ class PainnAC(AbstractActorCritic):
         # Focus
         focus_logits = self.phi_focus(latent_states)  # n_obs x n_atoms x 1
         focus_logits = focus_logits.squeeze(-1)  # n_obs x n_atoms
+
+
+        
 
         focus_p = masked_softmax(focus_logits, mask=focus_mask_choose.bool())  # n_obs x n_atoms        
         focus_p = torch.nan_to_num(focus_p, nan=0.0, posinf=1e10, neginf=-1e10)

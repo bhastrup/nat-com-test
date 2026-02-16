@@ -122,6 +122,7 @@ class MoleculeProcessor:
             'n_atoms_ring_max': int,
             'charge_fail': bool,
             'abs_energy': float,
+            'dipole': float,
             'rae': float,
             'NEW_SMILES': str,
             'relax_stable': bool,
@@ -144,6 +145,8 @@ class MoleculeProcessor:
         atoms = args['atoms'] if 'atoms' in args else args['atoms_object_list'][args['index']].copy()
         perform_optimization = args['perform_optimization']
         use_huckel = args['use_huckel']
+        calc_dipole = args['calc_dipole']
+        print(f"calc_dipole: {calc_dipole}")
 
 
         mol_info = self.analyzer.get_mol(atoms)
@@ -162,7 +165,7 @@ class MoleculeProcessor:
             biggest_ring = max(num_atoms_in_rings) if num_atoms_in_rings else 0
 
 
-        # Calculate the absolute energy and RAE
+        # Calculate the absolute energy and RAE and dipole
         calc = XTBOptimizer(method='GFN2-xTB', energy_unit=energy_unit)
         abs_energy = calc.calc_potential_energy(atoms)
         rae = None
@@ -174,6 +177,12 @@ class MoleculeProcessor:
                 benchmark_energy = benchmark_energy, 
                 n_atoms = len(atoms)
             )
+        # dipole = None
+        if calc_dipole:
+            dipole = calc.calc_dipole(atoms)
+        
+        print(f"dipole: {dipole}")
+
 
         # Get the SMILES representation
         SMILES = Chem.MolToSmiles(mol, isomericSmiles=False, canonical=True) if mol else None
@@ -226,6 +235,7 @@ class MoleculeProcessor:
             'n_atoms_ring_max': biggest_ring,
             'charge_fail': charge_fail,
             'abs_energy': abs_energy,
+            'dipole': dipole,
             'rae': rae,
             'NEW_SMILES': new_SMILES_Compact,
             'relax_stable': relax_stable,
@@ -244,6 +254,7 @@ class MoleculeProcessor:
         atoms_object_list: List[Atoms] = None, 
         benchmark_energies: dict = None,
         perform_optimization: bool = False,
+        calc_dipole: bool = False,
     ) -> Tuple[pd.DataFrame, List[dict]]:
 
         feature_cols = list(self.features_dict.keys())
@@ -264,7 +275,8 @@ class MoleculeProcessor:
                 'atoms': atoms,
                 'benchmark_energies': benchmark_energies,
                 'perform_optimization': perform_optimization,
-                'use_huckel': self.analyzer.use_huckel
+                'use_huckel': self.analyzer.use_huckel,
+                'calc_dipole': calc_dipole
             })
             stats_list.append(stats)
             extra_data_list.append(extra_data)

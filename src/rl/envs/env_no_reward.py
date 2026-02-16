@@ -4,7 +4,7 @@ import logging
 from typing import Tuple, List, Callable
 
 import ase.data
-import gym
+import gymnasium as gym
 import numpy as np
 from ase import Atoms, Atom
 from scipy.spatial.qhull import ConvexHull, Delaunay

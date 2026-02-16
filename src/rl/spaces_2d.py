@@ -1,6 +1,6 @@
 from typing import Tuple, List
 
-import gym
+import gymnasium as gym
 import numpy as np
 from ase import Atoms
 

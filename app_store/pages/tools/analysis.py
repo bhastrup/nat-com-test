@@ -55,7 +55,7 @@ class MetricsDisplay:
                 'old_data_size', 'rediscovered', 'rediscovery_ratio', 'n_novel', 'expansion_ratio'
             ],
             'Structure/energy metrics': [
-                'abs_energy_avg', 'relax_stable', 'RMSD_avg', 'rae_relaxed_avg', 'n_rings_avg', 
+                'abs_energy_avg', 'dipole_avg', 'relax_stable', 'RMSD_avg', 'rae_relaxed_avg', 'n_rings_avg', 
                 'ring3+_ratio', 'ring4+_ratio', 'ring5+_ratio'
             ]
         }

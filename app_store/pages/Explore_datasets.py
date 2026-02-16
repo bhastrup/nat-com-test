@@ -1,5 +1,4 @@
-import pickle
-from typing import List
+from typing import List, Optional, Tuple
 
 import streamlit as st
 import pandas as pd
@@ -11,6 +10,8 @@ from ase.visualize import view
 from millify import prettify
 
 from src.tools import util
+from src.data.reference_dataloader import ReferenceDataLoader
+from src.performance.energetics import EnergyUnit
 from src.pretraining.action_decom import (
     recenter, pos_seq_to_actions, pos_seq_to_actions_emma, decompose_pos
 )
@@ -43,24 +44,26 @@ st.markdown(
 )
 
 
-def load_dataset(name: str):
-    """ Load dataset from pickle file """
-    if name != 'tmQM':
-        name = name.lower()
-
+def load_dataset(name: str) -> Tuple[Optional[dict], Optional[pd.DataFrame]]:
+    """Load dataset using the reference dataloader."""
     if name not in st.session_state.datasets or name + '_df' not in st.session_state.datasets:
-        
         with st.spinner(f"Loading {name} dataset from file"):
-
-            file_name = 'qm7_E_smiles_connectivity' if name == 'qm7' else name
-            with open(f'../TMQM-dataset/{name}/processed/{file_name}.pkl', 'rb') as f:
-                dataset_dict = pickle.load(f)
-            
-            df_full = pd.DataFrame.from_dict(dataset_dict, orient='index') #.sort_values(by='n_atoms')
-            df_full['formulas'] = df_full['bag_repr'].apply(lambda x: util.string_to_formula(x))
-
-            st.session_state.datasets[name] = dataset_dict
-            st.session_state.datasets[name + '_df'] = df_full
+            try:
+                loader = ReferenceDataLoader(data_dir='data')
+                ref_data = loader.load_and_polish(
+                    mol_dataset=name,
+                    new_energy_unit=EnergyUnit.EV,
+                    fetch_df=True,
+                )
+                df_full = ref_data.df
+                df_full = df_full.reset_index(drop=True)
+                dataset_dict = df_full.to_dict('index') if df_full is not None else None
+                if df_full is None:
+                    return None, None
+                st.session_state.datasets[name] = dataset_dict
+                st.session_state.datasets[name + '_df'] = df_full
+            except Exception:
+                return None, None
     else:
         dataset_dict = st.session_state.datasets[name]
         df_full = st.session_state.datasets[name + '_df']

@@ -225,7 +225,8 @@ def rollout_pg(
     render=False,
     render_bonds=False,
     num_workers=None,
-    perform_relaxation=False
+    perform_relaxation=False,
+    calc_dipole=False
 ):
 
     # write_reference_energies_into_pg(pg)
@@ -253,6 +254,7 @@ def rollout_pg(
                     atoms_list,
                     benchmark_energies=benchmark_energies,
                     perform_optimization=perform_relaxation,
+                    calc_dipole=calc_dipole,
                     # use_huckel=True
                 )
                 save_to_formula_dict(da.stoch_dict if mode == 'stochastic' else da.argmax_dict, mode, formula, new_df, data)
@@ -262,17 +264,26 @@ def generate_buttons():
     if 'trapped_in_ref_selector' not in st.session_state:
         st.session_state.trapped_in_ref_selector = False
 
+    toggle_cols = st.columns([1, 1, 1, 1])
+    with toggle_cols[0]:
+        render = st.toggle("Render", key='render_during_generation')
+    with toggle_cols[1]:
+        render_bonds = st.toggle("with bonds", disabled=not render, key='render_during_generation_with_bonds')
+    with toggle_cols[2]:
+        perform_relaxation = st.toggle("Relax", key='relax_results')
+    with toggle_cols[3]:
+        calc_dipole = st.toggle("Calculate dipole", key='calc_dipole_of_results')
+
+
     argmax_col, stoch_col, n_samples_col = st.columns([3, 3, 4])
     with argmax_col:
         generate_argmax_button = st.button("Generate Argmax Rollout ⛰️")
-        render = st.toggle("Render", key='render_argmax')
-        perform_relaxation = st.toggle("Relax", key='relax_results')
         if generate_argmax_button:
             st.session_state.generate_button = True
 
             for pg in st.session_state.pm.playgrounds:
                 if pg.deployable:
-                    rollout_pg(pg, mode='argmax', num_samples=1, num_workers=1, perform_relaxation=perform_relaxation)
+                    rollout_pg(pg, mode='argmax', num_samples=1, num_workers=1, perform_relaxation=perform_relaxation, calc_dipole=calc_dipole)
 
     with n_samples_col:
         num_samples = st.number_input("#samples:", min_value=1, max_value=10000, value=3)
@@ -284,7 +295,6 @@ def generate_buttons():
         # with render_cols[0]:
         #     render = st.toggle("Render")
         #with render_cols[1]:
-        render_bonds = st.toggle("with bonds", disabled=not render)
 
 
         if st.session_state.generate_stoch_button: #  or st.session_state.trapped_in_ref_selector:
@@ -297,6 +307,7 @@ def generate_buttons():
                         render=render,
                         render_bonds=render_bonds,
                         num_workers=num_workers,
-                        perform_relaxation=perform_relaxation
+                        perform_relaxation=perform_relaxation,
+                        calc_dipole=calc_dipole
                     )
     

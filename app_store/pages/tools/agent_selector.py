@@ -10,7 +10,7 @@ from src.agents.painn.agent import PainnAC
 
 
 MODEL_FOLDER = Path(os.getcwd()) / 'model_objects'
-DEFAULT_PATH = MODEL_FOLDER / 'A/seed_0/steps-30000.model'
+DEFAULT_PATH = MODEL_FOLDER / 'A/seed_0/_steps-30000.model'
 
 
 @dataclasses.dataclass

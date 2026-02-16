@@ -65,6 +65,7 @@ def single_formula_metrics(df: pd.DataFrame, SMILES_db: list = None) -> dict:
 
     # Energy measures
     agg_metrics['abs_energy_avg'] = df['abs_energy'].mean()
+    agg_metrics['dipole_avg'] = df['dipole'].mean()
     
     # After relaxation measures
     agg_metrics["relax_stable"] = np.sum(df["relax_stable"]) / total_samples if total_samples > 0 else 0

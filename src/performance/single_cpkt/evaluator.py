@@ -199,7 +199,7 @@ class SingleCheckpointEvaluator:
 
         return self.data['rollouts']
     
-    def _calc_features(self, features_from_file: bool = False, perform_optimization: bool = False) -> Dict[str, pd.DataFrame]:
+    def _calc_features(self, features_from_file: bool = False, perform_optimization: bool = False, calc_dipole: bool = False) -> Dict[str, pd.DataFrame]:
         """Calculate features for each formula."""
         formula_dfs = {}
 
@@ -223,7 +223,8 @@ class SingleCheckpointEvaluator:
                 df, _ = processor.atom_list_to_df(
                     atoms_object_list=atom_list,
                     benchmark_energies=self.benchmark_energies_eval,
-                    perform_optimization=perform_optimization
+                    perform_optimization=perform_optimization,
+                    calc_dipole=calc_dipole
                 )
                 formula_dfs[formula] = df
                 if self.io:

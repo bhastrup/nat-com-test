@@ -306,7 +306,7 @@ class EnvMaker:
 
 
 class EnvMakerNoRef:
-    """ Class for creating the environments from eva formulas alone. """
+    """ Class for creating the environments from evaluation formulas alone. """
     def __init__(
         self, 
         cf: dict, 
@@ -348,16 +348,3 @@ class EnvMakerNoRef:
             ])
 
             return None, eval_envs
-
-
-if __name__ == '__main__':
-    from scripts.train.launch_bc import (get_config, get_config_pretrain)
-
-    cf = get_config_pretrain()
-    cf['config_ft'] = get_config()
-    
-    cf['reward_coefs'] = {'rew_formation': 1.0, 'rew_valid': 3.0, 'rew_atomisation': 1.0}
-
-    # Load data
-    env_maker = EnvMaker(cf)
-    env_maker.make_envs()

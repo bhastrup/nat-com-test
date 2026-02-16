@@ -3,7 +3,7 @@ from collections import defaultdict
 from typing import Tuple, List, Dict
 
 import ase.data
-import gym
+import gymnasium as gym
 import numpy as np
 from ase import Atom, Atoms
 
@@ -86,9 +86,11 @@ class BagSpace(gym.spaces.Tuple):
         return tuple(zip(self.zs, bag))
 
     def from_formula(self, formula: FormulaType) -> BagType:
-        assert all(z in self.zs for z, count in formula)
+        filtered_formula = [(z, count) for z, count in formula 
+                           if z in self.zs or count != 0]
+        assert all(z in self.zs for z, count in filtered_formula)
         formula_dict: Dict[int, int] = defaultdict(int)
-        formula_dict.update(formula)
+        formula_dict.update(filtered_formula)
         return tuple(formula_dict[z] for z in self.zs)
 
 

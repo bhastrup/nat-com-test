@@ -122,6 +122,7 @@ nul
 Pipfile
 
 cormorant/
+build/
 
 .env
 SCRATCH/

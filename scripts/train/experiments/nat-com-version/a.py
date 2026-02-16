@@ -110,8 +110,8 @@ def main() -> None:
     config.update(
         dict(
             # Wandb
-            save_to_wandb=False,
-            entity='my_wandb_username', 	# Specify your username if you have an acocunt. Otherwise set save_to_wandb=False above.
+            save_to_wandb=True,
+            entity='bhastrup', # Specify your username if you have an acocunt. Otherwise set save_to_wandb=False in previous line.
             wandb_mode='online',
             wandb_project='isomer-discovery',
             train_mode='tabula_rasa',

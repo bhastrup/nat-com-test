@@ -119,7 +119,7 @@ class Playground:
             if self.editable:
                 if st.button(f'🌍 {env_name}', key=f'env_agent_{self.id}', help='Click to remove'):
                     self.remove_envs() 
-                    st.experimental_rerun()
+                    st.rerun()
             else:
                 if st.button(f'🌍 {env_name}', key=f'env_agent_{self.id}', help=f'{self.envs.environments}', disabled=True):
                     pass
@@ -141,7 +141,7 @@ class Playground:
                 if self.editable:
                     if st.button(f'🤖 {ag.name}', key=f'agent_{self.id}_{i}', help='Click to remove'):
                         self.remove_agent(i)
-                        st.experimental_rerun()
+                        st.rerun()
                 else:
                     if st.button(f'🤖 {ag.name}', key=f'agent_{self.id}_{i}', help=f'{ag.path_from_root}', disabled=True):
                         pass

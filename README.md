@@ -41,7 +41,7 @@ mamba env create -f env.yaml
 Once the installation is complete, activate the environment:
 ```bash
 eval "$(mamba shell hook --shell bash)"
-mamaba activate rl-env
+mamba activate rl-env
 ```
 
 ### 5. Verify Installation
@@ -98,7 +98,8 @@ Training scripts are available in the *scripts/train/* folder. Specifically, a t
 ``` bash
 python scripts/train/experiments/nat-com-version/a.py
 ```
-This files launches a training of "Agent A" from the paper. The script contains further instructions for how to setup the other agent trainings.
+This files launches a training of "Agent A" from the paper. The script also contains instructions for how to setup the other agent trainings.
+During training, you can follow the evolving performance metrics in the Wandb browser window.
 
 
 
@@ -110,7 +111,7 @@ Analysis scripts are available in the *scripts/analyse/* folder, which is furthe
 
 
 # Web app
-To interact with the trained agents, we provide a Streamlit-based web app that can be launched using
+To quickly interact with the trained agents, we provide a Streamlit-based web app that can be launched using
 ``` bash
 streamlit run app_store/About.py
 ```
@@ -119,11 +120,11 @@ streamlit run app_store/About.py
 In the sidebar on the left-hand side, navigate to the **Generator** page. This page is split into three columns, **Agents 🤖** (model checkpoints), **Environments 🌍** (chemical compositions) and **PlayGrounds 🎡 / Generator 🚀** which is the inference modules that take an (agent, environment)-pair as input and sample new molecules according to the agent policy.
 ### How to use:
 * In the center column, click the **New Playground 💫** button. This creates a new playground named *Playground 0* that opens in *edit* mode. Before we can **Deploy** this playground and use the **Generator 🚀** functionality, we must provide it with both agent and env objects:
-    * **Agents**: Loaded agents are displayed in the **All agents** expander (left column). We have pre-loaded 5 agent checkpoints from the paper, namely agents *A, AV, F, FV and AFV*.  These are named according to the abbreviations of the three core reward terms they are trained on. These are *A: Atomization energy, F: Formation energy, V: Validity*. See paper for explanations. For the desired agent checkkpoint, click **"To playgrounds"**. This adds it to any playground currently in *edit* mode. For direct agent comparison, you can add multiple agents into the same playground.
-    * *Environments*: Loaded envs are displayed in the **All envs** expander (right column). We have pre-loaded 5 chemical formulas from the paper, namely C3H8O, C4H7N, C3H5NO3, C7H10O2, and C7H8N2O2.
+    * **Agents 🤖**: Loaded agents are displayed in the **All agents** expander (left column). We have pre-loaded 5 agent checkpoints from the paper, namely agents *A, AV, F, FV and AFV*.  These are named according to the abbreviations of the three core reward terms they are trained on. These are *A: Atomization energy, F: Formation energy, V: Validity*. See paper for explanations. For the desired agent checkkpoint, click **To playgrounds**. This adds it to any playground currently in *edit* mode. For direct agent comparison, you can add multiple agents into the same playground. 
+    * **Environments 🌍**: Loaded envs are displayed in the **All envs** expander (right column). We have pre-loaded 5 chemical formulas from the paper, namely C3H8O, C4H7N, C3H5NO3, C7H10O2, and C7H8N2O2.
 * **Generate results 🚀 **: Start small, until you are familiar with the expected output.
 
 
-#### Load other agent checkpoints
+#### i) Load other agent checkpoints
 To load other agent checkpoints, use the GUI in the **"Agent Loader** expander. Use the file system explorer to find the checkpoint, but rather than double-clicking, just copy the path and paste into the line below. Select *cuda* (if available) and provide a name for the new agent before clicking **Load agent**. Note that the *model_objects/* folder also contains checkpoints for seed 1 and 2.
 

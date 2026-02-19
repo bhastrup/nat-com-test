@@ -1,5 +1,5 @@
 import os, logging
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Dict, Any
 
 import numpy as np
@@ -42,7 +42,7 @@ class Preprocessor:
 
     # status_flags = ['valid', 'charged_or_radical', 'fragmented', 'failed', 'crashed']
     
-    def __init__(self, parser: Parser, featurizer: Featurizer, max_workers: int = 4):
+    def __init__(self, parser: Parser, featurizer: Featurizer, max_workers: int = 1):
         self.parser = parser
         self.featurizer = featurizer
         self.max_workers = max_workers
@@ -56,18 +56,26 @@ class Preprocessor:
         self.mol_iterable = self.parser.load_data(n_mols=n_mols)
 
     def preprocess(self) -> None:
-        """ Afterwards, the data will be stored in self.data """
         max_workers = min(self.max_workers, len(self.mol_iterable))
-        print(f"Processing {len(self.mol_iterable)} molecules with {max_workers} workers")
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [executor.submit(self._process_molecule, i, mol_data) for i, mol_data in enumerate(self.mol_iterable)]
-            for future in tqdm(futures, total=len(futures), desc="Processing molecules", position=0, leave=True):
-                future.result()
+        results = []
 
-    def _process_molecule(self, i: int, raw_data: Any) -> None:
+        with ThreadPoolExecutor(max_workers=max_workers) as ex:
+            futures = [ex.submit(self._process_molecule_return, i, raw)
+                    for i, raw in enumerate(self.mol_iterable)]
+            for fut in tqdm(as_completed(futures), total=len(futures)):
+                results.append(fut.result())
+
+        # Deterministic ordering
+        results.sort(key=lambda x: x[0])  # sort by i
+
+        self.data = {}
+        for i, feature_dict, status in results:
+            self.data.setdefault(status, []).append(feature_dict)
+
+    def _process_molecule_return(self, i: int, raw_data: Any):
         mol_data = self.parser.read_atoms(i, raw_data)
         feature_dict, status = self.featurizer.calc_features(i, mol_data)
-        self._store_molecule(feature_dict, status)
+        return i, feature_dict, status
 
     def _store_molecule(self, feature_dict: dict, status: str) -> None:
         if status not in self.data.keys():

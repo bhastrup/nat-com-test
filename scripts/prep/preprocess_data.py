@@ -37,7 +37,7 @@ def get_parser_and_featurizer(dataset):
     }
 
     if dataset == "qm7":
-        return QM7Parser(tag="qm7"), Featurizer(**qm_kwargs)
+        return QM7Parser(tag="qm7-test1"), Featurizer(**qm_kwargs)
     elif dataset == "qm9":
         return QM9Parser(tag="qm9"), Featurizer(**qm_kwargs)
     else:

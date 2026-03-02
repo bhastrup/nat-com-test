@@ -1,8 +1,8 @@
 
 # Set default values for argparse options
-RUN_DIR="runs/nat-com-training/A/seed_0"
-MODEL_NAME="pretrain_run-0_CP-8_steps-20000.model"
-TAG="exp5-evaluate-basic-agent"
+RUN_DIR="pretrain_runs/Agent-AD/seed_0"
+MODEL_NAME="pretrain_run-0_steps-31500.model"
+TAG="exp5-31500"
 NUM_EPISODES_CONST=500
 LOG_NAME="pretrain_run-0.json"
 

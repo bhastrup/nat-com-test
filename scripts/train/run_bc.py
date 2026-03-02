@@ -32,7 +32,10 @@ def pretrain(config: dict) -> None:
     config['energy_unit'] = str_to_EnergyUnit(config['energy_unit'])
 
     # Load data and environments
-    env_maker = EnvMaker(config, split_method=config['split_method'])
+    env_maker = EnvMaker(
+        cf=config, 
+        split_method=config['split_method']
+    )
     training_envs, eval_envs, eval_envs_big = env_maker.make_envs()
     observation_space, action_space = env_maker.get_spaces()
     benchmark_energies = env_maker.ref_data.get_mean_energies()
@@ -66,7 +69,8 @@ def pretrain(config: dict) -> None:
         io_handler=EvaluatorIO(base_dir=config['results_dir']),
         wandb_run = logger.wandb_run,
         num_episodes_const=None,
-        prop_factor=1
+        prop_factor=1,
+        calc_dipole=True if 'reward_coefs' in config and 'rew_dipole' in config['reward_coefs'] else False
     )
 
     entropy_schedule = EntropySchedule(config_ft["start_entropy"], config_ft["final_entropy"], config_ft["total_steps"])

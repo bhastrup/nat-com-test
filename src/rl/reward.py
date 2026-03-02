@@ -76,6 +76,7 @@ class InteractionReward(MolecularReward):
         start = time.time()
         all_atoms = atoms.copy()
         all_atoms.append(new_atom)
+        n_atoms = len(all_atoms)
 
         # Intersection of self.reward_names and either intermediate_rew_terms or terminal_rew_terms
         rew_names = list(set(self.reward_names) & set(self.terminal_rew_terms if terminal else self.intermediate_rew_terms))
@@ -119,11 +120,17 @@ class InteractionReward(MolecularReward):
         })
 
         if terminal:
-            # For terminal molecules, save chemically insightful metrics that are not ALWAYS contained in rewards
+            # For terminal molecules, save chemically insightful metrics; reuse from new_rewards when available
+            atomization_energy = (self._sum_of_atomic_energies(all_atoms) - res_dict['xtb']) / n_atoms
+            rae = new_rewards['rew_rae'] if 'rew_rae' in new_rewards else self._calc_rae(all_atoms)
+            dipole = new_rewards['rew_dipole'] if 'rew_dipole' in new_rewards else self._calc_dipole(all_atoms)
+            validity = new_rewards['rew_valid'] if 'rew_valid' in new_rewards else self._validity_rew(args)
+
             metrics = {
-                'final:AE': self._sum_of_atomic_energies(all_atoms) - res_dict['xtb'],
-                'final:Valid': self._validity_rew(args),
-                'final:RAE': self._calc_rae(all_atoms),
+                'final:AE': atomization_energy,
+                'final:Valid': validity,
+                'final:RAE': rae,
+                'final:Dipole': dipole,
             }
             info.update({'metrics': metrics})
 
@@ -248,11 +255,12 @@ class InteractionReward(MolecularReward):
         bag_repr = symbols_to_str_formula([a.symbol for a in atoms])
         return bag_repr
 
+    def _calc_dipole(self, atoms: Atoms) -> float:
+        """Dipole magnitude (expensive XTB call); prefer reusing from new_rewards['rew_dipole'] when available."""
+        return self.calc.calc_dipole(atoms)
+
     def _dipole_rew(self, args: Dict) -> float:
-        atoms = args['atoms']
-        calc = XTBOptimizer(energy_unit=self.energy_unit)
-        dipole_magnitude = calc.calc_dipole(atoms)
-        return dipole_magnitude
+        return self._calc_dipole(args['atoms'])
 
 
 class RaeReward(InteractionReward):

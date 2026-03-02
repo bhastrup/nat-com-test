@@ -23,7 +23,7 @@ import subprocess
 import json
 import shlex
 
-def submit_job(params, script_path: str="analysis/catalysis/version-1/script.py"):
+def submit_job(params, script_path: str="scripts/analyse/exp5_scaffold/visuals/chimerax_script.py"):
 
     # Convert dictionary to a JSON string
     params_json = json.dumps(params)
@@ -43,11 +43,6 @@ def submit_job(params, script_path: str="analysis/catalysis/version-1/script.py"
 
 def get_path(tag: str, run_name: str, seed: int, formula: str) -> Path:
     return Path(f'{base_dir}/{run_name}/seed_{seed}/results/{tag}/{formula}')
-
-def fix_eval_formulas(eval_formulas: List[str]) -> List[str]:
-    return [util.bag_tuple_to_str_formula(util.str_formula_to_bag_tuple(f)) for f in eval_formulas]
-
-
 
 def get_all_dfs(eval_formulas: List[str], n_seeds: int, tag: str, run_name: str) -> Dict[str, pd.DataFrame]:
     dfs = {}
@@ -79,7 +74,14 @@ def get_all_dfs(eval_formulas: List[str], n_seeds: int, tag: str, run_name: str)
             #break
         #break
 
-    all_dfs = {formula: pd.concat(dfs[formula]).reset_index(drop=True) for formula in eval_formulas}
+    valid_formulas = [formula for formula in eval_formulas if len(dfs[formula]) > 0]
+
+    if not valid_formulas:
+        print(f"No valid dataframes found for any formulas in run {run_name}. Skipping.")
+        return {}, {}
+
+    all_dfs = {formula: pd.concat(dfs[formula]).reset_index(drop=True) for formula in valid_formulas}
+    trajs = {formula: trajs[formula] for formula in valid_formulas}
 
     return all_dfs, trajs
 
@@ -157,24 +159,33 @@ def optimize_and_sort_mols(
 ) -> Tuple[Dict[str, List[Atoms]], Dict[str, List[float]]]:
     calc = XTBOptimizer(method='GFN2-xTB', energy_unit=EnergyUnit.EV, use_mp=False)
 
-    energies_relaxed = {}
+    dipoles_relaxed = {}
     mols_relaxed = {}
     for formula in tqdm(eval_formulas, desc='Optimizing and sorting molecules'):
         print(f"Optimizing and sorting molecules for {formula}")
-        e_relaxed = []
+        dipoles = []
         m_relaxed = []
         for mol in tqdm(best_mols[formula], desc='Relaxing molecules'):
             opt_info = calc.optimize_atoms(mol, max_steps=1000, fmax=0.05, redirect_logfile=False)
-            e_relaxed.append(opt_info['energy_after'])
-            m_relaxed.append(opt_info['new_atoms'])
+            relaxed_mol = opt_info['new_atoms']
+            # Calculate dipole moment for the optimized molecule
+            dipole = calc.calc_dipole(relaxed_mol)
+            # Use 0.0 if dipole calculation failed (None)
+            dipole = dipole if dipole is not None else 0.0
+            dipoles.append(dipole)
+            m_relaxed.append(relaxed_mol)
 
-        # Sort based on relaxed energy
-        e_relaxed, m_relaxed = zip(*sorted(zip(e_relaxed, m_relaxed), key=lambda pair: pair[0]))
-        energies_relaxed[formula] = list(e_relaxed)
+        if not m_relaxed:
+            print(f"No valid molecules for {formula}; skipping.")
+            continue
+
+        # Sort based on dipole moment (largest first)
+        dipoles, m_relaxed = zip(*sorted(zip(dipoles, m_relaxed), key=lambda pair: pair[0], reverse=True))
+        dipoles_relaxed[formula] = list(dipoles)
         mols_relaxed[formula] = list(m_relaxed)
         mols_to_view = mols_relaxed[formula]
 
-    return mols_relaxed, energies_relaxed
+    return mols_relaxed, dipoles_relaxed
 
 
 
@@ -194,14 +205,19 @@ def launch_chimerax_jobs(mols_to_view: Dict[str, List[Atoms]], save_dir: str, bg
 
 
         # Finally, write molecules to pdb and create Chimerax visualization (png).
-        mol_paths = [os.path.join(save_dir, f'{formula}_{i}.pdb') for i in range(len(mols_to_view))]
-        save_paths = [os.path.join(save_dir, f'{formula}_{i}.png') for i in range(len(mols_to_view))]
+        mol_paths = [os.path.join(save_dir, f'{formula}_{i}.pdb') for i in range(len(mols_to_view[formula]))]
+        save_paths = [os.path.join(save_dir, f'{formula}_{i}.png') for i in range(len(mols_to_view[formula]))]
 
         for i, mol in enumerate(mols_to_view[formula]):
             mol.write(mol_paths[i])
 
         # Create Chimerax visualization (png).
         for i, (mol_path, save_path) in enumerate(zip(mol_paths, save_paths)):
+            # Check if the PDB file exists before launching Chimerax
+            if not os.path.exists(mol_path):
+                print(f"Warning: PDB file {mol_path} does not exist, skipping Chimerax visualization")
+                continue
+            
             params = {
                 "pdb_path": os.path.join(os.getcwd(), mol_path),
                 "image_path": os.path.join(os.getcwd(), save_path),
@@ -217,12 +233,16 @@ def launch_chimerax_jobs(mols_to_view: Dict[str, List[Atoms]], save_dir: str, bg
     return
 
 
-eval_formulas_before = [
-    'C3H5NO3',
-    'C4H7N',
-    'C3H8O',
-    'C7H10O2',
-    'C7H8N2O2'
+eval_formulas = [
+    'H4C3O3', # Bad
+    'H6C3O3', # Good
+
+    'H6C4O3', # Bad
+    'H8C4O3', # Good
+
+    'H6C5O3', # Bad
+    'H8C5O3', # Bad
+    'H10C5O3' # Good
 ]
 
 if __name__ == "__main__":
@@ -230,17 +250,15 @@ if __name__ == "__main__":
     # Define the experiment parameters
 
     n_seeds = 1
-    tag = 'EXP1_30000'
-
-    eval_formulas = fix_eval_formulas(eval_formulas_before)
-    
+    tag = 'exp5-31500'
+   
     run_names = [
-        'entropy-schedule-A'
+        'Agent-AD'
     ]
-    base_dir = 'from_niflheim/digital_discovery'
+    base_dir = 'pretrain_runs/nat-com-training'
 
-    n_query = 3 # n_mols matching the query
-    n_non_query = 3 # n_mols not matching the query
+    n_query = 10 # n_mols matching the query
+    n_non_query = 10 # n_mols not matching the query
 
     n_mols = 5 # number of molecules to view
 
@@ -249,21 +267,15 @@ if __name__ == "__main__":
     bg_color_str = 'black'
 
     show_relaxed = True
-    sorting_key = 'e_relaxed' if show_relaxed else 'abs_energy'
-    smiles_col = 'SMILES' if show_relaxed else 'NEW_SMILES'
+    sorting_key = 'dipole'
+    smiles_col = 'SMILES'
 
-    illustration_dir_name = f'exp1_{bg_color_str}_{sorting_key}_no_stable_TEST'
-
-
+    illustration_dir_name = f'exp5_{bg_color_str}_{sorting_key}'
 
     for run_name in run_names:
         save_dir = os.path.join(base_dir, run_name, illustration_dir_name)
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-
-
-
-
 
     for run_name in run_names:
         # Get all data
@@ -292,10 +304,10 @@ if __name__ == "__main__":
         # Optimize and sort molecules
         start_time = time.time()
         if show_relaxed:
-            mols_to_view, energies_relaxed = optimize_and_sort_mols(best_mols, eval_formulas, show_relaxed)
+            mols_to_view, dipoles_relaxed = optimize_and_sort_mols(best_mols, eval_formulas)
         else:
             mols_to_view = best_mols
-            energies_relaxed = None
+            dipoles_relaxed = None
         print(f"d) Time taken to optimize and sort molecules: {time.time() - start_time} seconds")
         
         # Rotate molecules

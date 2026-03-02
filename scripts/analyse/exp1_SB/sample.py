@@ -73,11 +73,11 @@ if __name__ == '__main__':
         cf=config, 
         train_formulas=None,
         eval_formulas=eval_formulas, 
-        deploy=True,
+        eval_only=True,
         action_space=model.action_space,
         observation_space=model.observation_space,
     )
-    _, eval_envs = env_maker.make_envs()
+    _, eval_envs, _ = env_maker.make_envs()
 
 
     evaluator = SingleCheckpointEvaluator(

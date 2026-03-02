@@ -77,11 +77,11 @@ if __name__ == '__main__':
         cf=config, 
         train_formulas=None,
         eval_formulas=eval_formulas, 
-        deploy=True,
+        eval_only=True,
         action_space=model.action_space,
         observation_space=model.observation_space,
     )
-    _, eval_envs = env_maker.make_envs()
+    _, eval_envs, _ = env_maker.make_envs()
 
 
     evaluator = SingleCheckpointEvaluator(
@@ -90,7 +90,8 @@ if __name__ == '__main__':
         benchmark_energies=None,
         io_handler=EvaluatorIO(base_dir=ph.eval_save_dir),
         num_episodes_const=num_episodes_const,
-        prop_factor=None
+        prop_factor=None,
+        calc_dipole=True
     )
 
     evaluator.reset(ph.eval_save_dir)
@@ -103,8 +104,7 @@ if __name__ == '__main__':
     start_time_features = time.time()
     evaluator._calc_features(
         features_from_file=False, 
-        perform_optimization=False, 
-        calc_dipole=True
+        perform_optimization=False,
     )
     print(f"Done calculating features {time.time()-start_time_features}")
 

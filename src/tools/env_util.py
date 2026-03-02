@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, List, Dict
+from typing import Tuple, List, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -179,11 +179,7 @@ class EnvMaker:
             split = IOHandler.read_json(f'data/{self.cf["mol_dataset"].lower()}/processed/split.json')
             df_eval = df[df['bag_repr'].isin(split['test'])]
             df_train = df[~df['bag_repr'].isin(split['test'])] if self.disjoint else df
-        
-        elif self.split_method == 'eval_on_train':
-            df_train = df
-            df_eval = df
-        
+                
         return df_train, df_eval
 
 
@@ -306,45 +302,126 @@ class EnvMaker:
 
 
 class EnvMakerNoRef:
-    """ Class for creating the environments from evaluation formulas alone. """
+    """ Class for creating the environments from formulas only (no dataset load).
+
+    - deploy=True: only eval envs, returns (None, eval_envs). Use for inference.
+    - deploy=False: train + eval envs from the same formula list (finetuning), returns
+      (training_envs, eval_envs, eval_envs_big). Formulas need not belong to any dataset.
+    """
     def __init__(
         self, 
         cf: dict, 
         train_formulas: List[str]=None, 
         eval_formulas: List[str]=None, 
-        deploy: bool=False,
+        eval_only: bool=False,
         action_space: ActionSpace=None,
-        observation_space: ObservationSpace=None
+        observation_space: ObservationSpace=None,
     ):
         self.cf = cf
         if 'energy_unit' not in self.cf:
             self.cf['energy_unit'] = EnergyUnit.EV
 
-        self.train_formulas = train_formulas
-        self.eval_formulas = eval_formulas
-        self.deploy = deploy
+        self.train_formulas = train_formulas or []
+        self.eval_formulas = eval_formulas or train_formulas or []
+        self.eval_only = eval_only
         self.action_space = action_space
         self.observation_space = observation_space
 
-    def make_envs(self) -> Tuple[SimpleEnvContainer, SimpleEnvContainer]:
+    def make_envs(self) ->  Tuple[SimpleEnvContainer, SimpleEnvContainer, SimpleEnvContainer]:
         reward = InteractionReward(
             reward_coefs=self.cf['reward_coefs'],
             relax_steps_final=self.cf['relax_steps_final'],
             energy_unit=self.cf['energy_unit']
         )
 
-        if self.deploy:
-            eval_envs = SimpleEnvContainer([
-                HeavyFirstNoReward(
-                    reward=reward,
-                    observation_space=self.observation_space,
-                    action_space=self.action_space,
-                    formulas=[util.string_to_formula(f)],
-                    min_atomic_distance=self.cf['min_atomic_distance'],
-                    max_solo_distance=self.cf['max_solo_distance'],
-                    min_reward=self.cf['min_reward'],
-                    energy_unit=self.cf['energy_unit'],
-                ) for f in self.eval_formulas
-            ])
+        eval_envs = SimpleEnvContainer([
+            HeavyFirstNoReward(
+                reward=reward,
+                observation_space=self.observation_space,
+                action_space=self.action_space,
+                formulas=[util.string_to_formula(f)],
+                min_atomic_distance=self.cf['min_atomic_distance'],
+                max_solo_distance=self.cf['max_solo_distance'],
+                min_reward=self.cf['min_reward'],
+                energy_unit=self.cf['energy_unit'],
+            ) for f in self.eval_formulas
+        ])
 
-            return None, eval_envs
+        if self.eval_only:
+            return None, eval_envs, None
+
+        # Finetuning: build both train and eval envs from the same formula list
+        formulas = self.train_formulas if self.train_formulas else self.eval_formulas
+        if not formulas:
+            raise ValueError("EnvMakerNoRef with deploy=False requires train_formulas or eval_formulas.")
+
+        num_envs = self.cf.get('num_envs', 1)
+        calc_rew = self.cf.get('calc_rew', True)
+        RLEnvironment = HeavyFirst if calc_rew else HeavyFirstNoReward
+
+        reward_train = InteractionReward(
+            reward_coefs=self.cf['reward_coefs'],
+            relax_steps_final=self.cf['relax_steps_final'],
+            energy_unit=self.cf['energy_unit'],
+            n_workers=num_envs,
+            xtb_mp=self.cf.get('safe_xtb', False),
+        )
+        eval_reward = InteractionReward(
+            reward_coefs=self.cf['reward_coefs'],
+            relax_steps_final=self.cf['relax_steps_final'],
+            energy_unit=self.cf['energy_unit'],
+        )
+        eval_big_reward = InteractionReward(
+            reward_coefs=self.cf['reward_coefs'],
+            relax_steps_final=self.cf['relax_steps_final'],
+            energy_unit=self.cf['energy_unit'],
+        )
+
+        online_formulas = [util.string_to_formula(f) for f in formulas]
+        training_envs = SimpleEnvContainer([
+            RLEnvironment(
+                reward=reward_train,
+                observation_space=self.observation_space,
+                action_space=self.action_space,
+                formulas=online_formulas,
+                min_atomic_distance=self.cf['min_atomic_distance'],
+                max_solo_distance=self.cf['max_solo_distance'],
+                min_reward=self.cf['min_reward'],
+                energy_unit=self.cf['energy_unit'],
+                worker_id=i,
+            )
+            for i in range(num_envs)
+        ])
+        logging.info(f'Number of training bags (formulas only): {len(formulas)}')
+
+        eval_formula_list = self.eval_formulas if self.eval_formulas else formulas
+
+        eval_envs = SimpleEnvContainer([
+            RLEnvironment(
+                reward=eval_reward,
+                observation_space=self.observation_space,
+                action_space=self.action_space,
+                formulas=[util.string_to_formula(eval_formula_list[i])],
+                min_atomic_distance=self.cf['min_atomic_distance'],
+                max_solo_distance=self.cf['max_solo_distance'],
+                min_reward=self.cf['min_reward'],
+                energy_unit=self.cf['energy_unit'],
+                benchmark_energy=[None],
+            ) for i in range(len(eval_formula_list))
+        ])
+        eval_envs_big = SimpleEnvContainer([
+            HeavyFirstNoReward(
+                reward=eval_big_reward,
+                observation_space=self.observation_space,
+                action_space=self.action_space,
+                formulas=[util.string_to_formula(eval_formula_list[i])],
+                min_atomic_distance=self.cf['min_atomic_distance'],
+                max_solo_distance=self.cf['max_solo_distance'],
+                min_reward=self.cf['min_reward'],
+                energy_unit=self.cf['energy_unit'],
+                benchmark_energy=[None],
+            ) for i in range(len(eval_formula_list))
+        ])
+        logging.info(f'Number of evaluation environments (formulas only): {len(eval_formula_list)}')
+        logging.info(f'eval formulas: {eval_formula_list}')
+        return training_envs, eval_envs, eval_envs_big

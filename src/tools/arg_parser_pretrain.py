@@ -68,7 +68,6 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
     parser.add_argument('--num_interactions', help='number of interaction layers in painn', type=int, default=3)
     parser.add_argument('--cutoff', help='cutoff distance for graph connectivity in painn', type=float, default=4.)
 
-    #parser.add_argument('--load_latest', help='load latest checkpoint file', action='store_true', default=False)
     parser.add_argument('--load_latest', help='load latest checkpoint file', type=str2bool, nargs='?', const=True, default=False)
     parser.add_argument('--load_model', help='load checkpoint file', type=str, default=None)
     parser.add_argument('--save_freq', help='save model every <n> iterations', type=int, default=10)
@@ -76,7 +75,6 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
     parser.add_argument('--eval_freq_fast', help='evaluate model every <n> iterations', type=int, default=5)
     parser.add_argument('--checkpoints', help='when to save unique model object', 
                         type=lambda s: [int(item) for item in s.split(',')], default=[0,100,1000])
-    # parser.add_argument('--num_eval_episodes', help='number of episodes per evaluation', type=int, default=None)
 
     # Training algorithm
     parser.add_argument('--optimizer',
@@ -84,33 +82,17 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
                         type=str,
                         default='adam',
                         choices=['adam', 'amsgrad'])
-    # parser.add_argument('--num_steps_per_iter',
-    #                     help='number of optimization steps per iteration',
-    #                     type=int,
-    #                     default=128)
+
     parser.add_argument('--mini_batch_size', help='mini batch size for training', type=int, default=128)
     parser.add_argument('--num_envs', help='number of environment copies', type=int, default=8)
-    # parser.add_argument('--clip_ratio', help='PPO clip ratio', type=float, default=0.2)
     parser.add_argument('--learning_rate', help='Learning rate of Adam optimizer', type=float, default=3e-4)
     parser.add_argument('--vf_coef', help='Coefficient for value function loss', type=float, default=0.5)
     parser.add_argument('--entropy_coef', help='Coefficient for entropy loss', type=float, default=0.15)
-    # parser.add_argument('--max_num_train_iters', help='Maximum number of training iterations', type=int, default=7)
     parser.add_argument('--gradient_clip', help='maximum norm of gradients', type=float, default=0.5)
-    # parser.add_argument('--lam', help='Lambda for GAE-Lambda', type=float, default=0.97)
-    # parser.add_argument('--target_kl',
-    #                     help='KL divergence between new and old policies after an update for early stopping',
-    #                     type=float,
-    #                     default=0.01)
 
     # Logging
     parser.add_argument('--log_level', help='log level', type=str, default='INFO')
-    # parser.add_argument('--keep_models', help='keep all models', action='store_true', default=False)
     parser.add_argument('--keep_models', help='keep all models', type=str2bool, nargs='?', const=True, default=False)
-    # parser.add_argument('--save_rollouts',
-    #                     help='which rollouts to save',
-    #                     type=str,
-    #                     default='none',
-    #                     choices=['none', 'train', 'eval', 'all'])
 
     parser.add_argument('--build_mode', help='fix TM, fix heaviest or nothing', type=str, default='none',
                         choices=['none', 'fix_TM', 'fix_heavy'])
@@ -153,7 +135,7 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
     parser.add_argument('--config_ft', help='config for finetuning jobs', type=json.loads, default=None)
     parser.add_argument("--launch_finetune", help="", type=str2bool, nargs='?', const=True, default=False)
     parser.add_argument('--expert_suffix', help='File extension for already preprocessed expert data', type=str, default='pkl')
-    parser.add_argument('--mol_dataset', help='Which dataset to use', type=str, default='QM7', choices=['TMQM', 'QM7'])
+    parser.add_argument('--mol_dataset', help='Which dataset to use', type=str, default='QM7', choices=['TMQM', 'QM7', 'QM9'])
     parser.add_argument('--split_method', help='How to split reference data into train and test', type=str, default='read_split_from_disk')
     parser.add_argument("--launch_eval_new_job", help="Spawn new job for eval_zero_shot", type=str2bool, nargs='?', const=True, default=False)
 
@@ -165,37 +147,5 @@ def build_default_argparser_pretrain() -> argparse.ArgumentParser:
 
     # Painn agant
     parser.add_argument("--rms_norm_update", help="", type=str2bool, nargs='?', const=True, default=False)
-
-    # MultiModal Agent
-    parser.add_argument("--bag_in_mpnn", help="", type=str2bool, nargs='?', const=True, default=False)
-
-    # Gated Equivariant Block
-    parser.add_argument("--use_GEB", help="", type=str2bool, nargs='?', const=True, default=True)
-
-
-    parser.add_argument("--multi_modal", help="", type=str2bool, nargs='?', const=True, default=True)
-    parser.add_argument("--num_gaussians_direction", help="", type=int, default=4)
-    parser.add_argument("--gmm_coef_direction_type", help="", type=str, default='length', 
-                        choices=['length', 'neural_net_s', 'neural_net_v'])
-    parser.add_argument("--use_GMM", help="", type=str2bool, nargs='?', const=True, default=False)
-    parser.add_argument("--chunk_s", help="", type=str2bool, nargs='?', const=True, default=True)
-
-
-    # Dim reductions
-    parser.add_argument("--reduced_v_dim", help="", type=int, default=4)
-    parser.add_argument("--reduced_s_dim", help="", type=int, default=None)
-
-
-    # Cormorant
-    parser.add_argument('--maxl', help='maximum L in spherical harmonics expansion', type=int, default=4)
-    parser.add_argument('--num_cg_levels', help='number of CG layers', type=int, default=3)
-    parser.add_argument('--num_channels_hidden', help='number of channels in hidden layers', type=int, default=10)
-    parser.add_argument('--num_channels_per_element', help='number of channels per element', type=int, default=4)
-    parser.add_argument('--num_gaussians', help='number of Gaussians in GMM', type=int, default=3)
-    parser.add_argument('--beta', help='set beta parameter of spherical distribution', required=False, default=None)
-    parser.add_argument('--bag_scale', help='maximum bag size', type=int, required=False)
-
-
-
 
     return parser

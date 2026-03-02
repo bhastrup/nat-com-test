@@ -157,7 +157,7 @@ CONFIG = {
                 "mol_index": 450,
                 "atoms_to_remove": [3,4,6,7,8,9],
                 "new_bags": [{"H": 4, "C": 2}],
-                "new_bags": [{"H": 3, "C": 2}],
+                "new_bags": [{"H": 6, "C": 2}],
 
                 "new_bags": [{"H": 6, "C": 3}],
                 "new_bags": [{"H": 8, "C": 3}],

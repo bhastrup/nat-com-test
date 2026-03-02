@@ -139,6 +139,7 @@ class SingleCheckpointEvaluator:
         wandb_run: Any = None,
         num_episodes_const: int = 10,
         prop_factor: int = 100,
+        calc_dipole: bool = False,
     ):
         
         self.eval_envs = eval_envs
@@ -146,6 +147,7 @@ class SingleCheckpointEvaluator:
         self.wandb_run = wandb_run
         self.reference_smiles = reference_smiles
         self.benchmark_energies = benchmark_energies
+        self.calc_dipole = calc_dipole
 
         self.eval_formulas = util.get_str_formulas_from_vecenv(eval_envs)
         self.num_episodes = get_num_episodes(reference_smiles, num_episodes_const, prop_factor, self.eval_formulas)
@@ -199,7 +201,7 @@ class SingleCheckpointEvaluator:
 
         return self.data['rollouts']
     
-    def _calc_features(self, features_from_file: bool = False, perform_optimization: bool = False, calc_dipole: bool = False) -> Dict[str, pd.DataFrame]:
+    def _calc_features(self, features_from_file: bool = False, perform_optimization: bool = False) -> Dict[str, pd.DataFrame]:
         """Calculate features for each formula."""
         formula_dfs = {}
 
@@ -224,7 +226,7 @@ class SingleCheckpointEvaluator:
                     atoms_object_list=atom_list,
                     benchmark_energies=self.benchmark_energies_eval,
                     perform_optimization=perform_optimization,
-                    calc_dipole=calc_dipole
+                    calc_dipole=self.calc_dipole
                 )
                 formula_dfs[formula] = df
                 if self.io:
@@ -263,7 +265,7 @@ class SingleCheckpointEvaluator:
 
     def evaluate(self, args: dict):
         self._rollout(args['ac'], args['rollouts_from_file'])
-        self._calc_features(args['features_from_file'])
+        self._calc_features(args['features_from_file'], self.calc_dipole)
         print(f"Formula dfs: {self.data['formula_dfs']}")
         self._get_metrics_by_formula()
         print(f"Formula metrics: {self.data['formula_metrics']}")

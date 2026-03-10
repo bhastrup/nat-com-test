@@ -98,6 +98,10 @@ class EnvMaker:
         training_envs, eval_envs, eval_envs_big = self._build_envs(self.formula_data)
         return training_envs, eval_envs, eval_envs_big
     
+    def get_training_reward(self) -> InteractionReward:
+        assert hasattr(self, 'training_reward'), 'Call make_envs() before get_training_reward()'
+        return self.training_reward
+
     def get_reference_smiles(self, formulas: list) -> Dict[str, list]:
         """ Returns a dictionary with formulas as keys and a list of SMILES as values. """
         df = self._get_df()
@@ -198,14 +202,15 @@ class EnvMaker:
         all_benchmark_energies.update(benchmark_energies_eval)
         if 'rew_rae' in self.cf['reward_coefs']:
             rewards = RaeReward(
-                reward_coefs=self.cf['reward_coefs'], 
+                reward_coefs=self.cf['reward_coefs'],
                 relax_steps_final=self.cf['relax_steps_final'],
                 benchmark_energies=all_benchmark_energies,
                 energy_unit=self.cf['energy_unit']
             )
+            self.training_reward = rewards
         else:
             rewards = [InteractionReward(
-                reward_coefs=self.cf['reward_coefs'], 
+                reward_coefs=self.cf['reward_coefs'],
                 relax_steps_final=self.cf['relax_steps_final'],
                 energy_unit=self.cf['energy_unit']
             ) for _ in range(self.cf['num_envs'])]
@@ -226,6 +231,7 @@ class EnvMaker:
                 relax_steps_final=self.cf['relax_steps_final'],
                 energy_unit=self.cf['energy_unit']
             )
+            self.training_reward = reward
 
 
         if self.cf['mol_dataset'] == 'TMQM':

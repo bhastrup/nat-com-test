@@ -10,7 +10,7 @@ from src.tools.model_util import get_model
 from src.tools.env_util import EnvMaker
 from src.performance.single_cpkt.evaluator import EvaluatorIO, SingleCheckpointEvaluator
 from src.performance.cumulative.discovery_logger import CumulativeDiscoveryTracker
-from src.rl.losses import EntropySchedule
+from src.rl.losses import EntropySchedule, RewardCoefficientSchedule
 from scripts.train.pretrain_bc import pretrain_agent
 
 
@@ -75,6 +75,15 @@ def pretrain(config: dict) -> None:
 
     entropy_schedule = EntropySchedule(config_ft["start_entropy"], config_ft["final_entropy"], config_ft["total_steps"])
 
+    reward_coef_schedule = None
+    if "reward_coef_schedule" in config_ft:
+        rcs = config_ft["reward_coef_schedule"]
+        reward_coef_schedule = RewardCoefficientSchedule(
+            schedules=rcs["schedules"],
+            start_iter=rcs["start_iter"],
+            end_iter=rcs["end_iter"],
+        )
+    training_reward = env_maker.get_training_reward()
 
     # Train model
     total_num_iter = start_num_iter
@@ -98,7 +107,9 @@ def pretrain(config: dict) -> None:
             logger=logger,
             info_saver=util.InfoSaver(directory=config['results_dir'], tag=tag),
             evaluator=evaluator,
-            entropy_schedule=entropy_schedule
+            entropy_schedule=entropy_schedule,
+            reward_coef_schedule=reward_coef_schedule,
+            reward=training_reward,
         )
 
         print(f"Finished epoch {epoch} with {total_num_steps} steps")

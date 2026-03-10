@@ -241,3 +241,29 @@ class EntropySchedule:
             return new_entropy
         else:
             return self.final_entropy
+
+
+class RewardCoefficientSchedule:
+    def __init__(self, schedules: dict, start_iter: int, end_iter: int):
+        """
+        Linearly ramps one or more reward coefficients between start_iter and
+        end_iter (both inclusive).  Outside that interval values are clamped.
+
+        :param schedules: Mapping of reward name -> (start_value, final_value).
+            Example: {'rew_dipole': (0.0, 2.0), 'rew_basin': (1.0, 0.0)}
+        :param start_iter: Iteration at which the ramp begins.
+        :param end_iter: Iteration at which the ramp ends.
+        """
+        self.schedules = schedules
+        self.start_iter = start_iter
+        self.end_iter = end_iter
+
+    def calculate(self, step: int) -> dict:
+        """Return {reward_name: current_value} for all scheduled terms."""
+        if step <= self.start_iter:
+            t = 0.0
+        elif step >= self.end_iter:
+            t = 1.0
+        else:
+            t = (step - self.start_iter) / (self.end_iter - self.start_iter)
+        return {name: t * (sv[1] - sv[0]) + sv[0] for name, sv in self.schedules.items()}

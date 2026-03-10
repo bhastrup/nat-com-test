@@ -13,8 +13,9 @@ from src.rl.env_container import VecEnv
 from src.rl.buffer_container import PPOBufferContainer, PPOBufferContainerDeploy
 from src.rl.rollouts import batch_rollout_with_logging, rollout_n_eps_per_env
 from src.rl.losses import (
-    compute_loss, compute_loss_MARWIL, compute_loss_BC, train, EntropySchedule
+    compute_loss, compute_loss_MARWIL, compute_loss_BC, train, EntropySchedule, RewardCoefficientSchedule
 )
+from src.rl.reward import InteractionReward
 from src.performance.single_cpkt.evaluator import SingleCheckpointEvaluator, launch_eval_jobs
 from src.performance.cumulative.performance_summary import Logger
 
@@ -183,7 +184,9 @@ def pretrain_agent(
     rollout_saver: Optional[RolloutSaver] = None,
     info_saver: Optional[InfoSaver] = None,
     evaluator: SingleCheckpointEvaluator = None,
-    entropy_schedule: EntropySchedule = None
+    entropy_schedule: EntropySchedule = None,
+    reward_coef_schedule: RewardCoefficientSchedule = None,
+    reward: InteractionReward = None,
 ):
     assert rl_algo_online == 'PPO', "Unknown online RL algorithm"
 
@@ -191,6 +194,10 @@ def pretrain_agent(
     num_training_iterations = config_ft["max_num_steps"] // config_ft["num_steps_per_iter"]
     for i in range(num_training_iterations):
         infos = {}
+
+        # Update scheduled reward coefficient
+        if reward_coef_schedule is not None and reward is not None:
+            reward.reward_coefs.update(reward_coef_schedule.calculate(total_num_iter))
 
         # Save model (big checkpoint)
         if model_handler:

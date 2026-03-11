@@ -28,7 +28,7 @@ class MolecularReward(abc.ABC):
 
 class InteractionReward(MolecularReward):
     intermediate_rew_terms = ['rew_formation']
-    terminal_rew_terms = ['rew_formation', 'rew_atomisation', 'rew_valid', 'rew_basin', 'rew_rae', 'rew_ring_plane', 'rew_ring_sphere']
+    terminal_rew_terms = ['rew_formation', 'rew_atomisation', 'rew_valid', 'rew_basin', 'rew_rae', 'rew_ring_plane', 'rew_ring_sphere', 'rew_dipole']
 
     reward_functions_available = {
         'rew_formation': '_formation',
@@ -255,12 +255,12 @@ class InteractionReward(MolecularReward):
         bag_repr = symbols_to_str_formula([a.symbol for a in atoms])
         return bag_repr
 
-    def _calc_dipole(self, atoms: Atoms) -> float:
-        """Dipole magnitude (expensive XTB call); prefer reusing from new_rewards['rew_dipole'] when available."""
-        return self.calc.calc_dipole(atoms)
-
     def _dipole_rew(self, args: Dict) -> float:
-        return self._calc_dipole(args['atoms'])
+        """Dipole magnitude (expensive XTB call); prefer reusing from new_rewards['rew_dipole'] when available."""
+        dipole = self.calc.calc_dipole(args['atoms'])
+        if dipole is None:
+            return 0.0
+        return dipole
 
 
 class RaeReward(InteractionReward):

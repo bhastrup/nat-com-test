@@ -146,7 +146,6 @@ class MoleculeProcessor:
         perform_optimization = args['perform_optimization']
         use_huckel = args['use_huckel']
         calc_dipole = args['calc_dipole']
-        print(f"calc_dipole: {calc_dipole}")
 
 
         mol_info = self.analyzer.get_mol(atoms)

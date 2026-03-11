@@ -1,58 +1,14 @@
-import abc
-import itertools
-import logging
-from typing import Tuple, List, Callable
-
-import ase.data
-import gymnasium as gym
-import numpy as np
-from ase import Atoms, Atom
-from scipy.spatial.qhull import ConvexHull, Delaunay
-
-from src.rl.reward import InteractionReward
-from src.rl.spaces import ActionSpace, ObservationSpace, ActionType, ObservationType, FormulaType
-from src.tools.util import remove_atom_from_formula, get_formula_size, zs_to_formula
+from typing import Tuple
 
 
-from src.rl.envs.environment import AbstractMolecularEnvironment, HeavyFirst
+from ase import Atoms
 
-
-
-# class HeavyFirst(AbstractMolecularEnvironment):
-#     def __init__(self, formulas: List[FormulaType], benchmark_energy: List[float] = [None], *args, **kwargs):
-#         super().__init__(*args, **kwargs)
-
-#         self.formulas = formulas
-#         self.formula_cycle = itertools.cycle(self.formulas)
-
-#         self.benchmark_energies = benchmark_energy
-#         self.benchmark_energy_cycle = itertools.cycle(self.benchmark_energies)
-
-#         self.formula_counter = 0
-#         self.reshuffle_formula_list()
-
-#         self.obs_reset = self.reset()
-
-#     def reset(self) -> ObservationType:
-#         if self.formula_counter == len(self.formulas):
-#             self.reshuffle_formula_list()
-
-#         self.current_atoms = Atoms()
-#         self.current_formula = next(self.formula_cycle)
-#         self.benchmark_energy = next(self.benchmark_energy_cycle)
-#         self.reward.reset_old_energies(self.worker_id)
-
-#         # Take a step to add the heaviest atom on the canvas
-#         heaviest = max([z for (z, _) in self.current_formula ])
-#         heaviest_number_index = self.action_space.zs.index(heaviest)
-#         obs, _, _, _ = self.step(action=(heaviest_number_index, (0, 0, 0)))
-
-#         return obs
+from src.rl.spaces import ActionType, ObservationType
+from src.tools.util import remove_atom_from_formula
+from src.rl.envs.environment import HeavyFirst
 
 
 class HeavyFirstNoReward(HeavyFirst):
-
-
     def step(self, action: ActionType) -> Tuple[ObservationType, float, bool, dict]:
         atomic_number_index, position = action
         atomic_number = self.action_space.zs[atomic_number_index]

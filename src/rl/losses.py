@@ -217,30 +217,30 @@ def train(
 
 
 class EntropySchedule:
-    def __init__(self, start_entropy, final_entropy, total_steps):
+    def __init__(self, start_value: float, final_value: float, start_iter: int, end_iter: int):
         """
-        Initializes the EntropySchedule.
-        
-        :param start_entropy: The initial entropy value at the start of training.
-        :param final_entropy: The final entropy value at the end of training.
-        :param total_steps: The total number of steps over which to transition from start_entropy to final_entropy.
-        """
-        self.start_entropy = start_entropy
-        self.final_entropy = final_entropy
-        self.total_steps = total_steps
+        Linearly ramps the entropy coefficient between start_iter and end_iter
+        (both inclusive).  Outside that interval values are clamped.
 
-    def calculate(self, step):
+        :param start_value: The entropy value at the start of the ramp.
+        :param final_value: The entropy value at the end of the ramp.
+        :param start_iter: Iteration at which the ramp begins.
+        :param end_iter: Iteration at which the ramp ends.
         """
-        Calculate the entropy value at a given step.
-        
-        :param step: The step for which to calculate the entropy value.
-        :return: The entropy value at the given step.
-        """
-        if step < self.total_steps:
-            new_entropy = step / self.total_steps * (self.final_entropy - self.start_entropy) + self.start_entropy
-            return new_entropy
+        self.start_value = start_value
+        self.final_value = final_value
+        self.start_iter = start_iter
+        self.end_iter = end_iter
+
+    def calculate(self, step: int) -> float:
+        """Return the entropy coefficient at the given step."""
+        if step <= self.start_iter:
+            t = 0.0
+        elif step >= self.end_iter:
+            t = 1.0
         else:
-            return self.final_entropy
+            t = (step - self.start_iter) / (self.end_iter - self.start_iter)
+        return t * (self.final_value - self.start_value) + self.start_value
 
 
 class RewardCoefficientSchedule:

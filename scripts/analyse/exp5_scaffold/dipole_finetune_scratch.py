@@ -16,17 +16,20 @@ from src.tools.launch_utils import (
 def main() -> None:
     
 
-    wandb_group = 'Agent-AV-30k' 	# Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
+    wandb_group = 'A-30k-DIP-A' 	# Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
 
     
-    # Section A: RERUNS   -   In case you need to extend a training (e.g. due to a crash), provide the exact model checkpoint here 
-    #                         and tell it to use the old config file.
-    load_model = 'runs/nat-com-training/AV/seed_0/models/pretrain_run-0_CP-12_steps-30000.model'
+    # Section A: Config and optional rerun
+    # use_old_config: load config from the run (e.g. for finetuning with same base). Does not submit by itself.
+    # rerun_only: submit a single job immediately and exit (e.g. to extend a crashed run). Set load_model and use_old_config.
+    load_model = 'runs/nat-com-training/A/seed_0/models/pretrain_run-0_CP-12_steps-30000.model'
+    # 'pretrain_runs/Agent-A-30k-Schedule2500/seed_0/models/pretrain_run-0_steps-30250.model' # 
     load_latest = False				# False
-    use_old_config = False
+    use_old_config = True
+    rerun_only = False				# True only for pure reruns (e.g. training crashed)
 
-    config = load_default_configuration(use_old_config, load_model) # Load the default configuration, or use a config from a particular run.
-    if use_old_config and (load_model or load_latest):
+    config = load_default_configuration(use_old_config, load_model)  # Load default or config from run.
+    if rerun_only and (load_model or load_latest):
         config['load_model'] = load_model
         config['load_latest'] = load_latest
         config['safe_xtb'] = False		# Can be set to True, if XTB for some reason caused everything to crash.
@@ -37,6 +40,7 @@ def main() -> None:
             ask_permission=False,
             use_submitit=False
         )
+        return
 
 
     # Section B: Compute resources
@@ -102,14 +106,14 @@ def main() -> None:
             #reward_coefs = {'rew_atomisation': 1.0, 'rew_valid': 3.0} 					            # AV
             #reward_coefs = {'rew_formation': 1.0, 'rew_valid': 3.0}					            # FV
             #reward_coefs = {'rew_atomisation': 1.0, 'rew_formation': 1.0, 'rew_valid': 3.0} 		# AFV
-            reward_coefs = {'rew_atomisation': 1.0, 'rew_valid': 3.0, 'rew_dipole': 1.0}, 			# AVD
-
+            # reward_coefs = {'rew_atomisation': 1.0, 'rew_valid': 3.0, 'rew_dipole': 1.0}, 		# AVD
+            reward_coefs = {'rew_atomisation': 1.0}, # , 'rew_dipole': 2.0}, 						    # AD
             
             # Agent policy
-            model = 'painn',
-            rms_norm_update = False,
-            num_interactions=3,
-            network_width=128,
+            #model = 'painn',
+            #rms_norm_update = False,
+            #num_interactions=3,
+            #network_width=128,
 
 
             # Model IO
@@ -121,14 +125,14 @@ def main() -> None:
 
 
             # Training scheme
-            rl_algo_online='PPO',
-            learning_rate=2e-5,
-            mini_batch_size=256,
-            num_epochs=1000,
+            # rl_algo_online='PPO',
+            #learning_rate=2e-5,
+            #mini_batch_size=256,
+            #num_epochs=1000,
 
 
             # Evaluation
-            eval_freq=1500,
+            eval_freq=15000,
             eval_freq_fast=100,
         )
     )
@@ -139,10 +143,18 @@ def main() -> None:
             max_num_steps = int(3e7),
             device = config["device"],
             entropy_coef=0.15,
-            start_entropy = 0.15,
-            final_entropy = 0.25,
-            total_steps = 30000,
-            num_steps_per_iter=512
+            entropy_schedule=dict(
+                start_value=0.15,
+                final_value=0.25,
+                start_iter=0,
+                end_iter=30000,
+            ),
+            num_steps_per_iter=512,
+            reward_coef_schedule = dict(
+                schedules = {'rew_dipole': (0.0, 2.0)},
+                start_iter = 30000,   # matches start_num_iter of loaded checkpoint
+                end_iter = 32500,     # ramp over 2500 iterations
+            ),
         )
     )
 

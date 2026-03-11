@@ -73,7 +73,13 @@ def pretrain(config: dict) -> None:
         calc_dipole=True if 'reward_coefs' in config and 'rew_dipole' in config['reward_coefs'] else False
     )
 
-    entropy_schedule = EntropySchedule(config_ft["start_entropy"], config_ft["final_entropy"], config_ft["total_steps"])
+    es = config_ft["entropy_schedule"]
+    entropy_schedule = EntropySchedule(
+        start_value=es["start_value"],
+        final_value=es["final_value"],
+        start_iter=es["start_iter"],
+        end_iter=es["end_iter"],
+    )
 
     reward_coef_schedule = None
     if "reward_coef_schedule" in config_ft:

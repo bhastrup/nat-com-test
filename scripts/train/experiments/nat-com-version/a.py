@@ -169,9 +169,12 @@ def main() -> None:
             max_num_steps = int(3e7),
             device = config["device"],
             entropy_coef=0.15,
-            start_entropy = 0.15,
-            final_entropy = 0.25,
-            total_steps = 30000,
+            entropy_schedule=dict(
+                start_value=0.15,
+                final_value=0.25,
+                start_iter=0,
+                end_iter=30000,
+            ),
             num_steps_per_iter=512
         )
     )

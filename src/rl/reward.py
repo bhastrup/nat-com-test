@@ -1,6 +1,6 @@
 import abc
 import time
-from typing import Tuple, Dict, Union
+from typing import Tuple, Dict, Union, Optional
 
 import numpy as np
 from ase import Atoms, Atom
@@ -69,9 +69,6 @@ class InteractionReward(MolecularReward):
         self.old_energies[worker_id] = 0.
 
     def calculate(self, atoms: Atoms, new_atom: Atom, terminal: bool = False, worker_id: int = 1) -> Tuple[float, dict]:
-        query_fns = {'xtb': self._calculate_energy, 'rdkit': self.analyzer.get_mol}
-        query_order = ['rdkit', 'xtb'] # # Which one comes first, xtb query or rdkit query?
-
         info = {}
         start = time.time()
         all_atoms = atoms.copy()
@@ -81,27 +78,22 @@ class InteractionReward(MolecularReward):
         # Intersection of self.reward_names and either intermediate_rew_terms or terminal_rew_terms
         rew_names = list(set(self.reward_names) & set(self.terminal_rew_terms if terminal else self.intermediate_rew_terms))
 
-        res_dict = {}
-        for query_fn in query_order:
-            query_value = query_fns[query_fn](all_atoms)
-            res_dict[query_fn] = query_value
-            if isinstance(query_value, dict):  # Case where we have a dict, ie. mol_info
-                if query_value['info'] == 'crashed':
-                    return (None, {})
-            else:  # Case where we have a float, ie. energy
-                if query_value is None:
-                    return (None, {})
-
         if terminal and self.relax_steps_final > 0:
             opt_info = self._optimize_atoms(all_atoms, max_steps=self.relax_steps_final)
             all_atoms = opt_info['new_atoms']
             e_tot = opt_info['energy_after']
+        else:
+            e_tot = self._calculate_energy(all_atoms)
+
+        if e_tot is None:
+            return (None, {})
 
         # Prepare arguments for reward functions
-        args = {'atoms': all_atoms, 'e_tot': res_dict['xtb']}
+        args = {'atoms': all_atoms, 'e_tot': e_tot}
         if terminal or 'rew_valid' in rew_names:
-            args['mol_info'] = res_dict['rdkit']
-            info['mol_info'] = res_dict['rdkit']
+            mol_info = self.analyzer.get_mol(all_atoms)
+            args['mol_info'] = mol_info
+            info['mol_info'] = mol_info
         if 'rew_formation' in rew_names:
             args['worker_id'] = worker_id
 
@@ -121,10 +113,10 @@ class InteractionReward(MolecularReward):
 
         if terminal:
             # For terminal molecules, save chemically insightful metrics; reuse from new_rewards when available
-            atomization_energy = (self._sum_of_atomic_energies(all_atoms) - res_dict['xtb']) / n_atoms
-            rae = new_rewards['rew_rae'] if 'rew_rae' in new_rewards else self._calc_rae(all_atoms)
-            dipole = new_rewards['rew_dipole'] if 'rew_dipole' in new_rewards else self._calc_dipole(all_atoms)
-            validity = new_rewards['rew_valid'] if 'rew_valid' in new_rewards else self._validity_rew(args)
+            atomization_energy = (self._sum_of_atomic_energies(all_atoms) - e_tot) / n_atoms # Cheap
+            rae = new_rewards['rew_rae'] if 'rew_rae' in new_rewards else self._calc_rae(all_atoms, e_tot) # Cheap
+            dipole = new_rewards['rew_dipole'] if 'rew_dipole' in new_rewards else self._dipole_rew(args) # Cheap if available
+            validity = new_rewards['rew_valid'] if 'rew_valid' in new_rewards else self._validity_rew(args) # Cheap
 
             metrics = {
                 'final:AE': atomization_energy,
@@ -239,12 +231,12 @@ class InteractionReward(MolecularReward):
         return calc.optimize_atoms(atoms, max_steps=max_steps, fmax=0.10)
 
     # RAE calculation methods
-    def _calc_rae(self, atoms: Atoms) -> float:
+    def _calc_rae(self, atoms: Atoms, e_tot: Optional[float] = None) -> float:
         bag_repr = self._get_formula(atoms)
         if bag_repr not in self.benchmark_energies:
             return None
         mean_reference_energy = self.benchmark_energies[bag_repr]
-        e_tot = self._calculate_energy(atoms)
+        e_tot = e_tot if e_tot is not None else self._calculate_energy(atoms)
         rae = e_tot - mean_reference_energy
         rae = rae / len(atoms)
         return rae
@@ -282,7 +274,7 @@ class RaeReward(InteractionReward):
 
     def _rae_rew(self, args: Dict) -> float:
         """Calculates the Relative Atomic Energy (RAE) of the molecule."""
-        rae = self._calc_rae(args['atoms'])
+        rae = self._calc_rae(args['atoms'], args['e_tot'])
 
         reward = -1 * rae
 
@@ -291,9 +283,9 @@ class RaeReward(InteractionReward):
 
         return reward
 
-    def _calc_rae(self, atoms: Atoms) -> float:
+    def _calc_rae(self, atoms: Atoms, e_tot: Optional[float] = None) -> float:
         mean_reference_energy = self.benchmark_energies[self._get_formula(atoms)]
-        e_tot = self._calculate_energy(atoms)
+        e_tot = e_tot if e_tot is not None else self._calculate_energy(atoms)
         rae = e_tot - mean_reference_energy
         rae = rae / len(atoms)
         return rae

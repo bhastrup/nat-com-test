@@ -104,7 +104,7 @@ if __name__ == '__main__':
     start_time_features = time.time()
     evaluator._calc_features(
         features_from_file=False, 
-        perform_optimization=False,
+        perform_optimization=True,
     )
     print(f"Done calculating features {time.time()-start_time_features}")
 

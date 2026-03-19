@@ -16,7 +16,7 @@ from src.tools.launch_utils import (
 def main() -> None:
     
 
-    wandb_group = 'A-30k-DIP-A' 	# Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
+    wandb_group = 'A-30k-Fixed' 	# Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
 
     
     # Section A: Config and optional rerun
@@ -107,7 +107,7 @@ def main() -> None:
             #reward_coefs = {'rew_formation': 1.0, 'rew_valid': 3.0}					            # FV
             #reward_coefs = {'rew_atomisation': 1.0, 'rew_formation': 1.0, 'rew_valid': 3.0} 		# AFV
             # reward_coefs = {'rew_atomisation': 1.0, 'rew_valid': 3.0, 'rew_dipole': 1.0}, 		# AVD
-            reward_coefs = {'rew_atomisation': 1.0}, # , 'rew_dipole': 2.0}, 						    # AD
+            reward_coefs = {'rew_atomisation': 1.0, 'rew_dipole': 0.0}, 						    # AD
             
             # Agent policy
             #model = 'painn',
@@ -142,14 +142,15 @@ def main() -> None:
         dict(
             max_num_steps = int(3e7),
             device = config["device"],
+            num_steps_per_iter=512,
             entropy_coef=0.15,
+            # max_num_train_iters=1,
             entropy_schedule=dict(
                 start_value=0.15,
                 final_value=0.25,
                 start_iter=0,
                 end_iter=30000,
             ),
-            num_steps_per_iter=512,
             reward_coef_schedule = dict(
                 schedules = {'rew_dipole': (0.0, 2.0)},
                 start_iter = 30000,   # matches start_num_iter of loaded checkpoint

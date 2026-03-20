@@ -65,6 +65,11 @@ class EvaluatorIO:
             os.makedirs(formula_dir, exist_ok=True)
             write(os.path.join(formula_dir, 'atoms.traj'), atom_list)
 
+    def save_relaxed_atoms_as_traj_file(self, formula: str, atom_list: List[Atoms]):
+        formula_dir = os.path.join(self.base_dir, formula)
+        os.makedirs(formula_dir, exist_ok=True)
+        write(os.path.join(formula_dir, 'atoms_relaxed.traj'), atom_list)
+
     def read_atoms_as_traj_file(self, formulas: List[str]) -> Dict[str, List[Atoms]]:
         final_atoms = {}
         for formula in formulas:
@@ -222,7 +227,7 @@ class SingleCheckpointEvaluator:
             for formula in missing_formulas:
                 print(f"Calc features for {formula}")
                 atom_list = self.data['rollouts'][formula]
-                df, _ = processor.atom_list_to_df(
+                df, extra_data_list = processor.atom_list_to_df(
                     atoms_object_list=atom_list,
                     benchmark_energies=self.benchmark_energies_eval,
                     perform_optimization=perform_optimization,
@@ -231,6 +236,14 @@ class SingleCheckpointEvaluator:
                 formula_dfs[formula] = df
                 if self.io:
                     self.io.save_df_to_csv(df, formula)
+                    if perform_optimization:
+                        # Fall back to original atoms for invalid/unrelaxed molecules so the
+                        # traj file stays index-aligned with df.csv and atoms.traj.
+                        relaxed_atoms = [
+                            d['new_atoms'] if d['new_atoms'] is not None else orig
+                            for d, orig in zip(extra_data_list, atom_list)
+                        ]
+                        self.io.save_relaxed_atoms_as_traj_file(formula, relaxed_atoms)
 
         # Store in data and return
         self.data['formula_dfs'] = formula_dfs

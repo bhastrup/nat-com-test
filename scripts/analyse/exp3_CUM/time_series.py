@@ -87,7 +87,7 @@ def plot_individual(
 
     plt.title(
         f"{'Relative ' if mol_dataset else ''}Number of SMILES Discovered During "
-        f"Training{f' (log scale)' if log_scale else ''}"
+        f"Training{' (log scale)' if log_scale else ''}"
     )
 
     # plt.ylabel('Cumulative Number of SMILES')
@@ -128,7 +128,7 @@ def plot_aggregated(
 
     plt.title(
         f"{'Relative ' if mol_dataset else ''}Number of SMILES Discovered During "
-        f"Training{f' (log scale)' if log_scale else ''}"
+        f"Training{' (log scale)' if log_scale else ''}"
     )
 
     # plt.ylabel('Cumulative Number of SMILES')

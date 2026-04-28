@@ -1,5 +1,6 @@
-import logging, time
-from typing import Optional, Any
+import logging
+import time
+from typing import Optional
 from copy import deepcopy
 
 import numpy as np

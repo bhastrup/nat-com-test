@@ -151,7 +151,7 @@ def make_scatter_plot(
 
     # ax4 = fig.add_subplot(gs[2, 0])
     ax4 = ax[1]
-    ax4.set_title(f"Rediscovered", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE)
+    ax4.set_title("Rediscovered", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE)
     ax4.bar(x_positions, rediscovered, color=colors)
     # ax4.scatter(x_positions[-1], muliplier*rediscovered[-1], color='black', s=30)
     ax4.set_xticks(x_positions)
@@ -161,7 +161,7 @@ def make_scatter_plot(
 
     # ax5 = fig.add_subplot(gs[2, 1])
     ax5 = ax[2]
-    ax5.set_title(f"Rediscovered disjoint", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE)
+    ax5.set_title("Rediscovered disjoint", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE)
     ax5.bar(x_positions, rediscovered_disjoint, color=colors)
     # ax5.scatter(x_positions[-1], muliplier*rediscovered_disjoint[-1], color='black', s=30)
     ax5.set_xticks(x_positions)

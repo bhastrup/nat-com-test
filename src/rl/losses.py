@@ -117,14 +117,15 @@ def compute_loss(
     return loss, info
 
 
-import time, logging
+import time
+import logging
 from typing import Sequence
 
 from torch.optim.optimizer import Optimizer
 
 import numpy as np
 
-from src.rl.buffer import DynamicPPOBuffer, get_batch_generator, collect_data_batch, compute_mean_dict
+from src.rl.buffer import get_batch_generator, collect_data_batch, compute_mean_dict
 from src.tools.util import compute_gradient_norm
 
 

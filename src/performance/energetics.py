@@ -4,7 +4,7 @@ from enum import Enum
 
 import numpy as np
 from ase import Atoms
-from ase.optimize import BFGS, FIRE
+from ase.optimize import FIRE
 from xtb.ase.calculator import XTB
 
 

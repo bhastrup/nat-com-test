@@ -127,7 +127,7 @@ class CumulativeDiscoveryTracker(Logger):
             print(f"info: {info}")
             print(f"in sample formulas: {self.formulas_is}")
             print(f"out of sample formulas: {self.formulas_oos}")
-            print(f"exiting...")
+            print("exiting...")
             exit()
         else:
             formula_data = db[formula]

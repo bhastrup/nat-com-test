@@ -1,9 +1,9 @@
-import dataclasses, itertools
+import itertools
 from typing import List, Tuple
 from copy import deepcopy
 
-from ase import Atoms, Atom
-from ase.data import atomic_numbers, chemical_symbols
+from ase import Atoms
+from ase.data import atomic_numbers
 from ase.visualize import view
 
 import numpy as np
@@ -12,7 +12,7 @@ import streamlit as st
 
 from src.rl.spaces import ActionSpace, ObservationSpace
 from src.rl.reward import InteractionReward
-from src.rl.envs.environment import tmqmEnv, HeavyFirst
+from src.rl.envs.environment import tmqmEnv
 from src.rl.env_container import SimpleEnvContainer
 from src.tools import util
 
@@ -199,8 +199,6 @@ def partial_canvas_selector():
 
 
 from src.rl.envs.env_partial_canvas import (
-    PartialCanvasEnv,
-    CanvasGenerator,
     ObservationType,
     FormulaType,
     AbstractMolecularEnvironment,

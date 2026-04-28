@@ -1,11 +1,10 @@
-from typing import Dict, List, Tuple
+from typing import Dict, List
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
 from ase import Atoms
-from ase.visualize import view
 from rdkit import Chem
 from rdkit.Chem import rdDistGeom
 from src.performance.energetics import XTBOptimizer, EnergyUnit
@@ -236,7 +235,7 @@ def get_etkdg_dict(
             try:
                 etkdg_energies = get_etkdg_energies(smiles, n_confs, relax=True, fmax=fmax, step_max=step_max)
             except:
-                print(f"Failed to fetch ETKDG energies")
+                print("Failed to fetch ETKDG energies")
                 continue
 
             # plot_single_etkdg_hist(etkdg_energies)

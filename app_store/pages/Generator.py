@@ -1,15 +1,9 @@
-import pickle, glob, os, time
-from typing import Optional
 
 import numpy as np
 import pandas as pd
-import torch
 
-from ase import Atoms
-from ase.visualize import view
 
 import streamlit as st
-import streamlit_nested_layout
 
 import altair as alt
 

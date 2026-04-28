@@ -1,12 +1,9 @@
 import os
-import sys
 from datetime import datetime
 import numpy as np
 import submitit
 
-from xtb.ase.calculator import XTB
 
-from src.performance.energetics import EnergyUnit
 from scripts.train.train import train as submit_fn
 from src.tools.launch_utils import (
     load_default_configuration,

@@ -5,7 +5,6 @@ from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src.tools.config import str2bool
 
 
 def parse_cmd():

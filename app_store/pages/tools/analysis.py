@@ -136,9 +136,8 @@ def display_results_tabs():
             playground_results_tab(pg)
 
 
-from app_store.pages.tools.generate import write_reference_energies_into_pg, get_ref_energies
+from app_store.pages.tools.generate import get_ref_energies
 from src.performance.metrics import calc_rae
-from src.tools.util import string_to_formula, symbols_to_str_formula
 
 
 def playground_results_tab(pg):

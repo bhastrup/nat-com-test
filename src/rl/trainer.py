@@ -7,7 +7,7 @@ import numpy as np
 from torch.utils.data import DataLoader
 import torch
 from src.agents.base import AbstractActorCritic
-from src.performance.cumulative.performance_summary import Logger, MultibagLogger, FinetuneLogger
+from src.performance.cumulative.performance_summary import Logger
 from src.performance.single_cpkt.evaluator import SingleCheckpointEvaluator, launch_eval_jobs
 from src.rl.buffer_container import PPOBufferContainer, PPOBufferContainerDeploy
 from src.rl.env_container import VecEnv

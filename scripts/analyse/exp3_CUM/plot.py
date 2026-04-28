@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from src.data.io_handler import IOHandler
 from src.performance.cumulative.cum_io import CumulativeIO
 from src.performance.cumulative.projections import SOAPProjector
 from src.performance.cumulative.investigator import (

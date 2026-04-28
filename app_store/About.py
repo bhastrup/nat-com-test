@@ -1,11 +1,7 @@
-import os, sys
+import sys
 
 import streamlit as st
-import numpy as np
-import pandas as pd
 
-from ase import Atoms
-from ase.visualize import view
 
 from PIL import Image
 

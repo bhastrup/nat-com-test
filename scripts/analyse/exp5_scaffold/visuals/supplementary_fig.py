@@ -778,7 +778,7 @@ if __name__ == "__main__":
     smiles_col = "NEW_SMILES"
 
     # Create save directory
-    illustration_dir_name = f"exp5_grid_figure"
+    illustration_dir_name = "exp5_grid_figure"
 
     save_dir = os.path.join(base_dir, illustration_dir_name)
     if not os.path.exists(save_dir):

@@ -15,7 +15,6 @@ import time
 
 from src.tools import util
 from src.data.io_handler import IOHandler
-from src.tools.env_util import EnvMaker
 from src.rl.envs.env_no_reward import HeavyFirstNoReward
 from src.rl.env_container import SimpleEnvContainer
 from src.performance.single_cpkt.utils import PathHelper, process_config, get_model

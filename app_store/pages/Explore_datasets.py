@@ -9,14 +9,12 @@ from ase.data import chemical_symbols, atomic_numbers
 from ase.visualize import view
 from millify import prettify
 
-from src.tools import util
 from src.data.reference_dataloader import ReferenceDataLoader
 from src.performance.energetics import EnergyUnit
 from src.pretraining.action_decom import recenter, pos_seq_to_actions, pos_seq_to_actions_emma, decompose_pos
 from app_store.pages.tools.images.show_logo import show_logo
-from app_store.pages.tools.app_utils import make_multi_button_columns, configure_canvas, initialize_session_state
+from app_store.pages.tools.app_utils import make_multi_button_columns, initialize_session_state
 from app_store.pages.tools.visualize import view_bag_conformers_fn
-from app_store.pages.tools.bag_sampler import explain_sampler
 from app_store.pages.tools.visualize import row_to_energy, get_single_energy, row_to_atoms
 from app_store.pages.tools.visualize import view_atoms_from_list, view_atoms_from_list_sequence, view_rdkit_mol
 
@@ -237,7 +235,7 @@ def display_bag_mols_df(df: pd.DataFrame, bag_df: pd.DataFrame, sort_by_energy: 
                     {"df_shown": df_shown, "df_full": df, "atoms_list": atoms_list, "col": cols[1]},
                 ),
             ],
-            unique_key=f"explore_datasets_mols_df",
+            unique_key="explore_datasets_mols_df",
         )
 
 
@@ -338,7 +336,7 @@ def view_decom_all(
 
             sorted_indices = tuple(sorted_indices)
 
-            if not sorted_indices in sorted_indices_dict.keys():
+            if sorted_indices not in sorted_indices_dict.keys():
                 sorted_indices_dict[sorted_indices] = 1
             else:
                 sorted_indices_dict[sorted_indices] += 1
@@ -381,7 +379,7 @@ def view_decom_all(
         button_configs=[
             ("View Seq", view_atoms_from_list_sequence, {"atoms_list": atoms_list_new}),
         ],
-        unique_key=f"explore_datasets_decom_all_df",
+        unique_key="explore_datasets_decom_all_df",
     )
 
     return None
@@ -482,7 +480,7 @@ def investigate_decom(df: pd.DataFrame) -> None:
                 {"decom_method": "dfs", "decom_params": decom_params, "all_decoms": all_decoms},
             ),
         ],
-        unique_key=f"explore_datasets_decom_df",
+        unique_key="explore_datasets_decom_df",
     )
 
     if st.session_state.decom_view_params == {}:
@@ -548,7 +546,7 @@ def main():
     with st.expander(r"$\textsf{{\large Filter molecule dataframe}}$", expanded=False):
         # Filter molecules based on n_atoms
         n_atoms_max_data = max(data_dict.values(), key=lambda x: x["n_atoms"])["n_atoms"]
-        n_atoms_min, n_atoms_max = st.slider(f"n_atoms", 0, n_atoms_max_data, (5, min(10, n_atoms_max_data)))
+        n_atoms_min, n_atoms_max = st.slider("n_atoms", 0, n_atoms_max_data, (5, min(10, n_atoms_max_data)))
         df = df_full[(df_full["n_atoms"] >= n_atoms_min) & (df_full["n_atoms"] <= n_atoms_max)]
 
         all_elements = [atomic_numbers[sym] for sym in st.session_state[dataset + "_symbols"]]

@@ -1,20 +1,15 @@
-import os
-import pickle
 from collections import deque
-from typing import List, Tuple
 
 import numpy as np
 from numpy.linalg import norm
-import pandas as pd
 import torch
-from scipy import sparse
 
 import ase
 from ase import neighborlist
 
 from src.tools import util
 from src.tools.util import to_numpy
-from src.rl.envs.environment import MolecularEnvironment, tmqmEnv, HeavyFirst
+from src.rl.envs.environment import tmqmEnv, HeavyFirst
 from src.rl.reward import InteractionReward
 from src.rl.spaces import FormulaType
 
@@ -368,17 +363,17 @@ def pos_seq_to_actions(pos, atomic_numbers, zs, no_hydro_focus=True):
             if dihedral != torch.arccos(
                 torch.dot(normal2, normal1) / (torch.linalg.norm(normal1) * torch.linalg.norm(normal2))
             ).unsqueeze(-1):
-                print(f"DIHEDRAL WAS CLAMPED!")
+                print("DIHEDRAL WAS CLAMPED!")
 
             if torch.isnan(dihedral):
                 if torch.linalg.norm(normal1) == 0 or torch.linalg.norm(normal2) == 0:
                     print(
-                        f"normal1 or normal2 is of zero length. Coordinate system undefined. Sampling random dihedral angle between 0 and pi"
+                        "normal1 or normal2 is of zero length. Coordinate system undefined. Sampling random dihedral angle between 0 and pi"
                     )
                     if torch.linalg.norm(normal1) == 0:
-                        print(f"normal1 is zero -> focus_to_new, focus_to_n1 are (anti)parallel")
+                        print("normal1 is zero -> focus_to_new, focus_to_n1 are (anti)parallel")
                     elif torch.linalg.norm(normal2) == 0:
-                        print(f"normal2 is zero -> focus_to_n2, focus_to_n1 are (anti)parallel")
+                        print("normal2 is zero -> focus_to_n2, focus_to_n1 are (anti)parallel")
                     dihedral = torch.rand(1) * np.pi
 
                 # # print all tensors in dihedral

@@ -1,12 +1,12 @@
-import dataclasses, glob, os
+import dataclasses
+import glob
+import os
 from pathlib import Path
 
 import streamlit as st
-import numpy as np
 import torch
 
 from src.tools.model_util import ModelIO
-from src.agents.painn.agent import PainnAC
 
 
 MODEL_FOLDER = Path(os.getcwd()) / "model_objects"

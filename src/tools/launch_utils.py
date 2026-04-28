@@ -1,4 +1,6 @@
-import itertools, json, glob
+import itertools
+import json
+import glob
 from typing import Callable, List, Dict
 
 import submitit
@@ -39,7 +41,7 @@ def load_old_config(model_path: str = None) -> dict:
 
 
 def get_sublog_name(EXPERIMENT_NAME: str, dt_string: str) -> str:
-    return f"sublogs/" + EXPERIMENT_NAME + "_" + dt_string + "_main"
+    return "sublogs/" + EXPERIMENT_NAME + "_" + dt_string + "_main"
 
 
 def submit_jobs(

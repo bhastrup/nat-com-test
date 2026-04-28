@@ -1,9 +1,8 @@
-import dataclasses
 from typing import List, Optional, Dict
-import pickle, os
+import pickle
+import os
 import time
 
-import pandas as pd
 import streamlit as st
 
 from src.rl.env_container import SimpleEnvContainer
@@ -162,7 +161,7 @@ class Playground:
                 self.display_agents()
 
     def save_playground(self):
-        directory = f"saved_playgrounds/"
+        directory = "saved_playgrounds/"
         if not os.path.exists(directory):
             os.makedirs(directory)
 
@@ -188,7 +187,7 @@ class Playground:
         path_name = f"{directory}/{name}.pickle"
 
         if os.path.exists(path_name):
-            st.write(f"Name already exists!")
+            st.write("Name already exists!")
             decision = st.radio(
                 label="Overwrite or rename?", options=["Rename", "Overwrite"], index=None
             )  # key=f'overwrite_{self.name}
@@ -253,7 +252,7 @@ class PlaygroundManager:
                         disabled=not deployable,
                     )
                     if pg.deployable:
-                        st.header(f"🟢")
+                        st.header("🟢")
 
                     # if st.button('Save 💾', key=f'save_playground_{id}'):
                     #     pg.saving = True
@@ -280,7 +279,7 @@ class PlaygroundManager:
                     st.rerun()
             with load_col:
                 with st.expander(" Load from file 📤"):
-                    pickle_file = st.file_uploader("Upload file", label_visibility="hidden", key=f"load_playground")
+                    pickle_file = st.file_uploader("Upload file", label_visibility="hidden", key="load_playground")
                     if pickle_file:
                         loaded_pg = pickle.load(pickle_file)
                         if st.button("Load", key=f"load_playground_{loaded_pg.id}"):

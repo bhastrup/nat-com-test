@@ -7,13 +7,8 @@ from tqdm import tqdm
 
 from ase import Atoms
 from ase.io import read
-from ase.visualize import view
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 
-from src.tools import util
-from src.data.io_handler import IOHandler
 from src.performance.reward_metrics_rings import get_max_view_positions
 
 

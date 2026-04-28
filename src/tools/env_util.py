@@ -1,5 +1,5 @@
 import logging
-from typing import Tuple, List, Dict, Union
+from typing import Tuple, List, Dict
 
 import numpy as np
 import pandas as pd
@@ -11,7 +11,7 @@ from src.rl.envs.environment import tmqmEnv, HeavyFirst
 from src.rl.envs.env_no_reward import HeavyFirstNoReward
 from src.rl.spaces import ObservationSpace, ActionSpace
 
-from src.rl.reward import InteractionReward, RaeReward
+from src.rl.reward import RaeReward
 from src.tools import util
 
 from src.data.reference_dataloader import ReferenceDataLoader

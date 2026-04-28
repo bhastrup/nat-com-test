@@ -105,7 +105,7 @@ if __name__ == "__main__":
     print(f"Done calculating metrics {time.time() - start_time_metrics}")
 
     evaluator._calc_global_metrics(size_weighted=False)
-    print(f"Done calculating global metrics")
+    print("Done calculating global metrics")
     print(f"global_metrics: {evaluator.data['global_metrics']}")
 
     print(f"Total time {time.time() - start_time_rollout}")

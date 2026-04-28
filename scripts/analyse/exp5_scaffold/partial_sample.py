@@ -6,13 +6,12 @@ Scaffold-functionalization task: use a trained agent to complete a partial molec
 import itertools
 import time
 from copy import deepcopy
-from pathlib import Path
 from typing import List, Tuple
 
 import numpy as np
 import pandas as pd
 from ase import Atoms
-from ase.data import atomic_numbers, chemical_symbols
+from ase.data import chemical_symbols
 
 from src.tools import util
 from src.data.io_handler import IOHandler

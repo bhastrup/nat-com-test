@@ -3,7 +3,6 @@ import os
 import tarfile
 from abc import ABC, abstractmethod
 from typing import Any, Dict, Iterable, List, Tuple
-from collections import Counter
 import gzip
 
 import numpy as np

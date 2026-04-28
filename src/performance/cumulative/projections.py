@@ -86,7 +86,7 @@ class SOAPProjector:
 
         print(f"Fitting PCA / TSNE dim reducer on SOAP features of shape: {soap_vectors.shape}")
         projs = self.pca.fit_transform(soap_vectors)
-        print(f"PCA / TSNE fitted.")
+        print("PCA / TSNE fitted.")
         return {smiles: proj for smiles, proj in zip(df["SMILES"], projs)}
 
     def _latent_to_2d(self, latent_states: np.ndarray) -> np.ndarray:

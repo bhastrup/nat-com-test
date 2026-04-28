@@ -208,7 +208,7 @@ def get_grid():
     file_name = "quadpy_u3_lebedev_71.npz"
     file_path = os.path.dirname(os.path.realpath(__file__))
     data = np.load(os.path.join(file_path, file_name))
-    logging.debug(f"Using quadpy alternative method.")
+    logging.debug("Using quadpy alternative method.")
 
     return DummyLebedev(points=data["points"], weights=data["weights"])
 

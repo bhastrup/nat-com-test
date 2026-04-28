@@ -14,7 +14,6 @@ from ase.formula import Formula
 from ase.data import atomic_numbers, chemical_symbols
 
 import numpy as np
-import pandas as pd
 import scipy.signal
 import torch
 from torch.optim import Adam

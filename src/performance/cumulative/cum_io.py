@@ -1,9 +1,8 @@
-import copy, os
+import os
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Union, Set
 
 import numpy as np
-from rdkit import Chem
 from tqdm import tqdm
 
 from src.data.io_handler import IOHandler

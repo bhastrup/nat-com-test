@@ -1,17 +1,16 @@
 import abc
 import itertools
 import logging
-from typing import Tuple, List, Callable
+from typing import Tuple, List
 
 import ase.data
 import gymnasium as gym
 import numpy as np
 from ase import Atoms, Atom
-from scipy.spatial.qhull import ConvexHull, Delaunay
 
 from src.rl.reward import InteractionReward
 from src.rl.spaces import ActionSpace, ObservationSpace, ActionType, ObservationType, FormulaType
-from src.tools.util import remove_atom_from_formula, get_formula_size, zs_to_formula
+from src.tools.util import remove_atom_from_formula, get_formula_size
 
 
 class AbstractMolecularEnvironment(gym.Env, abc.ABC):

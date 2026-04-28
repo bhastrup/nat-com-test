@@ -1,5 +1,6 @@
-import time, logging
-from typing import Dict, Sequence, Tuple, Callable
+import time
+import logging
+from typing import Dict, Tuple
 from abc import ABC, abstractmethod
 
 import numpy as np
@@ -7,7 +8,7 @@ import torch
 from torch.optim.optimizer import Optimizer
 
 from src.agents.base import AbstractActorCritic
-from src.rl.buffer import DynamicPPOBuffer, get_batch_generator, collect_data_batch, compute_mean_dict
+from src.rl.buffer import get_batch_generator, collect_data_batch, compute_mean_dict
 from src.tools.util import compute_gradient_norm, to_numpy
 
 

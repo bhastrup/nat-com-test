@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Dict, List, Tuple
 from tqdm import tqdm
 
 from src.data.io_handler import IOHandler
@@ -81,7 +81,7 @@ class CummulativeInvestigator:
         """Load and process the raw data"""
         if self.cum_io is not None:
             self.db_raw = self.cum_io.load_all_dbs(step_max=step_max)
-            print(f"Done loading raw data.")
+            print("Done loading raw data.")
             self.output = process_raw_data(self.db_raw, self.bag_reprs, self.ref_data.smiles)
 
     def get_discovery_metrics(self, tag: str = "in_sample", mol_dataset: str = "qm7") -> DiscoveryCountType:

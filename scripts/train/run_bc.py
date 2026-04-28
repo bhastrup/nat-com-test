@@ -23,6 +23,7 @@ def pretrain(config: dict) -> None:
     tag = util.get_tag(config)
     util.set_seeds(seed=config['seed'])
     device = util.init_device(config['device'])
+    print(f"{'-'* 50} Using device: {device} {'-'* 50}")
     util.create_directories([config['log_dir'], config['model_dir'], config['results_dir']])
     util.setup_logger(config, directory=config['log_dir'], tag=tag)
 
@@ -73,13 +74,16 @@ def pretrain(config: dict) -> None:
         calc_dipole=True if 'reward_coefs' in config and 'rew_dipole' in config['reward_coefs'] else False
     )
 
-    es = config_ft["entropy_schedule"]
-    entropy_schedule = EntropySchedule(
-        start_value=es["start_value"],
-        final_value=es["final_value"],
-        start_iter=es["start_iter"],
-        end_iter=es["end_iter"],
-    )
+    if "entropy_schedule" in config_ft:
+        es = config_ft["entropy_schedule"]
+        entropy_schedule = EntropySchedule(
+            start_value=es["start_value"],
+            final_value=es["final_value"],
+            start_iter=es["start_iter"],
+            end_iter=es["end_iter"],
+        )
+    else:
+        entropy_schedule = None
 
     reward_coef_schedule = None
     if "reward_coef_schedule" in config_ft:

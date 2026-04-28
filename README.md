@@ -128,3 +128,40 @@ In the sidebar on the left-hand side, navigate to the **Generator** page. This p
 #### i) Load other agent checkpoints
 To load other agent checkpoints, use the GUI in the **"Agent Loader** expander. Use the file system explorer to find the checkpoint, but rather than double-clicking, just copy the path and paste into the line below. Select *cuda* (if available) and provide a name for the new agent before clicking **Load agent**. Note that the *model_objects/* folder also contains checkpoints for seed 1 and 2.
 
+
+---
+
+## Known Issues and Planned Improvements
+
+This section tracks outstanding issues that should be addressed before or after final publication. Contributions welcome.
+
+### High priority
+
+- **Weights & Biases is currently required for training.** The codebase has a `save_to_wandb` flag, but W&B is still imported and called unconditionally in several places. Training should work without a W&B account by routing all logging to stdout/a local file when `save_to_wandb=False`. This is a barrier to openness that we want to remove.
+
+- **Hardcoded W&B entity.** The training config in `scripts/train/experiments/nat-com-version/a.py` has `entity='bhastrup'` hardcoded. Users must change this to their own username, or set `save_to_wandb=False`. We plan to make this an environment variable or remove it entirely once W&B is made optional.
+
+- **Confusing `config_ft` structure.** The online RL (PPO) parameters live inside `config["config_ft"]` — a name inherited from an earlier pretraining→finetuning workflow that was not used in the final paper. In the paper, all agents are trained from scratch (*tabula rasa*). The nesting and the name are confusing; we plan to flatten the config structure in a future refactor.
+
+- **No test suite.** The repository currently has no automated tests. We plan to add at minimum: smoke tests for environment step and reward calculation, and a forward-pass test for the PaiNN agent. This is important for verifying that the codebase runs correctly on a new machine without running a full training job.
+
+- **Make sure app is also tight and has documentation in the readme.
+
+### Code quality
+
+- **No linting configuration.** There is no `pyproject.toml`, `.flake8`, or `ruff.toml`. We plan to add a `ruff` configuration targeting Python 3.11 and enforce it in CI.
+
+- **Mixed logging styles.** Core modules in `src/` use a mix of `print()` and the `logging` module. We plan to standardise on `logging` throughout.
+
+- **Leftover personal paths.** `src/tools/launch_utils.py` contains a hardcoded personal path (`/home/energy/bjaha/...`) in the `set_default_resources` helper. This function is not used in the main training script but should be cleaned up.
+
+### Missing analysis scripts
+
+- **Learning curve plotting.** The script for reproducing the training learning curves (validity, atomization energy, etc. vs. training steps) is not yet in the repository. It requires stitching together multiple W&B runs across seeds and restarts. The plan is to export the smoothed curve data as CSV files and provide a clean plotting script that reads from those — so the figures can be reproduced without a W&B account.
+
+### Planned (post-submission)
+
+- **Integrate the advanced `Trainer` class.** A more modular `Trainer` architecture exists in a development branch and is better suited for extension. We plan to migrate to it once all tests are in place, to avoid introducing subtle changes to training dynamics.
+
+- **CI/CD pipeline.** Add GitHub Actions to run the test suite and linter on every push.
+

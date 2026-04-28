@@ -208,7 +208,7 @@ def rollout_n_eps_per_env(ac: AbstractActorCritic,
                     print(f"Successfully ---------------------- : {final_atoms}")
                     rollout_trajs[i_original].append(final_atoms)
                 else:
-                    print(f"----------------------------- Failed: {final_atoms}")
+                    print(f"----------------------------- Failed: {atoms_to_go} atoms remaining")
                 if num_episodes_combined:
                     if sum([len(rollout_traj) for rollout_traj in rollout_trajs]) >= num_episodes_combined:
                         break

@@ -23,7 +23,7 @@ from src.performance.metrics import calc_rae
 from src.data.reference_dataloader import ReferenceDataLoader
 from src.performance.energetics import EnergyUnit
 
-from src.tools.arg_parser import str2bool
+from src.tools.config import str2bool
 
 def parse_cmd():
     parser = argparse.ArgumentParser(description="Script for generating molecular evaluation plots.")

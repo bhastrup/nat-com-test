@@ -4,8 +4,6 @@ from torch.optim import Adam
 
 from src.tools import util
 from src.performance.energetics import str_to_EnergyUnit
-from src.tools.arg_parser_pretrain import build_default_argparser_pretrain
-from src.tools.arg_parser import build_default_argparser
 from src.tools.model_util import get_model
 from src.tools.env_util import EnvMaker
 from src.performance.single_cpkt.evaluator import EvaluatorIO, SingleCheckpointEvaluator

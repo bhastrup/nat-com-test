@@ -11,7 +11,7 @@ from src.performance.single_cpkt.utils import (
     get_evaluator_prop
 )
 
-from src.tools.arg_parser import str2bool
+from src.tools.config import str2bool
 
 def parse_cmd():
     parser = argparse.ArgumentParser(description="Script for sampling molecules.")

@@ -1,25 +1,18 @@
-import itertools, sys, json, glob
+import itertools, json, glob
 from typing import Callable, List, Dict
 
 import submitit
 
-from src.tools.arg_parser_pretrain import build_default_argparser_pretrain
-from src.tools.arg_parser import build_default_argparser
+from src.tools.config import default_config
 
 
 def load_default_configuration(
         use_old_config: bool = False,
         load_model: str = None,
-        build_default_argparser_pretrain: Callable = build_default_argparser_pretrain,
-        build_default_argparser: Callable = build_default_argparser,    
 ) -> dict:
     if use_old_config and load_model:
-        config = load_old_config(load_model)
-    else:
-        config = get_config_pretrain(build_default_argparser_pretrain)
-        config["config_ft"] = get_config(build_default_argparser)
-    
-    return config
+        return load_old_config(load_model)
+    return default_config()
 
 
 def load_old_config(model_path: str = None) -> dict:
@@ -49,20 +42,6 @@ def load_old_config(model_path: str = None) -> dict:
 
 def get_sublog_name(EXPERIMENT_NAME: str, dt_string: str) -> str:
     return f"sublogs/" + EXPERIMENT_NAME + '_' + dt_string + '_main'
-
-
-def get_config(build_default_argparser: Callable = build_default_argparser) -> dict:
-    parser = build_default_argparser()
-    args = parser.parse_args()
-    config = vars(args)
-    return config
-
-
-def get_config_pretrain(build_default_argparser_pretrain: Callable = build_default_argparser_pretrain) -> dict:
-    parser = build_default_argparser_pretrain()
-    args = parser.parse_args()
-    config = vars(args)
-    return config
 
 
 def submit_jobs(
@@ -149,16 +128,13 @@ def set_directories(parameter_dict: dict, exp_name: str, sweep_name: str):
 
 def set_default_resources(executor):
     if executor._executor.__class__.__name__ == 'SlurmExecutor':
-        executor._command = "/home/energy/bjaha/miniconda3/envs/delight-rl/bin/python"
         executor.update_parameters(
-            slurm_partition="sm3090",
-            # gres="gpu:RTX3090:1",
+            slurm_partition="your_gpu_partition",   # replace with your cluster partition
             slurm_num_gpus=1,
             cpus_per_task=8,
-            tasks_per_node=1, # the new one
+            tasks_per_node=1,
             slurm_nodes=1,
             slurm_time="0-03:00:00",
-            # slurm_mail_type="END,FAIL",
             mem_gb=16
         )
     elif executor._executor.__class__.__name__ == 'LocalExecutor':
@@ -170,8 +146,4 @@ def set_default_resources(executor):
             tasks_per_node=1,
             mem_gb=4,
         )
-    else:
-        print(f"Unknown executor type: {executor._executor.__class__.__name__}")
-        sys.exit(1)
-
     return executor

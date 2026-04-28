@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src.tools.arg_parser import str2bool
+from src.tools.config import str2bool
 
 def parse_cmd():
     parser = argparse.ArgumentParser(description=".")

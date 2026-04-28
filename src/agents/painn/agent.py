@@ -343,8 +343,8 @@ class PainnAC(AbstractActorCritic):
         """
 
         for i, obs in enumerate(observations):
-            labels, pos = zip(*[(l, p) for l, p in obs[0]])
-            n_atoms = sum([1 for l in labels if l > 0])
+            labels, pos = zip(*[(label, p) for label, p in obs[0]])
+            n_atoms = sum([1 for label in labels if label > 0])
 
             if self.no_hydrogen_focus:
                 # atoms, _ = self.observation_space.parse(obs)

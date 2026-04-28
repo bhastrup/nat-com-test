@@ -11,9 +11,12 @@ from src.performance.metrics import get_mol
 from rdkit.Chem import Draw
 
 
-get_single_energy = lambda atoms: InteractionReward()._calculate_energy(atoms)
+def get_single_energy(atoms):
+    return InteractionReward()._calculate_energy(atoms)
 
-view_atoms_from_list = lambda index, atoms_list: view(atoms_list[index], viewer="ase")
+
+def view_atoms_from_list(index, atoms_list):
+    return view(atoms_list[index], viewer="ase")
 
 
 def row_to_atoms(row):

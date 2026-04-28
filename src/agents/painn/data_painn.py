@@ -141,9 +141,9 @@ def collate_atomsdata(graphs: List[dict], pin_memory=True):
     dict_of_lists = {k: [dic[k] for dic in graphs] for k in graphs[0]}
     # Convert each list of tensors to single tensor with pad and stack
     if pin_memory:
-        pin = lambda x: x.pin_memory()
+        pin = lambda x: x.pin_memory()  # noqa: E731
     else:
-        pin = lambda x: x
+        pin = lambda x: x  # noqa: E731
 
     collated = {k: pin(pad_and_stack(dict_of_lists[k])) for k in dict_of_lists}
     return collated

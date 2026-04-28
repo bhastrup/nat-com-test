@@ -40,7 +40,7 @@ def unpad_and_cat(stacked_seq: torch.Tensor, seq_len: torch.Tensor):
 
     """
     unstacked = stacked_seq.unbind(0)
-    unpadded = [torch.narrow(t, 0, 0, l) for (t, l) in zip(unstacked, seq_len.unbind(0))]
+    unpadded = [torch.narrow(t, 0, 0, length) for (t, length) in zip(unstacked, seq_len.unbind(0))]
     return torch.cat(unpadded, dim=0)
 
 

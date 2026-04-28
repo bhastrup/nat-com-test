@@ -360,7 +360,7 @@ def BO2mol(
 
     """
 
-    l = len(BO_matrix)
+    l = len(BO_matrix)  # noqa: E741
     l2 = len(atoms)
     BO_valences = list(BO_matrix.sum(axis=1))
 

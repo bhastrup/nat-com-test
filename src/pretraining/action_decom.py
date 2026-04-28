@@ -792,7 +792,7 @@ def rotate_to_axis(positions: np.ndarray, atom_index: int, axis: str = "x") -> n
             [-rotation_axis[1], rotation_axis[0], 0],
         ]
     )
-    I = np.eye(3)
+    I = np.eye(3)  # noqa: E741
 
     # Rodrigues' rotation formula
     rotation_matrix = I + np.sin(angle) * K + (1 - np.cos(angle)) * np.dot(K, K)

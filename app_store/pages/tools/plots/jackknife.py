@@ -66,7 +66,7 @@ def bootstrap_expected_unique_curve(samples, num_bootstrap_samples=100):
         model_expected_values = []
 
         for n in range(1, len(model_sample) + 1):
-            estimator = lambda sample: estimate_expected_unique(sample[:n])
+            estimator = lambda sample: estimate_expected_unique(sample[:n])  # noqa: E731
             bootstrap_results = bootstrap_estimate(model_sample, estimator, num_bootstrap_samples)
             expected_value = np.mean(bootstrap_results)
             model_expected_values.append(expected_value)

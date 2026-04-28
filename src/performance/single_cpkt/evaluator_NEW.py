@@ -1,4 +1,3 @@
-
 import os, json, logging
 from typing import Dict, Tuple, List, Any, Union
 
@@ -11,31 +10,28 @@ from ase.io import read, write
 from src.agents.base import AbstractActorCritic
 from src.rl.rollouts import rollout_argmax_and_stoch
 from src.performance.metrics import atom_list_to_df
-from src.performance.single_cpkt.stats import (
-    single_formula_metrics, get_global_metrics
-)
+from src.performance.single_cpkt.stats import single_formula_metrics, get_global_metrics
 
 
 def get_num_episodes(
     smiles: Dict[str, List[str]],
-    num_episodes_const: int = None, 
-    prop_factor: int = None, 
+    num_episodes_const: int = None,
+    prop_factor: int = None,
 ) -> Union[int, List[int]]:
-    
-    assert (num_episodes_const is None) != (prop_factor is None), \
+
+    assert (num_episodes_const is None) != (prop_factor is None), (
         "One and only one of num_episodes_const and prop_factor must be provided."
+    )
 
     if num_episodes_const:
         num_episodes = num_episodes_const
     elif prop_factor:
         num_episodes = (np.array([len(v) for _, v in smiles.items()]) * prop_factor).tolist()
-    
+
     episode_dict = {f: n for f, n in zip(smiles.keys(), num_episodes)}
     logging.info(f"Number of episodes: {episode_dict}")
 
     return num_episodes
-
-
 
 
 class EvaluatorIO:
@@ -46,7 +42,7 @@ class EvaluatorIO:
         for formula, smiles_list in smiles.items():
             formula_dir = os.path.join(self.base_dir, formula)
             os.makedirs(formula_dir, exist_ok=True)
-            with open(os.path.join(formula_dir, 'smiles.json'), 'w') as f:
+            with open(os.path.join(formula_dir, "smiles.json"), "w") as f:
                 json.dump(smiles_list, f)
 
     def save_atoms_as_traj_file(self, final_atoms: Dict[str, List[Atoms]]):
@@ -54,12 +50,12 @@ class EvaluatorIO:
         for formula, atom_list in final_atoms.items():
             formula_dir = os.path.join(self.base_dir, formula)
             os.makedirs(formula_dir, exist_ok=True)
-            write(os.path.join(formula_dir, 'atoms.traj'), atom_list)
+            write(os.path.join(formula_dir, "atoms.traj"), atom_list)
 
     def read_atoms_as_traj_file(self, formulas: List[str]) -> Dict[str, List[Atoms]]:
         final_atoms = {}
         for formula in formulas:
-            formula_path = os.path.join(self.base_dir, formula, 'atoms.traj')
+            formula_path = os.path.join(self.base_dir, formula, "atoms.traj")
             if not os.path.exists(formula_path):
                 raise FileNotFoundError(f"No trajectory file found at {formula_path} for formula {formula}")
             atom_list = read(formula_path)
@@ -70,13 +66,13 @@ class EvaluatorIO:
         for formula, df in dfs.items():
             formula_dir = os.path.join(self.base_dir, formula)
             os.makedirs(formula_dir, exist_ok=True)
-            df.to_csv(os.path.join(formula_dir, 'df.csv'), index=False)
+            df.to_csv(os.path.join(formula_dir, "df.csv"), index=False)
 
     def load_dfs_from_csv(self, formulas: List[str]) -> Dict[str, pd.DataFrame]:
         formula_dfs = {}
         for formula in formulas:
             formula_dir = os.path.join(self.base_dir, formula)
-            df_path = os.path.join(formula_dir, 'df.csv')
+            df_path = os.path.join(formula_dir, "df.csv")
             if os.path.exists(df_path):
                 formula_dfs[formula] = pd.read_csv(df_path)
             else:
@@ -87,28 +83,28 @@ class EvaluatorIO:
         formula_dfs = {}
         for formula in formulas:
             formula_dir = os.path.join(self.base_dir, formula)
-            df_path = os.path.join(formula_dir, 'df.csv')
-            smiles_path = os.path.join(formula_dir, 'smiles.json')
+            df_path = os.path.join(formula_dir, "df.csv")
+            smiles_path = os.path.join(formula_dir, "smiles.json")
 
             if not os.path.exists(df_path):
                 raise FileNotFoundError(f"No feature DataFrame found at {df_path} for formula {formula}")
             if not os.path.exists(smiles_path):
                 raise FileNotFoundError(f"No smiles found at {smiles_path} for formula {formula}")
 
-            df = pd.read_csv(os.path.join(formula_dir, 'df.csv'))
-            smiles = json.load(open(os.path.join(formula_dir, 'smiles.json'), 'r'))
+            df = pd.read_csv(os.path.join(formula_dir, "df.csv"))
+            smiles = json.load(open(os.path.join(formula_dir, "smiles.json"), "r"))
             formula_dfs[formula] = (df, smiles)
         return formula_dfs
 
     def save_global_metrics(self, global_metrics: Dict[str, Any]):
-        with open(os.path.join(self.base_dir, 'global_metrics.json'), 'w') as f:
+        with open(os.path.join(self.base_dir, "global_metrics.json"), "w") as f:
             json.dump(global_metrics, f)
 
 
 class IOHandler:
     def __init__(self, io_handler: EvaluatorIO = None):
         self.io = io_handler
-    
+
     def reset(self, new_base_dir: str, reference_smiles: Dict[str, list]):
         if self.io:
             self.io.base_dir = new_base_dir
@@ -133,7 +129,6 @@ class IOHandler:
             self.io.save_global_metrics(global_metrics)
 
 
-
 class EnvironmentManager:
     def __init__(self, eval_envs, reference_smiles: Dict[str, list], num_episodes_const: int, prop_factor: int):
         self.eval_envs = eval_envs
@@ -153,7 +148,9 @@ class RolloutManager:
         if rollouts_from_file:
             return io_handler.load_rollouts(self.environment_manager.eval_formulas) if io_handler else None
         else:
-            rollouts = rollout_argmax_and_stoch(ac, self.environment_manager.eval_envs, self.environment_manager.num_episodes)
+            rollouts = rollout_argmax_and_stoch(
+                ac, self.environment_manager.eval_envs, self.environment_manager.num_episodes
+            )
             io_handler.save_rollouts(rollouts) if io_handler else None
             return rollouts
 
@@ -184,8 +181,10 @@ class MetricsCalculator:
         else:
             stats_and_smiles = {formula: (df, self.reference_smiles[formula]) for formula, df in dfs.items()}
 
-        return {formula: single_formula_metrics(df, SMILES_db=smiles_list)
-                for formula, (df, smiles_list) in stats_and_smiles.items()}
+        return {
+            formula: single_formula_metrics(df, SMILES_db=smiles_list)
+            for formula, (df, smiles_list) in stats_and_smiles.items()
+        }
 
     def calculate_global_metrics(self, formula_metrics):
         return get_global_metrics(formula_metrics)
@@ -193,11 +192,11 @@ class MetricsCalculator:
 
 class SingleCheckpointEvaluator:
     def __init__(
-        self, 
-        eval_envs, 
+        self,
+        eval_envs,
         reference_smiles: Dict[str, list],
         benchmark_energies: Dict[str, float],
-        io_handler: EvaluatorIO = None, 
+        io_handler: EvaluatorIO = None,
         wandb_run: Any = None,
         num_episodes_const: int = 10,
         prop_factor: int = 100,
@@ -212,16 +211,21 @@ class SingleCheckpointEvaluator:
 
     def reset(self, new_base_dir: str):
         self.io_handler.reset(new_base_dir, self.environment_manager.reference_smiles)
-        self.data = {'rollouts': None, 'formula_dfs': None, 'formula_metrics': None, 'global_metrics': None}
+        self.data = {"rollouts": None, "formula_dfs": None, "formula_metrics": None, "global_metrics": None}
         return self
 
     def evaluate(self, args: dict):
-        self.data['rollouts'] = self.rollout_manager.perform_rollout(args['ac'], args['rollouts_from_file'], self.io_handler)
-        self.data['formula_dfs'] = self.feature_calculator.calculate_features(self.data['rollouts'], self.io_handler, args['features_from_file'])
-        self.data['formula_metrics'] = self.metrics_calculator.calculate_formula_metrics(self.data['formula_dfs'], self.io_handler)
-        self.data['global_metrics'] = self.metrics_calculator.calculate_global_metrics(self.data['formula_metrics'])
+        self.data["rollouts"] = self.rollout_manager.perform_rollout(
+            args["ac"], args["rollouts_from_file"], self.io_handler
+        )
+        self.data["formula_dfs"] = self.feature_calculator.calculate_features(
+            self.data["rollouts"], self.io_handler, args["features_from_file"]
+        )
+        self.data["formula_metrics"] = self.metrics_calculator.calculate_formula_metrics(
+            self.data["formula_dfs"], self.io_handler
+        )
+        self.data["global_metrics"] = self.metrics_calculator.calculate_global_metrics(self.data["formula_metrics"])
 
         if self.wandb_run:
-            self.data['global_metrics'].update({'total_num_steps': args['total_num_steps']})
-            self.wandb_run.log(self.data['global_metrics'])
-
+            self.data["global_metrics"].update({"total_num_steps": args["total_num_steps"]})
+            self.wandb_run.log(self.data["global_metrics"])

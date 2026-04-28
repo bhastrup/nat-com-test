@@ -55,10 +55,9 @@ class CovariantAC(AbstractActorCritic):
         self.num_gaussians = num_gaussians
 
         self.num_channels_out = len(self.zs) * self.num_channels_per_element
-        self.channel_offsets = torch.arange(start=0,
-                                            end=self.num_channels_per_element,
-                                            dtype=torch.long,
-                                            device=self.device).unsqueeze(0)
+        self.channel_offsets = torch.arange(
+            start=0, end=self.num_channels_per_element, dtype=torch.long, device=self.device
+        ).unsqueeze(0)
 
         self.cg_dict = CGDict(maxl=self.max_sh, device=self.device, dtype=self.dtype)
         self.cg_model = Cormorant(
@@ -67,11 +66,11 @@ class CovariantAC(AbstractActorCritic):
             num_cg_levels=self.num_cg_levels,  # Number of CG levels (default: 4)
             num_channels=[self.num_channels_hidden] * self.num_cg_levels + [self.num_channels_out],
             num_species=len(self.zs),
-            cutoff_type=['soft'],  # Types of cutoffs to include
+            cutoff_type=["soft"],  # Types of cutoffs to include
             hard_cut_rad=min(self.max_distance, 2.1),  # Radius of hard cutoff (in AA)
             soft_cut_rad=min(self.max_distance, 2.1),  # Radius of soft cutoff (in AA)
             soft_cut_width=0.2,  # Width of SOFT cutoff in Angstroms (default: 0.2)
-            weight_init='rand',  # Weight initialization function to use (default: rand)
+            weight_init="rand",  # Weight initialization function to use (default: rand)
             level_gain=[10.0],  # Gain at each level (default: [10.])
             charge_power=2,  # Maximum power to take in one-hot (default: 2)
             basis_set=[3, 3],  # Use gaussian mask instead of sigmoid mask.
@@ -88,18 +87,15 @@ class CovariantAC(AbstractActorCritic):
             maxl=self.max_sh,
             num_channels=self.num_channels_per_element,
             level_gain=10.0,
-            weight_init='rand',
+            weight_init="rand",
             device=self.device,
             dtype=self.dtype,
             cg_dict=self.cg_dict,
         )
 
-        self.sph_harms = SphericalHarmonics(maxl=self.max_sh,
-                                            conj=False,
-                                            sh_norm='qm',
-                                            device=self.device,
-                                            dtype=self.dtype,
-                                            cg_dict=self.cg_dict)
+        self.sph_harms = SphericalHarmonics(
+            maxl=self.max_sh, conj=False, sh_norm="qm", device=self.device, dtype=self.dtype, cg_dict=self.cg_dict
+        )
 
         self.atomic_scalars = AtomicScalars(maxl=self.max_sh, full_scalars=True, device=self.device, dtype=self.dtype)
 
@@ -125,16 +121,17 @@ class CovariantAC(AbstractActorCritic):
         )
         self.pad_zeros = torch.nn.ConstantPad1d(padding=(0, 1), value=0.0)  # Pad with one 0.0 to the right
 
-        self.distance_half_width = torch.tensor((self.max_distance - self.min_distance) / 2,
-                                                dtype=self.dtype,
-                                                device=self.device)
-        self.distance_center = torch.tensor((self.min_distance + self.max_distance) / 2,
-                                            dtype=self.dtype,
-                                            device=self.device)
+        self.distance_half_width = torch.tensor(
+            (self.max_distance - self.min_distance) / 2, dtype=self.dtype, device=self.device
+        )
+        self.distance_center = torch.tensor(
+            (self.min_distance + self.max_distance) / 2, dtype=self.dtype, device=self.device
+        )
 
-        self.distance_log_stds = torch.nn.Parameter(torch.log(
-            torch.tensor([0.1] * self.num_gaussians, dtype=self.dtype, device=self.device)),
-                                                    requires_grad=True)  # (gaussians, )
+        self.distance_log_stds = torch.nn.Parameter(
+            torch.log(torch.tensor([0.1] * self.num_gaussians, dtype=self.dtype, device=self.device)),
+            requires_grad=True,
+        )  # (gaussians, )
 
         # Value function
         self.phi_trans = MLP(
@@ -151,7 +148,7 @@ class CovariantAC(AbstractActorCritic):
         self.to(self.device)
 
     def to_action_space(self, action: torch.Tensor, observation: ObservationType) -> ActionType:
-        assert action.shape == (6, )
+        assert action.shape == (6,)
         action = to_numpy(action)
 
         focus = int(round(action[0].item()))
@@ -174,49 +171,44 @@ class CovariantAC(AbstractActorCritic):
         bags = [observation[1] for observation in observations]
 
         # Canvas
-        data = tools.process_atoms_list(atoms_list,
-                                        max_num_atoms=self.observation_space.canvas_space.size,
-                                        dtype=self.dtype,
-                                        device=self.device)
+        data = tools.process_atoms_list(
+            atoms_list, max_num_atoms=self.observation_space.canvas_space.size, dtype=self.dtype, device=self.device
+        )
 
-        data['one_hot'] = data['charges'].unsqueeze(-1) == self.zs_tensor.unsqueeze(0).unsqueeze(0)
-        data['atom_mask'] = data['charges'] > 0
-        data['edge_mask'] = data['atom_mask'].unsqueeze(1) * data['atom_mask'].unsqueeze(2)
+        data["one_hot"] = data["charges"].unsqueeze(-1) == self.zs_tensor.unsqueeze(0).unsqueeze(0)
+        data["atom_mask"] = data["charges"] > 0
+        data["edge_mask"] = data["atom_mask"].unsqueeze(1) * data["atom_mask"].unsqueeze(2)
 
         # At least one atom needs to be selectable
-        default = torch.zeros_like(data['atom_mask'])
+        default = torch.zeros_like(data["atom_mask"])
         default[..., 0] = 1
 
         # If the canvas is empty, focus 0th index
-        data['focus_mask'] = torch.logical_or(data['atom_mask'], default)
+        data["focus_mask"] = torch.logical_or(data["atom_mask"], default)
 
         # Is canvas empty?
-        data['empty'] = torch.tensor([len(atoms) == 0 for atoms in atoms_list], dtype=torch.bool, device=self.device)
+        data["empty"] = torch.tensor([len(atoms) == 0 for atoms in atoms_list], dtype=torch.bool, device=self.device)
 
         # Bag
-        data['bags'] = torch.tensor([list(bag) for bag in bags], dtype=self.dtype, device=self.device)  # (batches, zs)
-        data['element_mask'] = data['bags'] > 0  # (batches, zs)
+        data["bags"] = torch.tensor([list(bag) for bag in bags], dtype=self.dtype, device=self.device)  # (batches, zs)
+        data["element_mask"] = data["bags"] > 0  # (batches, zs)
 
         # Value mask
-        data['value_mask'] = data['atom_mask']
+        data["value_mask"] = data["atom_mask"]
 
         return data
 
     def get_so3_distribution(self, a_lms: SO3Vec, empty: torch.Tensor) -> SphericalDistribution:
         if self.beta is not None:
-            return ExpSO3Distribution(a_lms=a_lms,
-                                      sphs=self.sph_harms,
-                                      beta=self.beta,
-                                      grid=self.grid,
-                                      dtype=self.dtype,
-                                      device=self.device)
+            return ExpSO3Distribution(
+                a_lms=a_lms, sphs=self.sph_harms, beta=self.beta, grid=self.grid, dtype=self.dtype, device=self.device
+            )
         else:
             return SO3Distribution(a_lms=a_lms, sphs=self.sph_harms, empty=empty, dtype=self.dtype, device=self.device)
 
-
-
-    def mask_out_hydrogen(self, focus_mask: torch.Tensor, element_mask: torch.Tensor, 
-                          observations: List[ObservationType]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def mask_out_hydrogen(
+        self, focus_mask: torch.Tensor, element_mask: torch.Tensor, observations: List[ObservationType]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         hydrogen_delay masks out hydrogen as new atom type until all heavy atoms are placed.
         no_hydrogen_focus masks out hydrogen as focus atom at all times.
@@ -224,8 +216,7 @@ class CovariantAC(AbstractActorCritic):
 
         for i, obs in enumerate(observations):
             labels, pos = zip(*[(l, p) for l, p in obs[0]])
-            n_atoms = sum([1 for l in labels if l>0])
-
+            n_atoms = sum([1 for l in labels if l > 0])
 
             if self.no_hydrogen_focus:
                 # atoms, _ = self.observation_space.parse(obs)
@@ -238,16 +229,13 @@ class CovariantAC(AbstractActorCritic):
                     if element == 1:
                         focus_mask[i, j] = torch.tensor(0, dtype=torch.int, device=self.device)
 
-
                 if n_atoms == 0:
                     element_mask[i, 1] = torch.tensor(0, dtype=torch.int, device=self.device)
-
 
             if self.hydrogen_delay and (element_mask[i, 2:].sum() > 0):
                 element_mask[i, 1] = torch.tensor(0, dtype=torch.int, device=self.device)
 
         return focus_mask, element_mask
-
 
     def step(self, observations: List[ObservationType], actions: Optional[np.ndarray] = None) -> dict:
         data = self.parse_observations(observations)
@@ -262,10 +250,11 @@ class CovariantAC(AbstractActorCritic):
         # Compute invariants
         invariats = self.atomic_scalars(covariats)  # (batches, atoms, inv_feats)
 
-
-        focus_mask_choose, element_mask = self.mask_out_hydrogen(data['focus_mask'], data['element_mask'], observations) \
-            if self.hydrogen_delay or self.no_hydrogen_focus else (data['focus_mask'], data['element_mask'])
-
+        focus_mask_choose, element_mask = (
+            self.mask_out_hydrogen(data["focus_mask"], data["element_mask"], observations)
+            if self.hydrogen_delay or self.no_hydrogen_focus
+            else (data["focus_mask"], data["element_mask"])
+        )
 
         # Focus
         focus_logits = self.phi_focus(invariats)  # (batches, atoms, 1)
@@ -281,8 +270,9 @@ class CovariantAC(AbstractActorCritic):
         else:
             focus = torch.argmax(focus_probs, dim=-1).unsqueeze(-1)
 
-        focus_oh = to_one_hot(focus, num_classes=self.observation_space.canvas_space.size,
-                              device=self.device)  # (batches, atoms)
+        focus_oh = to_one_hot(
+            focus, num_classes=self.observation_space.canvas_space.size, device=self.device
+        )  # (batches, atoms)
 
         focused_cov = so3_tools.select_atomic_covariats(covariats, focus_oh)  # (batches, taus, ms, 2)
         focused_inv = so3_tools.select_atomic_invariats(invariats, focus_oh)  # (batches, feats)
@@ -310,9 +300,9 @@ class CovariantAC(AbstractActorCritic):
         # gmm_log_probs, d_mean_trans: (batches, gaussians)
         gmm_log_probs, d_mean_trans = self.phi_d(element_inv).split(self.num_gaussians, dim=-1)
         distance_mean = torch.tanh(d_mean_trans) * self.distance_half_width + self.distance_center
-        distance_dist = GaussianMixtureModel(log_probs=gmm_log_probs,
-                                             means=distance_mean,
-                                             stds=torch.exp(self.distance_log_stds).clamp(1e-6))
+        distance_dist = GaussianMixtureModel(
+            log_probs=gmm_log_probs, means=distance_mean, stds=torch.exp(self.distance_log_stds).clamp(1e-6)
+        )
 
         # distance: (batches, 1)
         if actions is not None:
@@ -329,7 +319,7 @@ class CovariantAC(AbstractActorCritic):
         distance_so3 = SO3Vec([transformed_d])
         cond_cov = self.cg_mix(element_cov, distance_so3)
 
-        so3_dist = self.get_so3_distribution(a_lms=cond_cov, empty=data['empty'])
+        so3_dist = self.get_so3_distribution(a_lms=cond_cov, empty=data["empty"])
 
         # so3: (batches, 3)
         if actions is not None:
@@ -360,7 +350,8 @@ class CovariantAC(AbstractActorCritic):
         # invariants: (batches, atoms, feats)
         trans_invariats = self.phi_trans(invariats)
         value_feats = torch.einsum(  # type: ignore
-            'ba,baf->bf', data['value_mask'].to(self.dtype), trans_invariats)  # (batches, inv_feats)
+            "ba,baf->bf", data["value_mask"].to(self.dtype), trans_invariats
+        )  # (batches, inv_feats)
         value = self.phi_v(value_feats).squeeze(-1)  # (batches, )
 
         # Action
@@ -369,14 +360,16 @@ class CovariantAC(AbstractActorCritic):
             actions = torch.cat([focus.float(), element.float(), distance, orientation], dim=-1)
 
             # Build correspond action in action space
-            response['actions'] = [self.to_action_space(a, o) for a, o in zip(actions, observations)]
+            response["actions"] = [self.to_action_space(a, o) for a, o in zip(actions, observations)]
 
-        response.update({
-            'a': actions,  # (batches, subactions)
-            'logp': log_prob,  # (batches, )
-            'ent': entropy,  # (batches, )
-            'v': value,  # (batches, )
-            'dists': [focus_dist, element_dist, distance_dist, so3_dist],
-        })
+        response.update(
+            {
+                "a": actions,  # (batches, subactions)
+                "logp": log_prob,  # (batches, )
+                "ent": entropy,  # (batches, )
+                "v": value,  # (batches, )
+                "dists": [focus_dist, element_dist, distance_dist, so3_dist],
+            }
+        )
 
         return response

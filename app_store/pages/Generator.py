@@ -25,11 +25,8 @@ def main():
     show_logo()
     configure_canvas()
     initialize_session_state()
-    
-    
 
     agent_col, dead_col1, mid_col, dead_col2, env_col = st.columns([12, 1, 20, 2, 14])
-
 
     with agent_col:
         agent_header_cols = st.columns([5, 10])
@@ -49,7 +46,6 @@ def main():
         with st.expander(r"$\textsf{\Large All envs}$"):
             display_loaded_envs()
 
-
     with mid_col:
         generator_header_cols = st.columns([5, 10])
         with generator_header_cols[1]:
@@ -57,23 +53,16 @@ def main():
         generate_buttons()
         st.session_state.pm.playgrounds_GUI()
 
-
-    st.markdown("---") #############################################################################################
+    st.markdown("---")  #############################################################################################
     display_results_tabs()
     # TODO: Idea: print results on the fly
-      
 
-
-
-    latent_space_viz = False # st.checkbox('Explore latent space')
+    latent_space_viz = False  # st.checkbox('Explore latent space')
 
     if latent_space_viz:
-        df = pd.DataFrame(
-            np.random.randn(200, 3),
-            columns=['a', 'b', 'c'])
+        df = pd.DataFrame(np.random.randn(200, 3), columns=["a", "b", "c"])
 
-        c = alt.Chart(df).mark_circle().encode(
-            x='a', y='b', size='c', color='c', tooltip=['a', 'b', 'c'])
+        c = alt.Chart(df).mark_circle().encode(x="a", y="b", size="c", color="c", tooltip=["a", "b", "c"])
 
         st.write(c)
 

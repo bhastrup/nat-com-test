@@ -23,11 +23,13 @@ from torch.optim.optimizer import Optimizer
 from src.rl.spaces import FormulaType
 from src.rl.env_container import SimpleEnvContainer
 
+
 def get_str_formulas_from_vecenv(envs: SimpleEnvContainer) -> List[str]:
-    """ Only meant to extract eval formulas. One for each environment."""
+    """Only meant to extract eval formulas. One for each environment."""
     for env in envs.environments:
         assert len(env.formulas) == 1
     return [bag_tuple_to_str_formula(env.formulas[0]) for env in envs.environments]
+
 
 # def bag_tuple_to_str_formula(bag_tuple: FormulaType) -> str:
 #     return ''.join(f"{ase.data.chemical_symbols[z]}{count if count>1 else ''}" for z, count in bag_tuple)
@@ -35,20 +37,21 @@ def get_str_formulas_from_vecenv(envs: SimpleEnvContainer) -> List[str]:
 
 def str_formula_to_size(formula: str) -> int:
     # Regular expression to find elements and their counts
-    element_pattern = re.compile(r'([A-Z][a-z]?)(\d*)')
-    
+    element_pattern = re.compile(r"([A-Z][a-z]?)(\d*)")
+
     total_atoms = 0
-    
+
     for element, count in element_pattern.findall(formula):
         # If count is empty, it means there's only one atom of this element
         count = int(count) if count else 1
         total_atoms += count
-    
+
     return total_atoms
+
 
 def str_formula_to_bag_tuple(formula: str) -> FormulaType:
     # Regular expression to find elements and their counts
-    element_pattern = re.compile(r'([A-Z][a-z]?)(\d*)')
+    element_pattern = re.compile(r"([A-Z][a-z]?)(\d*)")
 
     bag = []
 
@@ -64,8 +67,9 @@ def symbols_to_str_formula(atom_syms: list) -> str:
     elements_unique = set([atomic_numbers[s] for s in atom_syms])
     symbols_sorted = [chemical_symbols[atomic_number] for atomic_number in sorted(elements_unique)]
     counts = dict(collections.Counter(atom_syms))
-    counts_sort =  {k: counts[k] for k in symbols_sorted}
-    return ''.join([f'{k}' if v == 1 else f'{k}{v}' for k, v in counts_sort.items()])
+    counts_sort = {k: counts[k] for k in symbols_sorted}
+    return "".join([f"{k}" if v == 1 else f"{k}{v}" for k, v in counts_sort.items()])
+
 
 def elements_to_str_formula(elements: List[Union[int, str]]) -> str:
     if all(isinstance(e, int) for e in elements):
@@ -77,14 +81,15 @@ def elements_to_str_formula(elements: List[Union[int, str]]) -> str:
 
     counts = collections.Counter(symbols)
     sorted_symbols = sorted(counts.keys(), key=lambda x: atomic_numbers[x])
-    return ''.join([f'{s}' if counts[s] == 1 else f'{s}{counts[s]}' for s in sorted_symbols])
-
+    return "".join([f"{s}" if counts[s] == 1 else f"{s}{counts[s]}" for s in sorted_symbols])
 
 
 def bag_tuple_to_str_formula(bag_tuple: FormulaType, sort: bool = True) -> str:
     if sort:
         bag_tuple = sorted(bag_tuple, key=lambda x: x[0])
-    return ''.join(f"{ase.data.chemical_symbols[z] if count > 0 else ''}{count if count > 1 else ''}" for z, count in bag_tuple)
+    return "".join(
+        f"{ase.data.chemical_symbols[z] if count > 0 else ''}{count if count > 1 else ''}" for z, count in bag_tuple
+    )
 
 
 def string_to_formula(string: str) -> FormulaType:
@@ -108,6 +113,7 @@ def remove_atom_from_formula(formula: FormulaType, atomic_number: int) -> Formul
 
     raise RuntimeError(f"Could not remove atomic number {atomic_number} from bag {formula}")
 
+
 def add_atom_to_formula(formula: FormulaType, atomic_number: int) -> FormulaType:
     copy = list(formula)
     for i, (z, count) in enumerate(formula):
@@ -118,11 +124,13 @@ def add_atom_to_formula(formula: FormulaType, atomic_number: int) -> FormulaType
     copy.append((atomic_number, 1))
     return tuple(copy)
 
+
 def find_count(formula: FormulaType, atomic_number: int) -> int:
     for z, count in formula:
         if z == atomic_number:
             return count
     return 0
+
 
 def update_count(formula: FormulaType, atomic_number: int, count: int) -> FormulaType:
     copy = list(formula)
@@ -145,7 +153,7 @@ def to_numpy(t: torch.Tensor) -> np.ndarray:
 
 def combined_shape(length: int, shape: Optional[tuple] = None) -> tuple:
     if shape is None:
-        return length,
+        return (length,)
     return (length, shape) if np.isscalar(shape) else (length, *shape)
 
 
@@ -160,7 +168,8 @@ def compute_gradient_norm(parameters: Iterable[torch.nn.Parameter], norm_type: i
     device = parameters[0].grad.device  # type: ignore
     total_norm = torch.norm(
         torch.stack([torch.norm(p.grad.detach(), norm_type).to(device) for p in parameters]),  # type: ignore
-        norm_type)
+        norm_type,
+    )
     return total_norm.item()
 
 
@@ -190,24 +199,24 @@ def discount_cumsum(x: np.ndarray, discount: float) -> np.ndarray:
 
 
 def set_seeds(seed: int) -> None:
-    np.random.seed(seed)        # Sets seed for numpy
-    torch.manual_seed(seed)     # Sets seed for PyTorch
-    if hasattr(torch, 'cuda'):  # Sets seed for CUDA (if using GPU)
+    np.random.seed(seed)  # Sets seed for numpy
+    torch.manual_seed(seed)  # Sets seed for PyTorch
+    if hasattr(torch, "cuda"):  # Sets seed for CUDA (if using GPU)
         torch.cuda.manual_seed_all(seed)
 
 
 def split_formula_strings(formulas: str) -> List[str]:
-    return formulas.split(',')
+    return formulas.split(",")
 
 
 def parse_size_range(size_range: str) -> Tuple[int, int]:
-    parsed_range = [int(i) for i in size_range.split(',')]
+    parsed_range = [int(i) for i in size_range.split(",")]
     assert len(parsed_range) == 2
     return parsed_range[0], parsed_range[1]
 
 
 def get_tag(config: dict) -> str:
-    return '{exp}_run-{seed}'.format(exp=config['name'], seed=config['seed'])
+    return "{exp}_run-{seed}".format(exp=config["name"], seed=config["seed"])
 
 
 def save_config(config: dict, directory: str, tag: str, verbose=True):
@@ -216,8 +225,8 @@ def save_config(config: dict, directory: str, tag: str, verbose=True):
     if verbose:
         logging.info(formatted)
 
-    path = os.path.join(directory, tag + '.json')
-    with open(file=path, mode='w') as f:
+    path = os.path.join(directory, tag + ".json")
+    with open(file=path, mode="w") as f:
         f.write(formatted)
 
 
@@ -274,35 +283,35 @@ class SafeStreamHandler(logging.StreamHandler):
         except BrokenPipeError:
             logging.getLogger().removeHandler(self)
 
+
 def setup_logger(config: dict, directory, tag: str):
     logger = logging.getLogger()
-    logger.setLevel(config['log_level'])
+    logger.setLevel(config["log_level"])
 
-    formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
+    formatter = logging.Formatter("%(asctime)s.%(msecs)03d %(levelname)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
 
     ch = SafeStreamHandler(stream=sys.stdout)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
-    path = os.path.join(directory, tag + '.log')
+    path = os.path.join(directory, tag + ".log")
     fh = logging.FileHandler(path)
     fh.setFormatter(formatter)
 
     logger.addHandler(fh)
 
 
-
 def setup_simple_logger(path: str = None, log_level=logging.INFO):
     logger = logging.getLogger()
     logger.setLevel(log_level)
-    formatter = logging.Formatter('%(message)s')
+    formatter = logging.Formatter("%(message)s")
 
     ch = logging.StreamHandler(stream=sys.stdout)
     ch.setFormatter(formatter)
     logger.addHandler(ch)
 
     if path:
-        fh = logging.FileHandler(path, mode='w')
+        fh = logging.FileHandler(path, mode="w")
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
@@ -311,14 +320,14 @@ class RolloutSaver:
     def __init__(self, directory: str, tag: str):
         self.directory = directory
         self.tag = tag
-        self._suffix = '.pkl'
+        self._suffix = ".pkl"
 
     def save(self, obj: object, num_steps: int, info: str):
-        added = f'steps-{num_steps}'
+        added = f"steps-{num_steps}"
 
-        path = os.path.join(self.directory, self.tag + '_' + added + '_' + info + self._suffix)
-        logging.debug(f'Saving rollout: {path}')
-        with open(path, mode='wb') as f:
+        path = os.path.join(self.directory, self.tag + "_" + added + "_" + info + self._suffix)
+        logging.debug(f"Saving rollout: {path}")
+        with open(path, mode="wb") as f:
             pickle.dump(obj, f)
 
 
@@ -326,31 +335,31 @@ class InfoSaver:
     def __init__(self, directory: str, tag: str):
         self.directory = directory
         self.tag = tag
-        self._suffix = '.txt'
+        self._suffix = ".txt"
 
     def save(self, obj: object, name: str):
-        path = os.path.join(self.directory, self.tag + '_' + name + self._suffix)
-        logging.debug(f'Saving info: {path}')
-        with open(path, mode='a') as f:
+        path = os.path.join(self.directory, self.tag + "_" + name + self._suffix)
+        logging.debug(f"Saving info: {path}")
+        with open(path, mode="a") as f:
             f.write(json.dumps(obj))
-            f.write('\n')
+            f.write("\n")
 
 
 def init_device(device_str: str) -> torch.device:
-    if device_str == 'cuda':
-        assert (torch.cuda.is_available()), 'No CUDA device available!'
-        logging.info('CUDA Device: {}'.format(torch.cuda.current_device()))
+    if device_str == "cuda":
+        assert torch.cuda.is_available(), "No CUDA device available!"
+        logging.info("CUDA Device: {}".format(torch.cuda.current_device()))
         torch.cuda.init()
-        return torch.device('cuda')
+        return torch.device("cuda")
     else:
-        logging.info('Using CPU')
-        return torch.device('cpu')
+        logging.info("Using CPU")
+        return torch.device("cpu")
 
 
 def get_optimizer(name: str, learning_rate: float, parameters: Iterable[torch.Tensor]) -> Optimizer:
-    if name == 'adam':
+    if name == "adam":
         amsgrad = False
-    elif name == 'amsgrad':
+    elif name == "amsgrad":
         amsgrad = True
     else:
         raise RuntimeError(f"Unknown optimizer '{name}'")
@@ -360,7 +369,7 @@ def get_optimizer(name: str, learning_rate: float, parameters: Iterable[torch.Te
 
 def fibonacci_sphere(samples=15):
     points = np.zeros((samples, 3))
-    phi = np.pi * (3. - np.sqrt(5.))  # golden angle in radians
+    phi = np.pi * (3.0 - np.sqrt(5.0))  # golden angle in radians
 
     for i in range(samples):
         y = 1 - (i / float(samples - 1)) * 2  # y goes from 1 to -1

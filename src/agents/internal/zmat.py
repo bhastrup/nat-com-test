@@ -63,8 +63,9 @@ def get_dihedral(p_i: np.ndarray, p_j: np.ndarray, p_k: np.ndarray, p_l: np.ndar
         return np.pi - psi
 
 
-def position_point(p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, distance: float, angle: float,
-                   dihedral: float) -> np.ndarray:
+def position_point(
+    p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, distance: float, angle: float, dihedral: float
+) -> np.ndarray:
     """
     Determine point p in space that is:
         - <distance> far from p2
@@ -89,7 +90,7 @@ def position_point(p0: np.ndarray, p1: np.ndarray, p2: np.ndarray, distance: flo
     v_b = v_b / np.linalg.norm(v_b)
 
     c_ab = np.cross(v_a, v_b)
-    c_ab = c_ab / (np.linalg.norm(c_ab)+1e-8)
+    c_ab = c_ab / (np.linalg.norm(c_ab) + 1e-8)
 
     c_ab_b = np.cross(c_ab, v_b)
 
@@ -104,7 +105,7 @@ def position_atom_helper(
     dihedral: float,
 ) -> np.ndarray:
     if focus > len(positions):
-        raise RuntimeError('Focus greater than number of atoms')
+        raise RuntimeError("Focus greater than number of atoms")
 
     if len(positions) == 0:
         return np.array([0, 0, 0], dtype=float)

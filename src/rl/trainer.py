@@ -17,7 +17,6 @@ from src.tools.model_util import ModelIO
 from src.tools.util import RolloutSaver, InfoSaver
 
 
-
 def lightweight_eval(eval_envs, ac, gamma, lam, logger, info_saver, rollout_saver, save_eval_rollout, total_num_iter):
     if eval_envs is None:
         return
@@ -26,48 +25,50 @@ def lightweight_eval(eval_envs, ac, gamma, lam, logger, info_saver, rollout_save
 
     with torch.no_grad():
         # ac.training = False
-        eval_rollout = rollout_n_eps_per_env(ac,
-                                             eval_envs,
-                                             buffer_container=eval_container,
-                                             num_episodes=1,
-                                             output_trajs=False,
-                                             render=True)
+        eval_rollout = rollout_n_eps_per_env(
+            ac, eval_envs, buffer_container=eval_container, num_episodes=1, output_trajs=False, render=True
+        )
         # ac.training = True
     eval_buffer = eval_container.merge()
     if logger:
-        logger.save_rollout_and_info(info_saver=info_saver, rollout_saver=rollout_saver, rollout=eval_rollout, 
-                                              save_rollout=save_eval_rollout, buffer=eval_buffer, name='eval', 
-                                              total_num_iter=total_num_iter)
-    
-    print(f'Eval: {eval_rollout["return_mean"]:.2f} +- {eval_rollout["return_std"]:.2f}')
+        logger.save_rollout_and_info(
+            info_saver=info_saver,
+            rollout_saver=rollout_saver,
+            rollout=eval_rollout,
+            save_rollout=save_eval_rollout,
+            buffer=eval_buffer,
+            name="eval",
+            total_num_iter=total_num_iter,
+        )
 
-
+    print(f"Eval: {eval_rollout['return_mean']:.2f} +- {eval_rollout['return_std']:.2f}")
 
 
 def merge_data(dict1: dict, dict2: dict):
-    return {k: dict1[k] + dict2[k] if k == 'obs' 
-            else np.concatenate([dict1[k], dict2[k]], axis=0) for k in dict2.keys()}
+    return {
+        k: dict1[k] + dict2[k] if k == "obs" else np.concatenate([dict1[k], dict2[k]], axis=0) for k in dict2.keys()
+    }
 
 
 class Trainer:
     def __init__(
-            self, 
-            total_num_iter: int,
-            ac: AbstractActorCritic,
-            data_loader: DataLoader = None,
-            policy_optimizer_offline: PolicyOptimizer = None,
-            policy_optimizer_online: PolicyOptimizer = None,
-            model_handler: Optional[ModelIO] = None,
-            save_freq: int = 50,
-            eval_freq: int = 2000,
-            eval_envs: VecEnv = None,
-            config: dict = None,
-            config_ft: dict = None,
-            train_envs_online: VecEnv = None,
-            logger: Logger = None,
-            evaluator: SingleCheckpointEvaluator = None,
-            info_saver: Optional[InfoSaver] = None,
-            rollout_saver: Optional[RolloutSaver] = None
+        self,
+        total_num_iter: int,
+        ac: AbstractActorCritic,
+        data_loader: DataLoader = None,
+        policy_optimizer_offline: PolicyOptimizer = None,
+        policy_optimizer_online: PolicyOptimizer = None,
+        model_handler: Optional[ModelIO] = None,
+        save_freq: int = 50,
+        eval_freq: int = 2000,
+        eval_envs: VecEnv = None,
+        config: dict = None,
+        config_ft: dict = None,
+        train_envs_online: VecEnv = None,
+        logger: Logger = None,
+        evaluator: SingleCheckpointEvaluator = None,
+        info_saver: Optional[InfoSaver] = None,
+        rollout_saver: Optional[RolloutSaver] = None,
     ):
         self.total_num_iter = total_num_iter
         self.ac = ac
@@ -91,7 +92,6 @@ class Trainer:
 
         self.determine_training_flags()
         self.determine_target_iter()
-
 
     def determine_training_flags(self):
         """Determine if we are doing offline and/or online learning"""
@@ -118,29 +118,33 @@ class Trainer:
             self.n_iter_online = 0
 
         if self.pretrain:
-            self.n_iter_pretrain = len(self.data_loader) * self.config['num_epochs']
+            self.n_iter_pretrain = len(self.data_loader) * self.config["num_epochs"]
         else:
             self.n_iter_pretrain = 0
 
         self.total_iter_target = max(self.n_iter_online, self.n_iter_pretrain)
 
-
     def make_pretraining_step_now(self) -> bool:
-        return (self.total_num_iter % self.config['pretrain_every_k_iter'] == 0) \
-            if self.config['pretrain_every_k_iter'] else False
-
+        return (
+            (self.total_num_iter % self.config["pretrain_every_k_iter"] == 0)
+            if self.config["pretrain_every_k_iter"]
+            else False
+        )
 
     def collect_online_data(self) -> Tuple[dict, dict]:
         if self.online_learning == False or self.total_num_iter < self.burn_in[0]:
             return None, None
-        
-        online_container = PPOBufferContainer(size=self.train_envs_online.get_size(), gamma=1., lam=0.97)
-        online_rollout = batch_rollout_with_logging(ac=self.ac, envs=self.train_envs_online,
-                                                    buffer_container=online_container,
-                                                    num_steps=self.config_ft['num_steps_per_iter'],
-                                                    logger=self.logger)
+
+        online_container = PPOBufferContainer(size=self.train_envs_online.get_size(), gamma=1.0, lam=0.97)
+        online_rollout = batch_rollout_with_logging(
+            ac=self.ac,
+            envs=self.train_envs_online,
+            buffer_container=online_container,
+            num_steps=self.config_ft["num_steps_per_iter"],
+            logger=self.logger,
+        )
         online_buffer = online_container.merge()
-    
+
         if self.logger:
             self.logger.save_rollout_and_info(
                 info_saver=self.info_saver,
@@ -148,14 +152,13 @@ class Trainer:
                 rollout=online_rollout,
                 save_rollout=False,
                 buffer=online_buffer,
-                name='train', 
-                total_num_iter=self.total_num_iter
+                name="train",
+                total_num_iter=self.total_num_iter,
             )
-        
+
         online_data = online_buffer.get_data()
 
         return online_data, online_rollout
-    
 
     def collect_offline_data(self):
         if not self.pretrain or not self.make_pretraining_step_now():
@@ -168,63 +171,59 @@ class Trainer:
             self.data_iter = iter(self.data_loader)
             return next(self.data_iter)
 
-
     def optimization_step(self, online_data: dict, offline_data: dict, infos: dict):
 
         if online_data is not None:
             loss_info_online = self.policy_optimizer_online.optimize(
-                data=online_data, mode='online', burn_in=self.total_num_iter < self.burn_in[1]
+                data=online_data, mode="online", burn_in=self.total_num_iter < self.burn_in[1]
             )
-            infos.update({'rl': loss_info_online})
+            infos.update({"rl": loss_info_online})
 
         if offline_data is not None:
-            loss_info_offline = self.policy_optimizer_offline.optimize(offline_data, mode='offline')
-            infos.update({'pretrain': loss_info_offline})
+            loss_info_offline = self.policy_optimizer_offline.optimize(offline_data, mode="offline")
+            infos.update({"pretrain": loss_info_offline})
 
         return infos
-
 
     def checkpoint_saving(self):
         if not self.model_handler:
             return
-        
+
         # Save model (perpetually)
         if self.total_num_iter % self.save_freq == 0:
             self.model_handler.save(self.ac, num_steps=self.total_num_iter)
-    
+
         # Save model (big checkpoint)
         if self.total_num_iter in self.model_handler._checkpoints:
             cp_path = self.model_handler.save_if_checkpoint(self.ac, self.total_num_iter)
 
-
     def log_infos(self, infos: dict):
         if not self.logger:
             return
-        
-        infos['total_num_iter'] = self.total_num_iter
+
+        infos["total_num_iter"] = self.total_num_iter
         print(infos)
 
         if self.logger.wandb_run is not None:
             self.logger.wandb_run.log(infos)
-    
 
     def evaluation(self):
         if self.eval_envs is None:
             return
 
         # Single shot evaluation: No longer used in finetuning_logger besides simple logging
-        if self.total_num_iter % self.config['eval_freq_fast'] == 0:
+        if self.total_num_iter % self.config["eval_freq_fast"] == 0:
             print(f"Fast evaluation at {self.total_num_iter} steps")
             lightweight_eval(
-                eval_envs=deepcopy(self.eval_envs), 
-                ac=self.ac, 
-                gamma=1., 
-                lam=0.97, 
+                eval_envs=deepcopy(self.eval_envs),
+                ac=self.ac,
+                gamma=1.0,
+                lam=0.97,
                 logger=self.logger,
-                info_saver=None, 
-                rollout_saver=None, 
+                info_saver=None,
+                rollout_saver=None,
                 save_eval_rollout=False,
-                total_num_iter=self.total_num_iter
+                total_num_iter=self.total_num_iter,
             )
 
         # Evaluate
@@ -236,12 +235,11 @@ class Trainer:
                 batch_size=self.config_ft["num_steps_per_iter"],
                 cf=self.config,
             )
-    
+
     def increment_total_num_iter(self):
         self.total_num_iter += 1
         if self.logger:
             self.logger.increment_total_num_iter()
-
 
     def train(self):
 
@@ -255,8 +253,9 @@ class Trainer:
             # Collect data
             online_data, online_rollout = self.collect_online_data()
             offline_data = self.collect_offline_data()
-            assert offline_data is not None or online_data is not None, \
+            assert offline_data is not None or online_data is not None, (
                 "We have to do either online or offline learning"
+            )
 
             # Optimize
             infos = self.optimization_step(online_data, offline_data, infos)

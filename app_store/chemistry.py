@@ -1,14 +1,12 @@
-
-
 labels = [
-    ['H', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', 'He'],
-    ['Li', 'Be', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', 'B', 'C', 'N', 'O', 'F', 'Ne'],
-    ['Na', 'Mg', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.', 'Al', 'Si', 'P', 'S', 'Cl', 'Ar'],
-    ['K', 'Ca', 'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn', 'Ga', 'Ge', 'As', 'Se', 'Br', 'Kr'],
-    ['Rb', 'Sr', 'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd', 'In', 'Sn', 'Sb', 'Te', 'I', 'Xe'],
-    ['Cs', 'Ba', '.', 'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Tl', 'Pb', 'Bi', 'Po', 'At', 'Rn'],
-    ['Fr', 'Ra', '.', 'Rf', 'Db', 'Sg', 'Bh', 'Hs', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
-    ['La', 'Ce', 'Pr', 'Nd', 'Pm', 'Sm', 'Eu', 'Gd', 'Tb', 'Dy', 'Ho', 'Er', 'Tm', 'Yb', 'Lu', '.', '.', '.']
+    ["H", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "He"],
+    ["Li", "Be", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "B", "C", "N", "O", "F", "Ne"],
+    ["Na", "Mg", ".", ".", ".", ".", ".", ".", ".", ".", ".", ".", "Al", "Si", "P", "S", "Cl", "Ar"],
+    ["K", "Ca", "Sc", "Ti", "V", "Cr", "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr"],
+    ["Rb", "Sr", "Y", "Zr", "Nb", "Mo", "Tc", "Ru", "Rh", "Pd", "Ag", "Cd", "In", "Sn", "Sb", "Te", "I", "Xe"],
+    ["Cs", "Ba", ".", "Hf", "Ta", "W", "Re", "Os", "Ir", "Pt", "Au", "Hg", "Tl", "Pb", "Bi", "Po", "At", "Rn"],
+    ["Fr", "Ra", ".", "Rf", "Db", "Sg", "Bh", "Hs", ".", ".", ".", ".", ".", ".", ".", ".", ".", "."],
+    ["La", "Ce", "Pr", "Nd", "Pm", "Sm", "Eu", "Gd", "Tb", "Dy", "Ho", "Er", "Tm", "Yb", "Lu", ".", ".", "."],
 ]
 
 
@@ -144,7 +142,6 @@ labels = [
 # }
 
 
-
 ### New version
 
 colors = {
@@ -159,9 +156,6 @@ colors = {
     "Actinide": "#FF0000",  # Red
     "Lanthanide": "#FF0000",  # Red
 }
-
-
-
 
 
 elements = {
@@ -217,7 +211,12 @@ elements = {
     "Sn": {"atomic_number": 50, "symbol": "Sn", "name": "Tin", "category": "Post-Transition Metal"},
     "Sb": {"atomic_number": 51, "symbol": "Sb", "name": "Antimony", "category": "Metalloid"},
     "Te": {"atomic_number": 52, "symbol": "Te", "name": "Tellurium", "category": "Metalloid"},
-    "I": {"atomic_number": 53, "symbol": "I", "name": "Iodine", "category": "Reactive Nonmetal"}, # use copilot from here
+    "I": {
+        "atomic_number": 53,
+        "symbol": "I",
+        "name": "Iodine",
+        "category": "Reactive Nonmetal",
+    },  # use copilot from here
     "Xe": {"atomic_number": 54, "symbol": "Xe", "name": "Xenon", "category": "Noble Gas"},
     "Cs": {"atomic_number": 55, "symbol": "Cs", "name": "Caesium", "category": "Alkali Metal"},
     "Ba": {"atomic_number": 56, "symbol": "Ba", "name": "Barium", "category": "Alkaline Earth Metal"},
@@ -239,7 +238,7 @@ elements = {
     "Hf": {"atomic_number": 72, "symbol": "Hf", "name": "Hafnium", "category": "Transition Metal"},
     "Ta": {"atomic_number": 73, "symbol": "Ta", "name": "Tantalum", "category": "Transition Metal"},
     "W": {"atomic_number": 74, "symbol": "W", "name": "Tungsten", "category": "Transition Metal"},
-    "Re": {"atomic_number": 75, "symbol": "Re", "name": "Rhenium", "category": "Transition Metal"}, 
+    "Re": {"atomic_number": 75, "symbol": "Re", "name": "Rhenium", "category": "Transition Metal"},
     "Os": {"atomic_number": 76, "symbol": "Os", "name": "Osmium", "category": "Transition Metal"},
     "Ir": {"atomic_number": 77, "symbol": "Ir", "name": "Iridium", "category": "Transition Metal"},
     "Pt": {"atomic_number": 78, "symbol": "Pt", "name": "Platinum", "category": "Transition Metal"},
@@ -286,7 +285,6 @@ elements = {
 }
 
 
-
 # import streamlit as st
 # from app_store.chemistry import elements, colors, labels
 
@@ -310,8 +308,6 @@ elements = {
 #             button_style = f"background-color: {category_color}; color: black; border: 1px solid black; padding: 8px 16px; text-align: center; text-decoration: none; display: inline-block; font-size: 16px; margin: 2px 2px; cursor: pointer;"
 #             button_html = f"<button id='{symbol}' style='{button_style}' onclick='alert(\"{symbol} selected\")'>{symbol}</button>"
 #             cols[i].markdown(button_html, unsafe_allow_html=True)
-
-
 
 
 # # Display the sliders and remove buttons for each element
@@ -339,5 +335,3 @@ elements = {
 # # Display the updated contents of the bag
 # st.header("Bag:")
 # st.write(", ".join(f"{k}: {v}" for k, v in st.session_state.bag.items()))
-
-

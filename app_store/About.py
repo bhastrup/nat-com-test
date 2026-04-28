@@ -21,7 +21,7 @@ show_logo()
 
 col1, col2 = st.columns([5, 10])
 with col1:
-    st.title('Isomer Discovery with RL')
+    st.title("Isomer Discovery with RL")
     st.write(
         """
         Accompanying web app for the paper:  
@@ -31,10 +31,9 @@ with col1:
         Preprint (Version 1) available on [Research Square](https://doi.org/10.21203/rs.3.rs-6900238/v1).
         """
     )
-    with st.expander('Python environment details 🐍', expanded=False):
+    with st.expander("Python environment details 🐍", expanded=False):
         st.write(f"python environment: {sys.executable}")
         st.write(f"python version: {sys.version}")
 
 with col2:
-    st.image(Image.open('resources/image_grid.png'))
-
+    st.image(Image.open("resources/image_grid.png"))

@@ -15,7 +15,12 @@ class HeavyFirstNoReward(HeavyFirst):
         done = atomic_number == 0
 
         if done:
-            return self.observation_space.build(self.current_atoms, self.current_formula), 0.0, done, {'termination_info': 'stop_token'}
+            return (
+                self.observation_space.build(self.current_atoms, self.current_formula),
+                0.0,
+                done,
+                {"termination_info": "stop_token"},
+            )
 
         new_atom = self.action_space.to_atom(action)
         if not self._is_valid_action(current_atoms=self.current_atoms, new_atom=new_atom):
@@ -23,7 +28,7 @@ class HeavyFirstNoReward(HeavyFirst):
                 self.observation_space.build(self.current_atoms, self.current_formula),
                 self.min_reward,
                 True,
-                {'termination_info': 'invalid_action'},
+                {"termination_info": "invalid_action"},
             )
 
         self.current_atoms.append(new_atom)
@@ -33,11 +38,9 @@ class HeavyFirstNoReward(HeavyFirst):
         if self._is_terminal(lag=0):
             done = True
 
-        
         reward = 0
         info = {}
 
-        
         return self.observation_space.build(self.current_atoms, self.current_formula), reward, done, info
 
     def reset(self) -> ObservationType:
@@ -47,10 +50,10 @@ class HeavyFirstNoReward(HeavyFirst):
         self.current_atoms = Atoms()
         self.current_formula = next(self.formula_cycle)
         self.benchmark_energy = next(self.benchmark_energy_cycle)
-        #self.reward.reset_old_energies(self.worker_id)
+        # self.reward.reset_old_energies(self.worker_id)
 
         # Take a step to add the heaviest atom on the canvas
-        heaviest = max([z for (z, _) in self.current_formula ])
+        heaviest = max([z for (z, _) in self.current_formula])
         heaviest_number_index = self.action_space.zs.index(heaviest)
         obs, _, _, _ = self.step(action=(heaviest_number_index, (0, 0, 0)))
 

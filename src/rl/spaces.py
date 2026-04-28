@@ -15,7 +15,7 @@ ObservationType = Tuple[CanvasType, BagType]
 
 FormulaType = Tuple[Tuple[int, int], ...]
 
-NULL_SYMBOL = 'X'
+NULL_SYMBOL = "X"
 
 
 class CanvasItemSpace(gym.spaces.Tuple):
@@ -33,7 +33,7 @@ class CanvasItemSpace(gym.spaces.Tuple):
     def to_atom(self, canvas_item: CanvasItemType) -> Atom:
         label, position = canvas_item
         if label < 0:
-            raise RuntimeError(f'Invalid atomic number: {label}')
+            raise RuntimeError(f"Invalid atomic number: {label}")
 
         return Atom(symbol=self.zs[label], position=position)
 
@@ -46,22 +46,23 @@ ActionSpace = CanvasItemSpace
 
 class CanvasSpace(gym.spaces.Tuple):
     def __init__(self, size: int, zs: List[int]) -> None:
-        assert 0 in zs, '0 has to be in the list of atomic numbers'
+        assert 0 in zs, "0 has to be in the list of atomic numbers"
         self.size = size
         self.zs = zs
         self.canvas_item_space = CanvasItemSpace(zs)
-        super().__init__((self.canvas_item_space, ) * self.size)
+        super().__init__((self.canvas_item_space,) * self.size)
 
     def to_atoms(self, canvas: CanvasType) -> Atoms:
         if sum(label > 0 for (label, _) in canvas) == 0:
             return Atoms()
-        symbols, positions = zip(*[(self.canvas_item_space.zs[label], position) \
-            for label, position in canvas if label > 0])
+        symbols, positions = zip(
+            *[(self.canvas_item_space.zs[label], position) for label, position in canvas if label > 0]
+        )
         return Atoms(symbols=symbols, positions=positions)
 
     def from_atoms(self, atoms: Atoms) -> CanvasType:
         if len(atoms) > self.size:
-            raise RuntimeError(f'Too many atoms: {len(atoms)} > {self.size}')
+            raise RuntimeError(f"Too many atoms: {len(atoms)} > {self.size}")
 
         elif len(atoms) < self.size:
             atoms = atoms.copy()
@@ -79,15 +80,14 @@ class BagSpace(gym.spaces.Tuple):
         self.size = len(zs)
         self.bag_item_space = gym.spaces.Discrete(n=sys.maxsize)
 
-        super().__init__((self.bag_item_space, ) * self.size)
+        super().__init__((self.bag_item_space,) * self.size)
 
     def to_formula(self, bag: BagType) -> FormulaType:
         assert len(bag) == self.size
         return tuple(zip(self.zs, bag))
 
     def from_formula(self, formula: FormulaType) -> BagType:
-        filtered_formula = [(z, count) for z, count in formula 
-                           if z in self.zs or count != 0]
+        filtered_formula = [(z, count) for z, count in formula if z in self.zs or count != 0]
         assert all(z in self.zs for z, count in filtered_formula)
         formula_dict: Dict[int, int] = defaultdict(int)
         formula_dict.update(filtered_formula)

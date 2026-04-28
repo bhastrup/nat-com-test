@@ -9,9 +9,9 @@ from xtb.ase.calculator import XTB
 
 
 class EnergyUnit(Enum):
-    HARTREE = 'hartree'
-    KCAL_MOL = 'kcal/mol'
-    EV = 'eV'
+    HARTREE = "hartree"
+    KCAL_MOL = "kcal/mol"
+    EV = "eV"
 
 
 def str_to_EnergyUnit(value: str) -> EnergyUnit:
@@ -51,10 +51,10 @@ class XTBOptimizer:
 
     def __init__(
         self,
-        method: str = 'GFN2-xTB',
+        method: str = "GFN2-xTB",
         energy_unit: EnergyUnit = EnergyUnit.HARTREE,
         use_mp: bool = False,
-        timeout: int = 60
+        timeout: int = 60,
     ):
         self.method = method
         self.energy_unit = energy_unit
@@ -64,14 +64,14 @@ class XTBOptimizer:
 
     def get_max_force(self, atoms: Atoms) -> float:
         forces = atoms.get_forces()
-        max_force = ((forces ** 2).sum(axis=1) ** 0.5).max()
+        max_force = ((forces**2).sum(axis=1) ** 0.5).max()
         return EnergyConverter.convert(max_force, self.old_energy_unit, self.energy_unit)
-    
+
     def calc_dipole(self, atoms: Atoms) -> float:
         atoms = atoms.copy()
         try:
             ase_xtb_calculator = XTB(method=self.method)
-            ase_xtb_calculator.calculate(atoms=atoms, properties=['dipole'])
+            ase_xtb_calculator.calculate(atoms=atoms, properties=["dipole"])
             dipole_moment = ase_xtb_calculator.results["dipole"]
             dipole_magnitude = np.linalg.norm(dipole_moment)
         except Exception as e:
@@ -101,7 +101,9 @@ class XTBOptimizer:
             logging.error(f"Error in XTB calculation: {e}")
             return None
 
-    def optimize_atoms(self, atoms: Atoms, max_steps: int = 50, fmax: float = 0.10, redirect_logfile: bool = True) -> dict:
+    def optimize_atoms(
+        self, atoms: Atoms, max_steps: int = 50, fmax: float = 0.10, redirect_logfile: bool = True
+    ) -> dict:
         atoms = atoms.copy()
         atoms.calc = XTB(method=self.method)
 
@@ -109,7 +111,7 @@ class XTBOptimizer:
 
         if energy_before is not None:
             try:
-                dyn = FIRE(atoms, logfile='temp_ASE_optimizer_log_file' if redirect_logfile else None)
+                dyn = FIRE(atoms, logfile="temp_ASE_optimizer_log_file" if redirect_logfile else None)
                 dyn.run(fmax=fmax, steps=max_steps)
                 energy_after = self.calc_potential_energy(atoms)
             except Exception as e:
@@ -134,7 +136,7 @@ class XTBOptimizer:
             new_atoms=atoms,
             fmax_final=fmax_final,
             converged=converged,
-            nsteps=dyn.nsteps if converged else max_steps
+            nsteps=dyn.nsteps if converged else max_steps,
         )
 
         return opt_info

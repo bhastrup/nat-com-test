@@ -33,9 +33,10 @@ def init_layer(layer: torch.nn.Linear, w_scale=1.0) -> torch.nn.Linear:
 class MLP(torch.nn.Module):
     def __init__(self, input_dim: int, output_dims: Tuple[int, ...] = (64, 64), gate=torch.nn.functional.relu):
         super().__init__()
-        dims = (input_dim, ) + output_dims
+        dims = (input_dim,) + output_dims
         self.layers = torch.nn.ModuleList(
-            [init_layer(torch.nn.Linear(dim_in, dim_out)) for dim_in, dim_out in zip(dims[:-1], dims[1:])])
+            [init_layer(torch.nn.Linear(dim_in, dim_out)) for dim_in, dim_out in zip(dims[:-1], dims[1:])]
+        )
         self.gate = gate
         self.output_dim = dims[-1]
 
@@ -46,16 +47,17 @@ class MLP(torch.nn.Module):
         return x
 
 
-
 # def masked_softmax(logits: torch.Tensor, mask: torch.Tensor) -> torch.Tensor:
 #     return torch_scatter.composite.scatter_softmax(src=logits, index=mask.to(torch.long), dim=-1) * mask
 
 
-def masked_softmax(vector: torch.Tensor,
-                   mask: torch.Tensor,
-                   dim: int = -1,
-                   memory_efficient: bool = False,
-                   mask_fill_value: float = -1e32) -> torch.Tensor:
+def masked_softmax(
+    vector: torch.Tensor,
+    mask: torch.Tensor,
+    dim: int = -1,
+    memory_efficient: bool = False,
+    mask_fill_value: float = -1e32,
+) -> torch.Tensor:
     """
     ``torch.nn.functional.softmax(vector)`` does not work if some elements of ``vector`` should be
     masked.  This performs a softmax on just the non-masked portions of ``vector``.  Passing

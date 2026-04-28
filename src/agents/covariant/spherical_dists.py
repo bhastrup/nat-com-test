@@ -3,6 +3,7 @@ import os
 from abc import ABC
 
 import numpy as np
+
 # import quadpy
 import torch
 from cormorant.cg_lib import SphericalHarmonics
@@ -14,12 +15,13 @@ from .so3_tools import sum_product_alms_ylms, generate_fibonacci_grid, normalize
 
 from dataclasses import dataclass
 
+
 class SphericalDistribution(Distribution, ABC):
     arg_constraints = {}  # type: ignore
     has_rsample = False
 
     def __init__(self, batch_shape=torch.Size(), validate_args=None, device=None, dtype=torch.float) -> None:
-        super().__init__(batch_shape, event_shape=torch.Size((3, )), validate_args=validate_args)
+        super().__init__(batch_shape, event_shape=torch.Size((3,)), validate_args=validate_args)
         self.device = device
         self.dtype = dtype
 
@@ -79,18 +81,20 @@ class SphericalUniform(SphericalDistribution):
 
 
 class SO3Distribution(SphericalDistribution):
-    def __init__(self,
-                 a_lms: SO3Vec,
-                 sphs: SphericalHarmonics,
-                 empty: torch.Tensor = None,
-                 validate_args=None,
-                 device=None,
-                 dtype=torch.float) -> None:
+    def __init__(
+        self,
+        a_lms: SO3Vec,
+        sphs: SphericalHarmonics,
+        empty: torch.Tensor = None,
+        validate_args=None,
+        device=None,
+        dtype=torch.float,
+    ) -> None:
         # SO3Vec: -ell, ..., ell: (batch size, tau's, m's, 2)
         assert all(a_lm.shape[:-3] == a_lms[0].shape[:-3] for a_lm in a_lms)
         super().__init__(batch_shape=a_lms[0].shape[:-3], validate_args=validate_args, device=device, dtype=dtype)
 
-        assert sphs.sh_norm == 'qm'
+        assert sphs.sh_norm == "qm"
         self.sphs = sphs
 
         assert empty is None or empty.shape == self.batch_shape
@@ -98,10 +102,9 @@ class SO3Distribution(SphericalDistribution):
 
         self.coefficients = normalize_alms(a_lms)  # (batches, taus, ms, 2)
 
-        self.spherical_uniform = SphericalUniform(batch_shape=self.batch_shape,
-                                                  device=device,
-                                                  dtype=dtype,
-                                                  validate_args=validate_args)
+        self.spherical_uniform = SphericalUniform(
+            batch_shape=self.batch_shape, device=device, dtype=dtype, validate_args=validate_args
+        )
         self.uniform_dist = Uniform(low=0.0, high=1.0, validate_args=validate_args)
 
     def get_max_prob(self) -> torch.Tensor:
@@ -126,16 +129,16 @@ class SO3Distribution(SphericalDistribution):
         max_prob_proposal = self.spherical_uniform.get_max_prob()
 
         m_value = max_prob / max_prob_proposal  # (batches, )
-        logging.debug(f'Mean M value: {torch.mean(m_value).item():.3f}')
+        logging.debug(f"Mean M value: {torch.mean(m_value).item():.3f}")
         count = min(max(1, int(2 * torch.max(m_value).item())), 1024)
 
         # number of samples per batch item
         num_samples = int(np.product(sample_shape))
 
         while torch.any(accepted_t.sum(dim=0) < num_samples):
-            candidates = self.spherical_uniform.sample(torch.Size((count, )))  # (count, batches, event)
+            candidates = self.spherical_uniform.sample(torch.Size((count,)))  # (count, batches, event)
             threshold = self.prob(candidates) / (m_value * self.spherical_uniform.prob(candidates))  # (count, batches)
-            u = self.uniform_dist.sample(torch.Size((count, ))).unsqueeze(1).to(self.device)  # (count, 1)
+            u = self.uniform_dist.sample(torch.Size((count,))).unsqueeze(1).to(self.device)  # (count, 1)
             accepted = u < threshold  # (count, batches)
 
             accepted_t = torch.cat([accepted_t, accepted], dim=0)
@@ -152,7 +155,7 @@ class SO3Distribution(SphericalDistribution):
         return samples_t.transpose(0, 1).reshape(sample_shape + self.batch_shape + self.event_shape).contiguous()
 
     def argmax(self, count=256) -> torch.Tensor:
-        samples = self.sample(sample_shape=torch.Size((count, )))  # (samples, batches, 3)
+        samples = self.sample(sample_shape=torch.Size((count,)))  # (samples, batches, 3)
         probs = self.prob(samples)  # (samples, batches)
         indices = torch.argmax(probs, dim=0)  # (batches, )
         gather_indices = indices.unsqueeze(0).unsqueeze(-1).expand((-1, -1) + self.event_shape)  # (1, batches, 3)
@@ -171,7 +174,7 @@ class SO3Distribution(SphericalDistribution):
 
         # Apply mask where probability is not defined
         if self.empty is not None:
-            empty = self.empty.reshape((1, ) * (len(p.shape) - 1) + self.batch_shape)
+            empty = self.empty.reshape((1,) * (len(p.shape) - 1) + self.batch_shape)
             constant = self.spherical_uniform.prob(value)
             p = torch.where(empty, constant, p)
 
@@ -181,12 +184,11 @@ class SO3Distribution(SphericalDistribution):
         return torch.log(self.prob(value).clamp(min=1e-10))
 
 
-
-
 @dataclass
 class DummyLebedev:
     points: np.ndarray
     weights: np.ndarray
+
 
 def get_grid():
     # try:
@@ -206,35 +208,36 @@ def get_grid():
     file_name = "quadpy_u3_lebedev_71.npz"
     file_path = os.path.dirname(os.path.realpath(__file__))
     data = np.load(os.path.join(file_path, file_name))
-    logging.debug(f'Using quadpy alternative method.')
+    logging.debug(f"Using quadpy alternative method.")
 
     return DummyLebedev(points=data["points"], weights=data["weights"])
 
 
 class ExpSO3Distribution(SphericalDistribution):
-    def __init__(self,
-                 a_lms: SO3Vec,
-                 sphs: SphericalHarmonics,
-                 beta: float,
-                 grid, # quadpy.u3._lebedev.lebedev_071(),
-                 validate_args=None,
-                 device=None,
-                 dtype=torch.float) -> None:
+    def __init__(
+        self,
+        a_lms: SO3Vec,
+        sphs: SphericalHarmonics,
+        beta: float,
+        grid,  # quadpy.u3._lebedev.lebedev_071(),
+        validate_args=None,
+        device=None,
+        dtype=torch.float,
+    ) -> None:
         # SO3Vec: -ell, ..., ell: (batch size, tau's, m's, 2)
         assert all(a_lm.shape[:-3] == a_lms[0].shape[:-3] for a_lm in a_lms)
         super().__init__(batch_shape=a_lms[0].shape[:-3], validate_args=validate_args, device=device, dtype=dtype)
 
-        assert sphs.sh_norm == 'qm'
+        assert sphs.sh_norm == "qm"
         self.sphs = sphs
 
         self.coefficients = normalize_alms(a_lms)  # (batches, taus, ms, 2)
         self.sphs = sphs
         self.beta = beta
 
-        self.spherical_uniform = SphericalUniform(batch_shape=self.batch_shape,
-                                                  device=device,
-                                                  dtype=dtype,
-                                                  validate_args=validate_args)
+        self.spherical_uniform = SphericalUniform(
+            batch_shape=self.batch_shape, device=device, dtype=dtype, validate_args=validate_args
+        )
         self.uniform_dist = Uniform(low=0.0, high=1.0, validate_args=validate_args)
 
         self.grid = grid
@@ -243,7 +246,7 @@ class ExpSO3Distribution(SphericalDistribution):
     def compute_log_z(self) -> torch.Tensor:
         # grid = quadpy.u3._lebedev.lebedev_071() # API has changed
         grid = self.grid
-    
+
         # grid_points: (samples, 1, 3)
         grid_points = torch.tensor(grid.points.transpose(), dtype=self.dtype, device=self.device).unsqueeze(-2)
         weights = torch.tensor(grid.weights, dtype=self.dtype, device=self.device).unsqueeze(-1)  # (samples, 1)
@@ -281,9 +284,9 @@ class ExpSO3Distribution(SphericalDistribution):
         num_samples = int(np.product(sample_shape))
 
         while torch.any(accepted_t.sum(dim=0) < num_samples):
-            candidates = self.spherical_uniform.sample(torch.Size((count, )))  # (count, batches, event)
+            candidates = self.spherical_uniform.sample(torch.Size((count,)))  # (count, batches, event)
             log_threshold = self.log_prob(candidates) - log_m_value - self.spherical_uniform.log_prob(candidates)
-            u = self.uniform_dist.sample(torch.Size((count, ))).unsqueeze(1).to(self.device)  # (count, 1)
+            u = self.uniform_dist.sample(torch.Size((count,))).unsqueeze(1).to(self.device)  # (count, 1)
             accepted = u < torch.exp(log_threshold)  # (count, batches)
 
             accepted_t = torch.cat([accepted_t, accepted], dim=0)
@@ -300,7 +303,7 @@ class ExpSO3Distribution(SphericalDistribution):
         return samples_t.transpose(0, 1).reshape(sample_shape + self.batch_shape + self.event_shape).contiguous()
 
     def argmax(self, count=128) -> torch.Tensor:
-        samples = self.sample(sample_shape=torch.Size((count, )))  # (samples, batches, 3)
+        samples = self.sample(sample_shape=torch.Size((count,)))  # (samples, batches, 3)
         log_probs_unnormalized = self.log_prob_unnormalized(samples)  # (samples, batches)
         indices = torch.argmax(log_probs_unnormalized, dim=0)  # (batches, )
         gather_indices = indices.unsqueeze(0).unsqueeze(-1).expand((-1, -1) + self.event_shape)  # (1, batches, 3)

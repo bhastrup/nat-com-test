@@ -2,7 +2,8 @@ import streamlit as st
 
 
 def explain_sampler():
-    st.write("In Simm et al. (2020), a set of molecular design tasks was introduced: the single-bag task assesses \
+    st.write(
+        "In Simm et al. (2020), a set of molecular design tasks was introduced: the single-bag task assesses \
              an agent's ability to build single stable molecules, whereas the multi-bag task focuses on building \
              several molecules of different composition and size at the same time. A limitation of these tasks is \
              that the initial bags were selected such that they correspond to known formulas, which in practice \
@@ -13,4 +14,5 @@ def explain_sampler():
              m(e) of a given bag B ∗ . For example, with B^∗ = {(H, 2), (O, 1)} we obtain pH = 32 and pO = 13 . \
              Since sampled bags might no longer correspond to valid molecules when placed completely, we \
              discard bags where the sum of valence electrons over all atoms contained in the bag is odd. This \
-             ensures that the agent can build a closed-shell system.")
+             ensures that the agent can build a closed-shell system."
+    )

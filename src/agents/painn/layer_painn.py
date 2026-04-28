@@ -40,18 +40,14 @@ def unpad_and_cat(stacked_seq: torch.Tensor, seq_len: torch.Tensor):
 
     """
     unstacked = stacked_seq.unbind(0)
-    unpadded = [
-        torch.narrow(t, 0, 0, l) for (t, l) in zip(unstacked, seq_len.unbind(0))
-    ]
+    unpadded = [torch.narrow(t, 0, 0, l) for (t, l) in zip(unstacked, seq_len.unbind(0))]
     return torch.cat(unpadded, dim=0)
 
 
 def pad_and_stack(tensors: List[torch.Tensor]):
     """Pad list of tensors if tensors are arrays and stack if they are scalars"""
     if tensors[0].shape:
-        return torch.nn.utils.rnn.pad_sequence(
-            tensors, batch_first=True, padding_value=0
-        )
+        return torch.nn.utils.rnn.pad_sequence(tensors, batch_first=True, padding_value=0)
     return torch.stack(tensors)
 
 
@@ -73,9 +69,7 @@ def sum_splits(values: torch.Tensor, splits: torch.Tensor):
     ind[torch.cumsum(splits, dim=0)[:-1]] = 1
     ind = torch.cumsum(ind, dim=0)
     # prepare the output
-    sum_y = torch.zeros(
-        splits.shape + values.shape[1:], dtype=values.dtype, device=values.device
-    )
+    sum_y = torch.zeros(splits.shape + values.shape[1:], dtype=values.dtype, device=values.device)
     # do the actual summation
     sum_y.index_add_(0, ind, values)
     return sum_y
@@ -101,17 +95,13 @@ def calc_distance(
         return_diff: If non-zero return the also the vector corresponding to edges
     """
     unitcell_repeat = torch.repeat_interleave(cells, splits, dim=0)  # num_edges, 3, 3
-    displacement = torch.matmul(
-        torch.unsqueeze(edges_displacement, 1), unitcell_repeat
-    )  # num_edges, 1, 3
+    displacement = torch.matmul(torch.unsqueeze(edges_displacement, 1), unitcell_repeat)  # num_edges, 1, 3
     displacement = torch.squeeze(displacement, dim=1)
     neigh_pos = positions[edges[:, 0]]  # num_edges, 3
     neigh_abs_pos = neigh_pos + displacement  # num_edges, 3
     this_pos = positions[edges[:, 1]]  # num_edges, 3
     diff = this_pos - neigh_abs_pos  # num_edges, 3
-    dist = torch.sqrt(
-        torch.sum(torch.square(diff), dim=1, keepdim=True)
-    )  # num_edges, 1
+    dist = torch.sqrt(torch.sum(torch.square(diff), dim=1, keepdim=True))  # num_edges, 1
 
     if return_diff:
         return dist, diff
@@ -140,12 +130,8 @@ def gaussian_expansion(input_x: torch.Tensor, expand_params: List[Tuple]):
             start, step, stop = step_tuple
             feat_expanded = torch.unsqueeze(feat, dim=1)
             sigma = step
-            basis_mu = torch.arange(
-                start, stop, step, device=input_x.device, dtype=input_x.dtype
-            )
-            expanded_list.append(
-                torch.exp(-((feat_expanded - basis_mu) ** 2) / (2.0 * sigma ** 2))
-            )
+            basis_mu = torch.arange(start, stop, step, device=input_x.device, dtype=input_x.dtype)
+            expanded_list.append(torch.exp(-((feat_expanded - basis_mu) ** 2) / (2.0 * sigma**2)))
         else:
             expanded_list.append(torch.unsqueeze(feat, 1))
     return torch.cat(expanded_list, dim=1)
@@ -175,9 +161,7 @@ def sinc_expansion(input_x: torch.Tensor, expand_params: List[Tuple]):
             feat_expanded = torch.unsqueeze(feat, dim=1)
             n_range = torch.arange(n, device=input_x.device, dtype=input_x.dtype) + 1
             # multiplication by pi n_range / cutoff is done in original painn for some reason
-            out = (
-                torch.sinc(n_range / cutoff * feat_expanded) * np.pi * n_range / cutoff
-            )
+            out = torch.sinc(n_range / cutoff * feat_expanded) * np.pi * n_range / cutoff
             expanded_list.append(out)
         else:
             expanded_list.append(torch.unsqueeze(feat, 1))
@@ -330,9 +314,7 @@ class PaiNNInteraction(nn.Module):
         filter_weight = self.filter_layer(edge_state)  # num_edges, 3*node_size
         filter_weight = filter_weight * cosine_cutoff(edge_distance, self.cutoff)
 
-        scalar_output = self.scalar_message_mlp(
-            node_state_scalar
-        )  # num_nodes, 3*node_size
+        scalar_output = self.scalar_message_mlp(node_state_scalar)  # num_nodes, 3*node_size
         scalar_output = scalar_output[edges[:, 0]]  # num_edges, 3*node_size
         filter_output = filter_weight * scalar_output  # num_edges, 3*node_size
 
@@ -340,17 +322,11 @@ class PaiNNInteraction(nn.Module):
             filter_output, node_state_scalar.shape[1], dim=1
         )
 
-        gate_state_vector = torch.unsqueeze(
-            gate_state_vector, 1
-        )  # num_edges, 1, node_size
-        gate_edge_vector = torch.unsqueeze(
-            gate_edge_vector, 1
-        )  # num_edges, 1, node_size
+        gate_state_vector = torch.unsqueeze(gate_state_vector, 1)  # num_edges, 1, node_size
+        gate_edge_vector = torch.unsqueeze(gate_edge_vector, 1)  # num_edges, 1, node_size
 
         # Only include sender in messages
-        messages_state_vector = node_state_vector[
-            edges[:, 0]
-        ] * gate_state_vector + gate_edge_vector * torch.unsqueeze(
+        messages_state_vector = node_state_vector[edges[:, 0]] * gate_state_vector + gate_edge_vector * torch.unsqueeze(
             edge_vector_normalised, 2
         )
 
@@ -366,6 +342,7 @@ class PaiNNInteraction(nn.Module):
 
         return new_state_scalar, new_state_vector
 
+
 class RMSNorm(torch.nn.Module):
     def __init__(self, dim: int, eps: float = 1e-6):
         """
@@ -380,6 +357,7 @@ class RMSNorm(torch.nn.Module):
         super().__init__()
         self.eps = eps
         self.weight = nn.Parameter(torch.ones(dim))
+
     def _norm(self, x):
         """
         Apply the RMSNorm normalization to the input tensor.
@@ -389,6 +367,7 @@ class RMSNorm(torch.nn.Module):
             torch.Tensor: The normalized tensor.
         """
         return x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
+
     def forward(self, x):
         """
         Forward pass through the RMSNorm layer.
@@ -410,8 +389,8 @@ class PaiNNUpdate(nn.Module):
         self.rms_norm = rms_norm
         if rms_norm:
             norm_eps: float = 1e-5
-            self.scalar_norm  = RMSNorm(node_size, eps=norm_eps)
-            self.vector_norm  = RMSNorm(node_size, eps=norm_eps)
+            self.scalar_norm = RMSNorm(node_size, eps=norm_eps)
+            self.vector_norm = RMSNorm(node_size, eps=norm_eps)
 
         self.linearU = nn.Linear(node_size, node_size, bias=False)
         self.linearV = nn.Linear(node_size, node_size, bias=False)
@@ -420,8 +399,6 @@ class PaiNNUpdate(nn.Module):
             nn.SiLU(),
             nn.Linear(node_size, 3 * node_size),
         )
-
-
 
     def forward(self, node_state_scalar, node_state_vector):
         """
@@ -435,24 +412,20 @@ class PaiNNUpdate(nn.Module):
                 updated_node_state_vector (num_nodes, 3, node_size)
         """
 
-        if hasattr(self, 'scalar_norm') and hasattr(self, 'vector_norm'):
+        if hasattr(self, "scalar_norm") and hasattr(self, "vector_norm"):
             if self.rms_norm:
                 node_state_vector = self.vector_norm(node_state_vector)
-                node_state_scalar = self.scalar_norm(node_state_scalar) 
+                node_state_scalar = self.scalar_norm(node_state_scalar)
 
         Uv = self.linearU(node_state_vector)  # num_nodes, 3, node_size
         Vv = self.linearV(node_state_vector)  # num_nodes, 3, node_size
 
         Vv_norm = torch.linalg.norm(Vv, dim=1, keepdim=False)  # num_nodes, node_size
 
-        mlp_input = torch.cat(
-            (node_state_scalar, Vv_norm), dim=1
-        )  # num_nodes, node_size*2
+        mlp_input = torch.cat((node_state_scalar, Vv_norm), dim=1)  # num_nodes, node_size*2
         mlp_output = self.combined_mlp(mlp_input)
 
-        a_ss, a_sv, a_vv = torch.split(
-            mlp_output, node_state_scalar.shape[1], dim=1
-        )  # num_nodes, node_size
+        a_ss, a_sv, a_vv = torch.split(mlp_output, node_state_scalar.shape[1], dim=1)  # num_nodes, node_size
 
         inner_prod = torch.sum(Uv * Vv, dim=1)  # num_nodes, node_size
 
@@ -491,9 +464,7 @@ class EdgeUpdate(nn.Module):
         Returns:
             (num_nodes, node_size) tensor
         """
-        combined = torch.cat(
-            (node_state[edges].view(-1, 2 * self.node_size), edge_state), axis=1
-        )
+        combined = torch.cat((node_state[edges].view(-1, 2 * self.node_size), edge_state), axis=1)
         return self.edge_update_mlp(combined)
 
 
@@ -508,7 +479,7 @@ class GatedEquivariantBlock(nn.Module):
 
         large_size = vector_size + scalar_size
         self.double_mlp = nn.Sequential(
-            nn.Linear(large_size, large_size), # TODO: Consider if dim should be reduced here
+            nn.Linear(large_size, large_size),  # TODO: Consider if dim should be reduced here
             nn.SiLU(),
             nn.Linear(large_size, large_size),
         )
@@ -525,36 +496,30 @@ class GatedEquivariantBlock(nn.Module):
                 updated_node_state_vector (num_nodes, 3, node_size)
         """
 
-        W1_v = self.W1(node_state_vector)       # num_nodes, 3, node_size
-        W2_v = self.W2(node_state_vector)       # num_nodes, 3, node_size
+        W1_v = self.W1(node_state_vector)  # num_nodes, 3, node_size
+        W2_v = self.W2(node_state_vector)  # num_nodes, 3, node_size
 
         W1_v_norm = torch.linalg.norm(W1_v, dim=1, keepdim=False)  # num_nodes, node_size
 
-        mlp_input = torch.cat(
-            (node_state_scalar, W1_v_norm), dim=1
-        )  # num_nodes, (node_size + zs_size) + node_size
+        mlp_input = torch.cat((node_state_scalar, W1_v_norm), dim=1)  # num_nodes, (node_size + zs_size) + node_size
 
-        # print shape of tensors above 
-        #print("node_state_scalar.shape: ", node_state_scalar.shape)
-        #print("W1_v_norm.shape: ", W1_v_norm.shape)
-        #print("mlp_input.shape: ", mlp_input.shape)
-        
-
+        # print shape of tensors above
+        # print("node_state_scalar.shape: ", node_state_scalar.shape)
+        # print("W1_v_norm.shape: ", W1_v_norm.shape)
+        # print("mlp_input.shape: ", mlp_input.shape)
 
         mlp_output = self.double_mlp(mlp_input)
-        #print(f"shape of mlp_output: {mlp_output.shape}")
+        # print(f"shape of mlp_output: {mlp_output.shape}")
 
-        s_new, v_filter = torch.split(
-            mlp_output, node_state_scalar.shape[1], dim=1
-        )  # num_nodes, node_size
+        s_new, v_filter = torch.split(mlp_output, node_state_scalar.shape[1], dim=1)  # num_nodes, node_size
 
-        #print(f"shape of W2_v: {W2_v.shape}")
-        #print(f"shape of s_new: {s_new.shape}")
-        #print(f"shape of v_filter: {v_filter.shape}")
+        # print(f"shape of W2_v: {W2_v.shape}")
+        # print(f"shape of s_new: {s_new.shape}")
+        # print(f"shape of v_filter: {v_filter.shape}")
 
         v_new = torch.unsqueeze(v_filter, 1) * W2_v  # num_nodes, 3, node_size
 
-        #print(f"shape of v_new: {v_new.shape}")
+        # print(f"shape of v_new: {v_new.shape}")
         # exit()
 
         return s_new, v_new

@@ -17,11 +17,11 @@ from src.data.io_handler import IOHandler
 from src.performance.reward_metrics_rings import get_max_view_positions
 
 
-
 import subprocess
 import json
 import shlex
 import argparse
+
 
 def _optional_int(arg: str):
     if arg is None:
@@ -30,7 +30,8 @@ def _optional_int(arg: str):
         return None
     return int(arg)
 
-def submit_job(params, script_path: str="scripts/analyse/exp5_scaffold/visuals/chimerax_script.py"):
+
+def submit_job(params, script_path: str = "scripts/analyse/exp5_scaffold/visuals/chimerax_script.py"):
 
     # Convert dictionary to a JSON string
     params_json = json.dumps(params)
@@ -40,8 +41,11 @@ def submit_job(params, script_path: str="scripts/analyse/exp5_scaffold/visuals/c
 
     # Construct the command correctly
     cmd = [
-        "chimerax", "--nogui", "--offscreen",
-        "--script", f'"{script_path} {quoted_params_json}"'  # Properly quote the JSON
+        "chimerax",
+        "--nogui",
+        "--offscreen",
+        "--script",
+        f'"{script_path} {quoted_params_json}"',  # Properly quote the JSON
     ]
 
     print("Executing:", " ".join(cmd))  # Debugging
@@ -59,8 +63,12 @@ def parse_args() -> argparse.Namespace:
             "Expected layout: <run_dir>/results/<tag>/<formula>/{df.csv,atoms.traj}"
         ),
     )
-    parser.add_argument("--base_dir", type=str, default=None, help="Optional base directory (used with --run_names/--n_seeds).")
-    parser.add_argument("--run_names", nargs="+", default=None, help="Optional run names (used with --base_dir/--n_seeds).")
+    parser.add_argument(
+        "--base_dir", type=str, default=None, help="Optional base directory (used with --run_names/--n_seeds)."
+    )
+    parser.add_argument(
+        "--run_names", nargs="+", default=None, help="Optional run names (used with --base_dir/--n_seeds)."
+    )
     parser.add_argument("--n_seeds", type=int, default=1, help="Number of seeds (used with --base_dir/--run_names).")
 
     parser.add_argument("--tag", type=str, default="exp5-31500", help="Results tag under results/<tag>/")
@@ -85,26 +93,28 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("--n_mols", type=int, default=3, help="Max molecules to render per formula.")
     parser.add_argument("--bg_color_str", type=str, default="white", help="ChimeraX background color.")
-    parser.add_argument("--illustration_dir_name", type=str, default=None, help="Output dir name under each run_dir (defaults to exp5_<bg>_<sorting_key>).")
+    parser.add_argument(
+        "--illustration_dir_name",
+        type=str,
+        default=None,
+        help="Output dir name under each run_dir (defaults to exp5_<bg>_<sorting_key>).",
+    )
     return parser.parse_args()
 
 
 def default_eval_formulas() -> List[str]:
     return [
-        'H4C3O3',  # Bad - Ethylene carbonate (EC) -> in qm7? No
-        'H6C3O3',  # Good - Dimethyl carbonate (DMC) -> in qm7? No
-
-        'H6C4O3',  # Bad - Propylene carbonate (PC) -> in qm7? No
-        'H8C4O3',  # Good - Ethyl methyl carbonate (EMC) -> in qm7? No
-
+        "H4C3O3",  # Bad - Ethylene carbonate (EC) -> in qm7? No
+        "H6C3O3",  # Good - Dimethyl carbonate (DMC) -> in qm7? No
+        "H6C4O3",  # Bad - Propylene carbonate (PC) -> in qm7? No
+        "H8C4O3",  # Good - Ethyl methyl carbonate (EMC) -> in qm7? No
         #'H6C5O3',  # Bad - Diethenylcarbonate (DMC) (double bonded carbons)
         #'H8C5O3',  # Bad - 1,2-Butylene carbonate (ring-like)
-        'H10C5O3', # Good - Diethyl carbonate (DEC) / Methyl propyl carbonate (MPC) -> in qm7? No
-
+        "H10C5O3",  # Good - Diethyl carbonate (DEC) / Methyl propyl carbonate (MPC) -> in qm7? No
         # Others
-        'H10C4O2', # 1,2-Dimethoxyethane (DME), (glyme) -> in qm7? Yes
-        'H6C2OS',  # Dimethyl sulfoxide (DMSO) -> in qm7? No
-        'H2C3O3',  # Vinylene carbonate (VC) -> in qm7? No
+        "H10C4O2",  # 1,2-Dimethoxyethane (DME), (glyme) -> in qm7? Yes
+        "H6C2OS",  # Dimethyl sulfoxide (DMSO) -> in qm7? No
+        "H2C3O3",  # Vinylene carbonate (VC) -> in qm7? No
     ]
 
 
@@ -123,11 +133,14 @@ def build_run_dirs(args: argparse.Namespace) -> List[str]:
 def get_eval_path(run_dir: str, tag: str, formula: str) -> Path:
     return Path(run_dir) / "results" / tag / formula
 
-def get_all_dfs(eval_formulas: List[str], run_dirs: List[str], tag: str) -> Tuple[Dict[str, pd.DataFrame], Dict[str, List[Atoms]]]:
+
+def get_all_dfs(
+    eval_formulas: List[str], run_dirs: List[str], tag: str
+) -> Tuple[Dict[str, pd.DataFrame], Dict[str, List[Atoms]]]:
     dfs = {}
     trajs = {}
 
-    for formula in tqdm(eval_formulas, desc='Loading data'):
+    for formula in tqdm(eval_formulas, desc="Loading data"):
         dfs[formula] = []
         trajs[formula] = []
 
@@ -138,15 +151,15 @@ def get_all_dfs(eval_formulas: List[str], run_dirs: List[str], tag: str) -> Tupl
             print(f"Missing all paths for formula={formula} tag={tag}")
             continue
 
-        for seed_path in tqdm(existing_paths, desc='Loading data'):
+        for seed_path in tqdm(existing_paths, desc="Loading data"):
             # load df
-            df = pd.read_csv(os.path.join(seed_path, 'df.csv'))
+            df = pd.read_csv(os.path.join(seed_path, "df.csv"))
             dfs[formula].append(df)
 
             # prefer relaxed atoms; fall back to raw rollout atoms for older run dirs
-            relaxed_path = os.path.join(seed_path, 'atoms_relaxed.traj')
-            traj_path = relaxed_path if os.path.exists(relaxed_path) else os.path.join(seed_path, 'atoms.traj')
-            atoms_list = read(traj_path, index=':')
+            relaxed_path = os.path.join(seed_path, "atoms_relaxed.traj")
+            traj_path = relaxed_path if os.path.exists(relaxed_path) else os.path.join(seed_path, "atoms.traj")
+            atoms_list = read(traj_path, index=":")
             trajs[formula].extend(atoms_list)
 
     valid_formulas = [formula for formula in eval_formulas if len(dfs.get(formula, [])) > 0]
@@ -167,7 +180,7 @@ def filter_data(
     eval_formulas: List[str],
     sorting_key: str,
     smiles_col: str,
-    stratify_on_smiles: bool
+    stratify_on_smiles: bool,
 ) -> Tuple[Dict[str, pd.DataFrame], Dict[str, List[Atoms]]]:
 
     merged_dfs = all_dfs.copy()
@@ -176,12 +189,11 @@ def filter_data(
     trajs_filtered = {}
     dfs_filtered = {}
 
-
     for formula in eval_formulas:
         df = merged_dfs[formula].copy().reset_index(drop=True)
         # Sort by sorting_key (descending: highest dipole / best energy first)
         df = df.sort_values(by=sorting_key, ascending=False)
-        
+
         # Drop rows where SMILES is None
         df = df[df[smiles_col].notna()]
 
@@ -190,13 +202,13 @@ def filter_data(
 
         # Keep only the best of each SMILES
         if stratify_on_smiles:
-            df = df.drop_duplicates(subset=[smiles_col], keep='first')
+            df = df.drop_duplicates(subset=[smiles_col], keep="first")
 
         # Update the trajectories
         idx = df.index.copy()
         trajs_filtered[formula] = [merged_trajs[formula][i] for i in idx]
         dfs_filtered[formula] = df.reset_index(drop=True)
-    
+
     return dfs_filtered, trajs_filtered
 
 
@@ -205,24 +217,22 @@ def find_candidate_mols(
     trajs_filtered: Dict[str, List[Atoms]],
     eval_formulas: List[str],
     n_query: int,
-    n_non_query: int
+    n_non_query: int,
 ) -> Dict[str, List[Atoms]]:
-    """ Select the most promising molecules. """
+    """Select the most promising molecules."""
     best_mols = {}
 
-
     for formula in eval_formulas:
-
         if n_query is None and n_non_query is None:
             print(f"No stratification on smiles, using all molecules for {formula}")
             best_mols[formula] = trajs_filtered[formula].copy()
             continue
         else:
             # Select molecules with rings and more than 4 atoms in the largest ring
-            query = 'n_rings > 0 and n_atoms_ring_max > 4'
+            query = "n_rings > 0 and n_atoms_ring_max > 4"
             queried_idx = dfs_filtered[formula].query(query).index
             queried_mols = [trajs_filtered[formula][i] for i in queried_idx[:n_query]].copy()
-            
+
             # Other promising molecules based on energy (complementary to query)
             non_query_idx = dfs_filtered[formula].index.difference(queried_idx)
             non_query_mols = [trajs_filtered[formula][i] for i in non_query_idx[:n_non_query]].copy()
@@ -233,17 +243,11 @@ def find_candidate_mols(
     return best_mols
 
 
-
-
-
-
-
 def rotate_mols(mols: Dict[str, List[Atoms]]) -> Dict[str, List[Atoms]]:
-    """ Rotate of the molecule to get a better view. """
+    """Rotate of the molecule to get a better view."""
     for formula, mols_to_view in mols.items():
         for mol in mols_to_view:
             mol.set_positions(get_max_view_positions(mol.get_positions()))
-
 
 
 def launch_chimerax_jobs(mols_to_view: Dict[str, List[Atoms]], save_dir: str, bg_color_str: str):
@@ -251,11 +255,9 @@ def launch_chimerax_jobs(mols_to_view: Dict[str, List[Atoms]], save_dir: str, bg
     formulas = list(mols_to_view.keys())
 
     for formula in formulas:
-
-
         # Finally, write molecules to pdb and create Chimerax visualization (png).
-        mol_paths = [os.path.join(save_dir, f'{formula}_{i}.pdb') for i in range(len(mols_to_view[formula]))]
-        save_paths = [os.path.join(save_dir, f'{formula}_{i}.png') for i in range(len(mols_to_view[formula]))]
+        mol_paths = [os.path.join(save_dir, f"{formula}_{i}.pdb") for i in range(len(mols_to_view[formula]))]
+        save_paths = [os.path.join(save_dir, f"{formula}_{i}.png") for i in range(len(mols_to_view[formula]))]
 
         for i, mol in enumerate(mols_to_view[formula]):
             mol.write(mol_paths[i])
@@ -266,14 +268,14 @@ def launch_chimerax_jobs(mols_to_view: Dict[str, List[Atoms]], save_dir: str, bg
             if not os.path.exists(mol_path):
                 print(f"Warning: PDB file {mol_path} does not exist, skipping Chimerax visualization")
                 continue
-            
+
             params = {
                 "pdb_path": os.path.join(os.getcwd(), mol_path),
                 "image_path": os.path.join(os.getcwd(), save_path),
                 "movie_path": None,
-                "atoms_to_deselect": [], # 0, 1, 2, 3]
+                "atoms_to_deselect": [],  # 0, 1, 2, 3]
                 "selected_action": "",
-                "bg_color": bg_color_str
+                "bg_color": bg_color_str,
             }
 
             print(f"params: {params}")
@@ -283,7 +285,6 @@ def launch_chimerax_jobs(mols_to_view: Dict[str, List[Atoms]], save_dir: str, bg
 
 
 if __name__ == "__main__":
-
     args = parse_args()
 
     eval_formulas = args.eval_formulas if args.eval_formulas else default_eval_formulas()
@@ -327,7 +328,7 @@ if __name__ == "__main__":
         )
         print(f"c) Time taken to find candidate molecules: {time.time() - start_time} seconds")
 
-        mols_to_view = {f: mols[:args.n_mols] for f, mols in best_mols.items()}
+        mols_to_view = {f: mols[: args.n_mols] for f, mols in best_mols.items()}
 
         # Rotate molecules
         start_time = time.time()
@@ -338,8 +339,3 @@ if __name__ == "__main__":
         start_time = time.time()
         launch_chimerax_jobs(mols_to_view, save_dir, args.bg_color_str)
         print(f"f) Time taken to launch Chimerax jobs: {time.time() - start_time} seconds")
-        
-        
-        
-        
-

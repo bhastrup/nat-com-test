@@ -34,25 +34,17 @@ class AseNeigborListWrapper:
         self.neighborlist = ase.neighborlist.NewPrimitiveNeighborList(
             cutoff, skin=0.0, self_interaction=False, bothways=True
         )
-        self.neighborlist.build(
-            atoms.get_pbc(), atoms.get_cell(), atoms.get_positions()
-        )
+        self.neighborlist.build(atoms.get_pbc(), atoms.get_cell(), atoms.get_positions())
         self.cutoff = cutoff
         self.atoms_positions = atoms.get_positions()
         self.atoms_cell = atoms.get_cell()
 
     def get_neighbors(self, i, cutoff):
-        assert (
-            cutoff == self.cutoff
-        ), "Cutoff must be the same as used to initialise the neighborlist"
+        assert cutoff == self.cutoff, "Cutoff must be the same as used to initialise the neighborlist"
 
         indices, offsets = self.neighborlist.get_neighbors(i)
 
-        rel_positions = (
-            self.atoms_positions[indices]
-            + offsets @ self.atoms_cell
-            - self.atoms_positions[i][None]
-        )
+        rel_positions = self.atoms_positions[indices] + offsets @ self.atoms_cell - self.atoms_positions[i][None]
 
         dist2 = np.sum(np.square(rel_positions), axis=1)
 
@@ -104,10 +96,7 @@ class TransformObjectToGraph:
         # Compute neighborlist
         if (
             np.any(atoms.get_cell().lengths() <= 0.0001)
-            or (
-                np.any(atoms.get_pbc())
-                and np.any(_cell_heights(atoms.get_cell()) < self.cutoff)
-            )
+            or (np.any(atoms.get_pbc()) and np.any(_cell_heights(atoms.get_cell()) < self.cutoff))
             or ("asap3" not in sys.modules)
         ):
             neighborlist = AseNeigborListWrapper(self.cutoff, atoms)
@@ -206,10 +195,7 @@ class TransformRowToGraphXyz:
         # Compute neighborlist
         if (
             np.any(atoms.get_cell().lengths() <= 0.0001)
-            or (
-                np.any(atoms.get_pbc())
-                and np.any(_cell_heights(atoms.get_cell()) < self.cutoff)
-            )
+            or (np.any(atoms.get_pbc()) and np.any(_cell_heights(atoms.get_cell()) < self.cutoff))
             or ("asap3" not in sys.modules)
         ):
             neighborlist = AseNeigborListWrapper(self.cutoff, atoms)
@@ -235,7 +221,6 @@ class TransformRowToGraphXyz:
             edges_displacement.append(neigh_origin_scaled)
 
         return np.concatenate(edges), np.concatenate(edges_displacement)
-
 
 
 class TransformAtomsObjectsToGraphXyz:
@@ -265,7 +250,7 @@ class TransformAtomsObjectsToGraphXyz:
             "edges": torch.tensor(edges),
             "edges_displacement": torch.tensor(edges_displacement, dtype=default_type),
             "cell": torch.tensor(np.array(atoms.get_cell()), dtype=default_type),
-            "num_edges": torch.tensor(edges.shape[0])
+            "num_edges": torch.tensor(edges.shape[0]),
         }
 
         return graph_data
@@ -292,10 +277,7 @@ class TransformAtomsObjectsToGraphXyz:
         # Compute neighborlist
         if (
             np.any(atoms.get_cell().lengths() <= 0.0001)
-            or (
-                np.any(atoms.get_pbc())
-                and np.any(_cell_heights(atoms.get_cell()) < self.cutoff)
-            )
+            or (np.any(atoms.get_pbc()) and np.any(_cell_heights(atoms.get_cell()) < self.cutoff))
             or ("asap3" not in sys.modules)
         ):
             neighborlist = AseNeigborListWrapper(self.cutoff, atoms)
@@ -412,9 +394,7 @@ class RotatingPoolData(torch.utils.data.Dataset):
         logging.debug("Filling rotating data pool of size %d" % pool_size)
         self.data_pool = [
             self.parent_data[i]
-            for i in self.rng.integers(
-                0, high=len(self.parent_data), size=self.pool_size, endpoint=False
-            )
+            for i in self.rng.integers(0, high=len(self.parent_data), size=self.pool_size, endpoint=False)
         ]
         self.loader_queue = multiprocessing.Queue(2)
 
@@ -423,9 +403,7 @@ class RotatingPoolData(torch.utils.data.Dataset):
             target=rotating_pool_worker,
             args=(self.parent_data, self.rng, self.loader_queue),
         )
-        self.transfer_thread = threading.Thread(
-            target=transfer_thread, args=(self.loader_queue, self.data_pool)
-        )
+        self.transfer_thread = threading.Thread(target=transfer_thread, args=(self.loader_queue, self.data_pool))
         self.loader_process.start()
         self.transfer_thread.start()
 
@@ -437,11 +415,9 @@ class RotatingPoolData(torch.utils.data.Dataset):
 
 
 def pad_and_stack(tensors: List[torch.Tensor]):
-    """ Pad list of tensors if tensors are arrays and stack if they are scalars """
+    """Pad list of tensors if tensors are arrays and stack if they are scalars"""
     if tensors[0].shape:
-        return torch.nn.utils.rnn.pad_sequence(
-            tensors, batch_first=True, padding_value=0
-        )
+        return torch.nn.utils.rnn.pad_sequence(tensors, batch_first=True, padding_value=0)
     return torch.stack(tensors)
 
 

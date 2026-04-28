@@ -12,28 +12,19 @@ from src.data.preprocessor import Preprocessor
 def parse_cmd():
     parser = argparse.ArgumentParser(description="Preprocess molecular datasets for training.")
     parser.add_argument(
-        "--mol_dataset",
-        type=str,
-        choices=["qm7", "qm9"],
-        default="qm7",
-        help="Dataset to preprocess (default: qm7)"
+        "--mol_dataset", type=str, choices=["qm7", "qm9"], default="qm7", help="Dataset to preprocess (default: qm7)"
     )
-    parser.add_argument(
-        "--n_mols",
-        type=int,
-        default=None,
-        help="Number of molecules to process (default: all)"
-    )
+    parser.add_argument("--n_mols", type=int, default=None, help="Number of molecules to process (default: all)")
     return parser.parse_args()
 
 
 def get_parser_and_featurizer(dataset):
     qm_kwargs = {
-        'include_energy': True,
-        'include_smiles': True,
-        'include_connectivity': True,
-        'use_huckel': True,
-        'smiles_compatible': True
+        "include_energy": True,
+        "include_smiles": True,
+        "include_connectivity": True,
+        "use_huckel": True,
+        "smiles_compatible": True,
     }
 
     if dataset == "qm7":
@@ -44,7 +35,7 @@ def get_parser_and_featurizer(dataset):
         raise ValueError(f"Unknown dataset: {dataset}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG)
     args = parse_cmd()
 
@@ -55,4 +46,4 @@ if __name__ == '__main__':
     processor.preprocess()
     processor.print_success_ratio()
     processor.save_data()
-    #processor.view_bad_molecules()
+    # processor.view_bad_molecules()

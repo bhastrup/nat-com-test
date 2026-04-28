@@ -49,11 +49,9 @@ class Cormorant(CGModule):
         self.num_species = num_species
 
         # Set up spherical harmonics
-        self.sph_harms = SphericalHarmonicsRel(maxl=max(max_sh),
-                                               conj=True,
-                                               device=self.device,
-                                               dtype=self.dtype,
-                                               cg_dict=self.cg_dict)
+        self.sph_harms = SphericalHarmonicsRel(
+            maxl=max(max_sh), conj=True, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict
+        )
 
         # Set up position functions, now independent of spherical harmonics
         self.rad_funcs = RadialFilters(
@@ -75,24 +73,26 @@ class Cormorant(CGModule):
         tau_in_atom = self.input_func_atom.tau
         tau_in_edge = self.input_func_edge.tau
 
-        self.cormorant_cg = CormorantCG(maxl=maxl,
-                                        max_sh=max_sh,
-                                        tau_in_atom=tau_in_atom,
-                                        tau_in_edge=tau_in_edge,
-                                        tau_pos=tau_pos,
-                                        num_cg_levels=num_cg_levels,
-                                        num_channels=num_channels,
-                                        level_gain=level_gain,
-                                        weight_init=weight_init,
-                                        cutoff_type=cutoff_type,
-                                        hard_cut_rad=hard_cut_rad,
-                                        soft_cut_rad=soft_cut_rad,
-                                        soft_cut_width=soft_cut_width,
-                                        cat=True,
-                                        gaussian_mask=False,
-                                        device=self.device,
-                                        dtype=self.dtype,
-                                        cg_dict=self.cg_dict)
+        self.cormorant_cg = CormorantCG(
+            maxl=maxl,
+            max_sh=max_sh,
+            tau_in_atom=tau_in_atom,
+            tau_in_edge=tau_in_edge,
+            tau_pos=tau_pos,
+            num_cg_levels=num_cg_levels,
+            num_channels=num_channels,
+            level_gain=level_gain,
+            weight_init=weight_init,
+            cutoff_type=cutoff_type,
+            hard_cut_rad=hard_cut_rad,
+            soft_cut_rad=soft_cut_rad,
+            soft_cut_width=soft_cut_width,
+            cat=True,
+            gaussian_mask=False,
+            device=self.device,
+            dtype=self.dtype,
+            cg_dict=self.cg_dict,
+        )
 
     def forward(self, data) -> SO3Vec:
         # Get and prepare the data
@@ -107,27 +107,29 @@ class Cormorant(CGModule):
         edge_net_in = self.input_func_edge(atom_scalars, atom_mask, edge_scalars, edge_mask, norms)
 
         # Clebsch-Gordan layers central to the network
-        atoms_all, edges_all = self.cormorant_cg(atom_reps_in, atom_mask, edge_net_in, edge_mask, rad_func_levels,
-                                                 norms, spherical_harmonics)
+        atoms_all, edges_all = self.cormorant_cg(
+            atom_reps_in, atom_mask, edge_net_in, edge_mask, rad_func_levels, norms, spherical_harmonics
+        )
 
         # Return last atomic layer
         return atoms_all[-1]
 
     def prepare_input(self, data) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        atom_positions = data['positions'].to(self.device, self.dtype)
-        one_hot = data['one_hot'].to(self.device, self.dtype)
-        charges = data['charges'].to(self.device, self.dtype)
+        atom_positions = data["positions"].to(self.device, self.dtype)
+        one_hot = data["one_hot"].to(self.device, self.dtype)
+        charges = data["charges"].to(self.device, self.dtype)
 
-        atom_mask = data['atom_mask'].to(self.device)
-        edge_mask = data['edge_mask'].to(self.device)
+        atom_mask = data["atom_mask"].to(self.device)
+        edge_mask = data["edge_mask"].to(self.device)
 
         charge_tensor = (charges.unsqueeze(-1) / self.charge_scale).pow(
-            torch.arange(self.charge_power + 1, device=self.device, dtype=self.dtype))
+            torch.arange(self.charge_power + 1, device=self.device, dtype=self.dtype)
+        )
         charge_tensor = charge_tensor.view(charges.shape + (1, self.charge_power + 1))
-        charge_tensor = (one_hot.unsqueeze(-1) * charge_tensor).view(charges.shape[:2] + (-1, ))
+        charge_tensor = (one_hot.unsqueeze(-1) * charge_tensor).view(charges.shape[:2] + (-1,))
 
-        bag_tiled = (data['bags'] / self.bag_scale).unsqueeze(1)  # (batches, 1, feats)
-        bag_tiled = bag_tiled.expand(charge_tensor.shape[:-1] + (-1, ))  # (batches, atoms, feats)
+        bag_tiled = (data["bags"] / self.bag_scale).unsqueeze(1)  # (batches, 1, feats)
+        bag_tiled = bag_tiled.expand(charge_tensor.shape[:-1] + (-1,))  # (batches, atoms, feats)
         atom_scalars = torch.cat([charge_tensor, bag_tiled], dim=-1)
 
         edge_scalars = torch.tensor([])
@@ -136,45 +138,34 @@ class Cormorant(CGModule):
 
 
 class CormorantMixer(CGModule):
-    def __init__(self,
-                 tau_in,
-                 tau_other,
-                 maxl,
-                 num_channels,
-                 level_gain,
-                 weight_init,
-                 device=None,
-                 dtype=None,
-                 cg_dict=None) -> None:
+    def __init__(
+        self, tau_in, tau_other, maxl, num_channels, level_gain, weight_init, device=None, dtype=None, cg_dict=None
+    ) -> None:
         super().__init__(maxl=maxl, device=device, dtype=dtype, cg_dict=cg_dict)
 
         self.tau_in = tau_in
         self.tau_other = tau_other
 
         # Operations linear in input reps
-        self.cg_aggregate = CGProduct(self.tau_other,
-                                      self.tau_in,
-                                      maxl=self.maxl,
-                                      device=self.device,
-                                      dtype=self.dtype,
-                                      cg_dict=self.cg_dict)
+        self.cg_aggregate = CGProduct(
+            self.tau_other, self.tau_in, maxl=self.maxl, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict
+        )
         tau_ag = list(self.cg_aggregate.tau)
 
-        self.cg_power = CGProduct(tau_ag,
-                                  tau_ag,
-                                  maxl=self.maxl,
-                                  device=self.device,
-                                  dtype=self.dtype,
-                                  cg_dict=self.cg_dict)
+        self.cg_power = CGProduct(
+            tau_ag, tau_ag, maxl=self.maxl, device=self.device, dtype=self.dtype, cg_dict=self.cg_dict
+        )
         tau_sq = list(self.cg_power.tau)
 
-        self.cat_mix = CatMixReps([tau_ag, tau_sq, self.tau_in],
-                                  num_channels,
-                                  maxl=self.maxl,
-                                  weight_init=weight_init,
-                                  gain=level_gain,
-                                  device=self.device,
-                                  dtype=self.dtype)
+        self.cat_mix = CatMixReps(
+            [tau_ag, tau_sq, self.tau_in],
+            num_channels,
+            maxl=self.maxl,
+            weight_init=weight_init,
+            gain=level_gain,
+            device=self.device,
+            dtype=self.dtype,
+        )
         self.tau = self.cat_mix.tau
 
     def forward(self, atom_reps, other_reps):

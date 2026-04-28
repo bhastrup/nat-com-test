@@ -27,26 +27,42 @@ class MolecularReward(abc.ABC):
 
 
 class InteractionReward(MolecularReward):
-    intermediate_rew_terms = ['rew_formation']
-    terminal_rew_terms = ['rew_formation', 'rew_atomisation', 'rew_valid', 'rew_basin', 'rew_rae', 'rew_ring_plane', 'rew_ring_sphere', 'rew_dipole']
+    intermediate_rew_terms = ["rew_formation"]
+    terminal_rew_terms = [
+        "rew_formation",
+        "rew_atomisation",
+        "rew_valid",
+        "rew_basin",
+        "rew_rae",
+        "rew_ring_plane",
+        "rew_ring_sphere",
+        "rew_dipole",
+    ]
 
     reward_functions_available = {
-        'rew_formation': '_formation',
-        'rew_atomisation': '_atomisation',
-        'rew_valid': '_validity_rew',
-        'rew_basin': '_basin_dist_rew',
-        'ring_plane': '_ring_plane_rew',
-        'ring_sphere': '_ring_sphere_rew',
-        'rew_dipole': '_dipole_rew'
+        "rew_formation": "_formation",
+        "rew_atomisation": "_atomisation",
+        "rew_valid": "_validity_rew",
+        "rew_basin": "_basin_dist_rew",
+        "ring_plane": "_ring_plane_rew",
+        "ring_sphere": "_ring_sphere_rew",
+        "rew_dipole": "_dipole_rew",
     }
 
-    def __init__(self, reward_coefs: Dict = {}, calculator: str = "GFN2-xTB",
-                 relax_steps_final: int = 0, energy_unit: str = EnergyUnit.EV,
-                 use_exponential: bool = True, n_workers: int = 1, xtb_mp: bool = False) -> None:
+    def __init__(
+        self,
+        reward_coefs: Dict = {},
+        calculator: str = "GFN2-xTB",
+        relax_steps_final: int = 0,
+        energy_unit: str = EnergyUnit.EV,
+        use_exponential: bool = True,
+        n_workers: int = 1,
+        xtb_mp: bool = False,
+    ) -> None:
         # Sometimes XTB crashes when calculating the energy of single nitrogen atom
         E_nitrogen_eV = -71.006818
         E_nitrogen = EnergyConverter.convert(E_nitrogen_eV, EnergyUnit.EV, energy_unit)
-        self.atom_energies: Dict[str, float] = {'N': E_nitrogen}
+        self.atom_energies: Dict[str, float] = {"N": E_nitrogen}
 
         self.calculator = calculator
         self.energy_unit = energy_unit
@@ -59,14 +75,15 @@ class InteractionReward(MolecularReward):
         self.calc = XTBOptimizer(energy_unit=self.energy_unit, use_mp=xtb_mp)
         self.analyzer = MoleculeAnalyzer(use_huckel=True)
 
-        self.old_energies = {f'{n}': 0. for n in range(n_workers)}
-        self.old_energies['eval'] = 0.
+        self.old_energies = {f"{n}": 0.0 for n in range(n_workers)}
+        self.old_energies["eval"] = 0.0
 
-        self.benchmark_energies = ReferenceDataLoader().load_and_polish(
-            'qm7', energy_unit, fetch_df=False).get_mean_energies()
+        self.benchmark_energies = (
+            ReferenceDataLoader().load_and_polish("qm7", energy_unit, fetch_df=False).get_mean_energies()
+        )
 
     def reset_old_energies(self, worker_id):
-        self.old_energies[worker_id] = 0.
+        self.old_energies[worker_id] = 0.0
 
     def calculate(self, atoms: Atoms, new_atom: Atom, terminal: bool = False, worker_id: int = 1) -> Tuple[float, dict]:
         info = {}
@@ -76,12 +93,14 @@ class InteractionReward(MolecularReward):
         n_atoms = len(all_atoms)
 
         # Intersection of self.reward_names and either intermediate_rew_terms or terminal_rew_terms
-        rew_names = list(set(self.reward_names) & set(self.terminal_rew_terms if terminal else self.intermediate_rew_terms))
+        rew_names = list(
+            set(self.reward_names) & set(self.terminal_rew_terms if terminal else self.intermediate_rew_terms)
+        )
 
         if terminal and self.relax_steps_final > 0:
             opt_info = self._optimize_atoms(all_atoms, max_steps=self.relax_steps_final)
-            all_atoms = opt_info['new_atoms']
-            e_tot = opt_info['energy_after']
+            all_atoms = opt_info["new_atoms"]
+            e_tot = opt_info["energy_after"]
         else:
             e_tot = self._calculate_energy(all_atoms)
 
@@ -89,13 +108,13 @@ class InteractionReward(MolecularReward):
             return (None, {})
 
         # Prepare arguments for reward functions
-        args = {'atoms': all_atoms, 'e_tot': e_tot}
-        if terminal or 'rew_valid' in rew_names:
+        args = {"atoms": all_atoms, "e_tot": e_tot}
+        if terminal or "rew_valid" in rew_names:
             mol_info = self.analyzer.get_mol(all_atoms)
-            args['mol_info'] = mol_info
-            info['mol_info'] = mol_info
-        if 'rew_formation' in rew_names:
-            args['worker_id'] = worker_id
+            args["mol_info"] = mol_info
+            info["mol_info"] = mol_info
+        if "rew_formation" in rew_names:
+            args["worker_id"] = worker_id
 
         # Calculate reward
         new_rewards = {}
@@ -106,41 +125,45 @@ class InteractionReward(MolecularReward):
 
         reward = sum([self.reward_coefs[k] * new_rewards[k] for k in new_rewards.keys()])
 
-        info.update({
-            'rew_calc_time': time.time() - start,
-            'new_rewards': new_rewards,
-        })
+        info.update(
+            {
+                "rew_calc_time": time.time() - start,
+                "new_rewards": new_rewards,
+            }
+        )
 
         if terminal:
             # For terminal molecules, save chemically insightful metrics; reuse from new_rewards when available
-            atomization_energy = (self._sum_of_atomic_energies(all_atoms) - e_tot) / n_atoms # Cheap
-            rae = new_rewards['rew_rae'] if 'rew_rae' in new_rewards else self._calc_rae(all_atoms, e_tot) # Cheap
-            dipole = new_rewards['rew_dipole'] if 'rew_dipole' in new_rewards else self._dipole_rew(args) # Cheap if available
-            validity = new_rewards['rew_valid'] if 'rew_valid' in new_rewards else self._validity_rew(args) # Cheap
+            atomization_energy = (self._sum_of_atomic_energies(all_atoms) - e_tot) / n_atoms  # Cheap
+            rae = new_rewards["rew_rae"] if "rew_rae" in new_rewards else self._calc_rae(all_atoms, e_tot)  # Cheap
+            dipole = (
+                new_rewards["rew_dipole"] if "rew_dipole" in new_rewards else self._dipole_rew(args)
+            )  # Cheap if available
+            validity = new_rewards["rew_valid"] if "rew_valid" in new_rewards else self._validity_rew(args)  # Cheap
 
             metrics = {
-                'final:AE': atomization_energy,
-                'final:Valid': validity,
-                'final:RAE': rae,
-                'final:Dipole': dipole,
+                "final:AE": atomization_energy,
+                "final:Valid": validity,
+                "final:RAE": rae,
+                "final:Dipole": dipole,
             }
-            info.update({'metrics': metrics})
+            info.update({"metrics": metrics})
 
         return reward, info
 
     def reduce_validity_reward(self, factor: float) -> None:
-        assert 'rew_valid' in self.reward_names, 'rew_valid must be in reward_names'
-        assert (factor > 0) and (factor <= 1), 'factor must be between 0 and 1'
+        assert "rew_valid" in self.reward_names, "rew_valid must be in reward_names"
+        assert (factor > 0) and (factor <= 1), "factor must be between 0 and 1"
 
         min_value = 0.1
-        new_value = self.reward_coefs['rew_valid'] * factor
-        self.reward_coefs['rew_valid'] = max(new_value, min_value)
+        new_value = self.reward_coefs["rew_valid"] * factor
+        self.reward_coefs["rew_valid"] = max(new_value, min_value)
 
     # Reward calculation methods
     def _atomisation(self, args: Dict) -> float:
         """The energy of the molecule minus the sum of the atomic energies. Often used at the end of the episode."""
-        atoms = args['atoms']
-        e_tot = args['e_tot']
+        atoms = args["atoms"]
+        e_tot = args["e_tot"]
         if e_tot is None:
             return 0.0
 
@@ -149,24 +172,24 @@ class InteractionReward(MolecularReward):
 
         # Convert to hartree so it's closer to unity
         neg_delta_e = EnergyConverter.convert(neg_delta_e, self.energy_unit, EnergyUnit.HARTREE)
-        
+
         x = neg_delta_e
 
         if x < 0:
             reward = x
         else:
             # Polynomial reward for good energies
-            reward = x + 0.5 * x ** 2
+            reward = x + 0.5 * x**2
 
         return reward
 
     def _formation(self, args: Dict) -> float:
         """The perStep reward for the formation of a new atom."""
-        atoms = args['atoms']
-        e_tot = args['e_tot']
+        atoms = args["atoms"]
+        e_tot = args["e_tot"]
         if e_tot is None:
             return 0.0
-        worker_id = args['worker_id']
+        worker_id = args["worker_id"]
 
         # Get old energy
         e_old = self.old_energies[worker_id]
@@ -181,31 +204,31 @@ class InteractionReward(MolecularReward):
         return neg_delta_e
 
     def _basin_dist_rew(self, args: Dict) -> float:
-        atoms = args['atoms']
+        atoms = args["atoms"]
         opt_info = self._optimize_atoms(atoms, max_steps=100)
-        energy_before = opt_info['energy_before']
-        energy_after = opt_info['energy_after']
+        energy_before = opt_info["energy_before"]
+        energy_after = opt_info["energy_after"]
         return max(energy_after - energy_before, -1) if energy_before and energy_after else -1
 
     def _validity_rew(self, args: Dict) -> float:
-        flag = args['mol_info']['info']
-        if flag == 'valid':
+        flag = args["mol_info"]["info"]
+        if flag == "valid":
             return 1.0
-        elif flag == 'charged_or_radical':
+        elif flag == "charged_or_radical":
             return 0.5
-        elif flag == 'fragmented':
+        elif flag == "fragmented":
             return 0.1
-        elif flag == 'failed':
+        elif flag == "failed":
             return 0.05
         else:
             return 0.0
 
     def _ring_plane_rew(self, args: Dict) -> float:
-        atoms = args['atoms']
+        atoms = args["atoms"]
         return plane_penalty(atoms.get_positions(), weights=atoms.get_atomic_numbers())
 
     def _ring_sphere_rew(self, args: Dict) -> float:
-        atoms = args['atoms']
+        atoms = args["atoms"]
         return center_of_mass_penalty(atoms.get_positions(), weights=atoms.get_atomic_numbers())
 
     # Energy calculation methods
@@ -242,14 +265,14 @@ class InteractionReward(MolecularReward):
         return rae
 
     def _get_formula(self, atoms: Atoms) -> str:
-        assert hasattr(self, 'benchmark_energies'), 'Benchmark energies must be set to calculate RAE'
-        assert self.benchmark_energies is not None, 'Benchmark energies cannot be None'
+        assert hasattr(self, "benchmark_energies"), "Benchmark energies must be set to calculate RAE"
+        assert self.benchmark_energies is not None, "Benchmark energies cannot be None"
         bag_repr = symbols_to_str_formula([a.symbol for a in atoms])
         return bag_repr
 
     def _dipole_rew(self, args: Dict) -> float:
         """Dipole magnitude (expensive XTB call); prefer reusing from new_rewards['rew_dipole'] when available."""
-        dipole = self.calc.calc_dipole(args['atoms'])
+        dipole = self.calc.calc_dipole(args["atoms"])
         if dipole is None:
             return 0.0
         return dipole
@@ -258,23 +281,18 @@ class InteractionReward(MolecularReward):
 class RaeReward(InteractionReward):
     """Calculates the Relative Atomic Energy (RAE) of the molecule."""
 
-    def __init__(
-        self,
-        benchmark_energies: Dict[str, float],
-        use_exponential: bool = True,
-        **kwargs
-    ) -> None:
+    def __init__(self, benchmark_energies: Dict[str, float], use_exponential: bool = True, **kwargs) -> None:
         super().__init__(**kwargs)
 
         self.benchmark_energies = benchmark_energies
         self.use_exponential = use_exponential
 
         # Add RAE to reward functions
-        self.reward_functions_available['rew_rae'] = '_rae_rew'
+        self.reward_functions_available["rew_rae"] = "_rae_rew"
 
     def _rae_rew(self, args: Dict) -> float:
         """Calculates the Relative Atomic Energy (RAE) of the molecule."""
-        rae = self._calc_rae(args['atoms'], args['e_tot'])
+        rae = self._calc_rae(args["atoms"], args["e_tot"])
 
         reward = -1 * rae
 
@@ -291,8 +309,8 @@ class RaeReward(InteractionReward):
         return rae
 
     def _get_formula(self, atoms: Atoms) -> str:
-        assert hasattr(self, 'benchmark_energies'), 'Benchmark energies must be set to calculate RAE'
-        assert self.benchmark_energies is not None, 'Benchmark energies cannot be None'
+        assert hasattr(self, "benchmark_energies"), "Benchmark energies must be set to calculate RAE"
+        assert self.benchmark_energies is not None, "Benchmark energies cannot be None"
         bag_repr = symbols_to_str_formula([a.symbol for a in atoms])
-        assert bag_repr in self.benchmark_energies, f'Formula {bag_repr} not in benchmark energies'
+        assert bag_repr in self.benchmark_energies, f"Formula {bag_repr} not in benchmark energies"
         return bag_repr

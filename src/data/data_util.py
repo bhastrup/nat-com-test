@@ -1,4 +1,3 @@
-
 from typing import Dict, List, Tuple
 import numpy as np
 import pandas as pd
@@ -9,22 +8,23 @@ from rdkit import Chem
 from rdkit.Chem.rdchem import BondType as RDKitBondType
 
 
-
 ############## Basic bag manipulation functions ################
 def elements_to_symbols(elements: set[int]) -> List[str]:
     return [chemical_symbols[atomic_number] for atomic_number in elements]
+
 
 def syms_to_count_dict(atom_syms: List[str], symbols_sorted: List[str]) -> Dict[str, int]:
     counts = dict(Counter(atom_syms))
     return {k: counts[k] for k in symbols_sorted}
 
+
 def sym_count_to_bag_repr(counts_sort: Dict[str, int]):
-    return ''.join([f'{k}' if v == 1 else f'{k}{v}' for k, v in counts_sort.items()])
+    return "".join([f"{k}" if v == 1 else f"{k}{v}" for k, v in counts_sort.items()])
 
 
 #############################################################################
 def get_benchmark_energies_from_df(df: pd.DataFrame) -> Dict[str, float]:
-    return df.groupby('bag_repr')['energy_GFN2'].mean().to_dict()
+    return df.groupby("bag_repr")["energy_GFN2"].mean().to_dict()
 
 
 # Example usage:
@@ -36,23 +36,18 @@ bondtype_to_order = {
     RDKitBondType.SINGLE: 1,
     RDKitBondType.DOUBLE: 2,
     RDKitBondType.TRIPLE: 3,
-    RDKitBondType.AROMATIC: 4
+    RDKitBondType.AROMATIC: 4,
 }
 
-valency = {
-    'H': (1,),
-    'C': (4,),
-    'N': (3,),
-    'O': (2,),
-    'S': (2, 6)
-}
+valency = {"H": (1,), "C": (4,), "N": (3,), "O": (2,), "S": (2, 6)}
+
 
 def valence_is_good(atom, valency):
-    return np.any([atom.GetExplicitValence() == v for v in valency[atom.GetSymbol()]]) 
+    return np.any([atom.GetExplicitValence() == v for v in valency[atom.GetSymbol()]])
 
 
 def get_con_mat(mol: Chem.Mol) -> np.ndarray:
-    """ Returns a connectivity matrix of the molecule using the bondtype_to_order."""
+    """Returns a connectivity matrix of the molecule using the bondtype_to_order."""
     n_atoms = mol.GetNumAtoms()
     con_mat = np.zeros((n_atoms, n_atoms), dtype=np.int8)
     for bond in mol.GetBonds():
@@ -65,19 +60,19 @@ def get_con_mat(mol: Chem.Mol) -> np.ndarray:
 
 
 def get_con_sparse(mol: Chem.Mol) -> dict:
-    """ Returns a dictionary of the molecule connectivity matrix in sparse format."""
-    
+    """Returns a dictionary of the molecule connectivity matrix in sparse format."""
+
     bond_dict = {}
     for bond in mol.GetBonds():
         i = bond.GetBeginAtomIdx()
         j = bond.GetEndAtomIdx()
         bond_dict[(i, j)] = bondtype_to_order[bond.GetBondType()]
-        
+
     return bond_dict
 
 
 def get_adj_mat(mol: Chem.Mol) -> np.ndarray:
-    """ Returns an adjacency matrix of the molecule."""
+    """Returns an adjacency matrix of the molecule."""
     n_atoms = mol.GetNumAtoms()
     adj_mat = np.zeros((n_atoms, n_atoms), dtype=np.int8)
     for bond in mol.GetBonds():
@@ -90,7 +85,7 @@ def get_adj_mat(mol: Chem.Mol) -> np.ndarray:
 
 
 def get_con_upper_triangular(mol: Chem.Mol) -> np.ndarray:
-    """ 
+    """
     Returns the upper triangular part of the connectivity matrix of the molecule.
     Uses np.int8 for bond orders to optimize memory usage.
     """
@@ -123,7 +118,7 @@ def get_con_upper_triangular(mol: Chem.Mol) -> np.ndarray:
 def unpack_upper_triangular_to_full(upper_triangular: np.ndarray, n_atoms: int) -> np.ndarray:
     """
     Converts an upper triangular array back into a full 2D connectivity matrix.
-    
+
     :param upper_triangular: 1D np.ndarray representing the upper triangular part of the matrix.
     :param n_atoms: The number of atoms in the molecule.
     :return: 2D np.ndarray representing the full connectivity matrix.

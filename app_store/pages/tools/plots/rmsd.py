@@ -6,11 +6,11 @@ import streamlit as st
 
 def plot_basin_RMSD(df_stoch: pd.DataFrame):
     fig = px.scatter(
-        df_stoch, 
-        x="basin_distance", 
-        y="RMSD", 
+        df_stoch,
+        x="basin_distance",
+        y="RMSD",
         color="abs_energy",
-        hover_data=['SMILES', 'NEW_SMILES'],
+        hover_data=["SMILES", "NEW_SMILES"],
         # size=sizes,
     )
     col1, col2 = st.columns(2)

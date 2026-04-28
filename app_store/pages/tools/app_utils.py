@@ -9,7 +9,8 @@ from src.performance.metrics import MoleculeProcessor
 
 
 def configure_canvas():
-    st.write("""
+    st.write(
+        """
     <style>
     .custom-remove-btn {
         height: 20px;
@@ -18,10 +19,13 @@ def configure_canvas():
         padding: 0 8px;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+        unsafe_allow_html=True,
+    )
+
 
 def initialize_session_state():
-    if 'loaded_models' not in st.session_state:
+    if "loaded_models" not in st.session_state:
         st.session_state.loaded_models = {}
     if "loaded_envs" not in st.session_state:
         st.session_state.loaded_envs = {}
@@ -31,11 +35,11 @@ def initialize_session_state():
         st.session_state.mols = {}
     if "index_in_explore_mols" not in st.session_state:
         st.session_state.index_in_explore_mols = None
-    if 'loaded_mols' not in st.session_state:
+    if "loaded_mols" not in st.session_state:
         st.session_state.loaded_mols = pd.DataFrame()
-    if 'datasets' not in st.session_state:
+    if "datasets" not in st.session_state:
         st.session_state.datasets = {}
-    if 'mol_processor' not in st.session_state:
+    if "mol_processor" not in st.session_state:
         st.session_state.mol_processor = MoleculeProcessor()
 
 
@@ -46,8 +50,8 @@ def make_multi_button_columns(
 ):
     """Creates multiple button columns in a dataframe that call functions when clicked."""
     # TODO: Investigate why the viewer pops up again when we rerun the app
-    
-    button_dict_key = f'{unique_key}_button_dict'
+
+    button_dict_key = f"{unique_key}_button_dict"
 
     if button_dict_key not in st.session_state:
         setattr(st.session_state, button_dict_key, {})
@@ -55,33 +59,27 @@ def make_multi_button_columns(
     button_dict = getattr(st.session_state, button_dict_key)
 
     # Create buttons or reload existing button values
-    for (button_name, func, _) in button_configs:
+    for button_name, func, _ in button_configs:
         df[button_name] = False
         if button_name not in button_dict.keys():
-            button_dict[button_name] = {
-                'all_indices': set(),
-                'new_index': None,
-                'old_indices': set()
-            }
-        #else:
+            button_dict[button_name] = {"all_indices": set(), "new_index": None, "old_indices": set()}
+        # else:
         #    st.write(f"button_dict[button_name]['all_indices']: {button_dict[button_name]['all_indices']}")
         #    df[button_name].iloc[list(button_dict[button_name]['all_indices'])] = True
-
 
     # Create data_editor
     editable_cols = [button_name for (button_name, _, _) in button_configs]
     non_editable_cols = [col for col in df.columns if col not in editable_cols]
     df = st.data_editor(df, key=unique_key, disabled=non_editable_cols)
 
-
-    # Run functions upon click and ipdate button values in session state 
+    # Run functions upon click and ipdate button values in session state
     do_rerun = False
-    for (button_name, func, args_dict) in button_configs:
+    for button_name, func, args_dict in button_configs:
         button_info = button_dict[button_name]
 
-        button_info['all_indices'] = set(df[df[button_name] == True].index)
-        new_index = button_info['all_indices'] - button_info['old_indices']
-        newly_removed = button_info['old_indices'] - button_info['all_indices']
+        button_info["all_indices"] = set(df[df[button_name] == True].index)
+        new_index = button_info["all_indices"] - button_info["old_indices"]
+        newly_removed = button_info["old_indices"] - button_info["all_indices"]
 
         if len(newly_removed) > 0 or len(new_index) > 0:
             do_rerun = True
@@ -90,11 +88,9 @@ def make_multi_button_columns(
             new_index = list(new_index)[0]
             func(new_index, **args_dict)
 
-        st.session_state[button_dict_key][button_name]['old_indices'] = button_info['all_indices'].copy()
+        st.session_state[button_dict_key][button_name]["old_indices"] = button_info["all_indices"].copy()
 
-
-
-    #if do_rerun:
+    # if do_rerun:
     #    st.rerun() # Attempting to avoid ASE viewer unintendedly popping up again
 
     # for (button_name, func, args_dict) in button_configs:
@@ -125,6 +121,6 @@ def check_hashability(obj, path=None):
     elif isinstance(obj, (list, tuple)):
         for index, item in enumerate(obj):
             check_hashability(item, path + [str(index)])
-    elif hasattr(obj, '__dict__'):
+    elif hasattr(obj, "__dict__"):
         for attr_name, attr_value in obj.__dict__.items():
             check_hashability(attr_value, path + [attr_name])

@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def calculate_centroid(atom_positions, weights=None):
     """
     Calculates the centroid of the atom positions.
@@ -16,6 +17,7 @@ def calculate_centroid(atom_positions, weights=None):
     centroid = np.average(atom_positions, axis=0, weights=weights)
     return centroid
 
+
 def center_positions(atom_positions, centroid):
     """
     Centers the atom positions around the centroid.
@@ -29,6 +31,7 @@ def center_positions(atom_positions, centroid):
     """
     centered_positions = atom_positions - centroid
     return centered_positions
+
 
 def calculate_covariance_matrix(centered_positions, weights=None):
     """
@@ -47,6 +50,7 @@ def calculate_covariance_matrix(centered_positions, weights=None):
         cov_matrix = np.cov(centered_positions, aweights=weights, rowvar=False)
     return cov_matrix
 
+
 def fit_plane(cov_matrix):
     """
     Fits a plane through the atom positions based on the covariance matrix.
@@ -60,6 +64,7 @@ def fit_plane(cov_matrix):
     eigenvalues, eigenvectors = np.linalg.eigh(cov_matrix)
     normal_vector = eigenvectors[:, 0]
     return normal_vector
+
 
 def calculate_distances_from_plane(centered_positions, normal_vector):
     """
@@ -75,6 +80,7 @@ def calculate_distances_from_plane(centered_positions, normal_vector):
     distances = np.abs(np.dot(centered_positions, normal_vector))
     return distances
 
+
 def plane_penalty(atom_positions, weights=None):
     """
     Calculates the penalty (negative reward) as the sum of distances from the fitted plane.
@@ -89,7 +95,7 @@ def plane_penalty(atom_positions, weights=None):
     """
     if weights is None:
         weights = np.ones(atom_positions.shape[0])
-    
+
     centroid = calculate_centroid(atom_positions, weights)
     centered_positions = center_positions(atom_positions, centroid)
     cov_matrix = calculate_covariance_matrix(centered_positions, weights)
@@ -113,13 +119,13 @@ def center_of_mass_penalty(atom_positions, weights=None):
     """
     if weights is None:
         weights = np.ones(atom_positions.shape[0])
-    
+
     centroid = calculate_centroid(atom_positions, weights)
     distances = np.linalg.norm(atom_positions - centroid, axis=1)
-    
+
     # Calculate the penalty as the weighted sum of distances
     distance_penalty = np.sum(distances * weights)
-    
+
     return -distance_penalty  # Return negative penalty as a reward
 
 
@@ -152,39 +158,33 @@ def get_max_view_positions(atom_positions):
             rotation_axis = rotation_axis / np.linalg.norm(rotation_axis)
             angle = np.pi
             # Rodrigues' rotation formula
-            K = np.array([
-                [0, -rotation_axis[2], rotation_axis[1]],
-                [rotation_axis[2], 0, -rotation_axis[0]],
-                [-rotation_axis[1], rotation_axis[0], 0]
-            ])
-            rotation_matrix = (
-                np.eye(3) +
-                np.sin(angle) * K +
-                (1 - np.cos(angle)) * K @ K
+            K = np.array(
+                [
+                    [0, -rotation_axis[2], rotation_axis[1]],
+                    [rotation_axis[2], 0, -rotation_axis[0]],
+                    [-rotation_axis[1], rotation_axis[0], 0],
+                ]
             )
+            rotation_matrix = np.eye(3) + np.sin(angle) * K + (1 - np.cos(angle)) * K @ K
     else:
         # General case: use Rodrigues' rotation formula
         rotation_axis = rotation_axis / sin_angle
         angle = np.arctan2(sin_angle, cos_angle)
 
-        K = np.array([
-            [0, -rotation_axis[2], rotation_axis[1]],
-            [rotation_axis[2], 0, -rotation_axis[0]],
-            [-rotation_axis[1], rotation_axis[0], 0]
-        ])
-        rotation_matrix = (
-            np.eye(3) +
-            np.sin(angle) * K +
-            (1 - np.cos(angle)) * K @ K
+        K = np.array(
+            [
+                [0, -rotation_axis[2], rotation_axis[1]],
+                [rotation_axis[2], 0, -rotation_axis[0]],
+                [-rotation_axis[1], rotation_axis[0], 0],
+            ]
         )
-        
-    # Add a small extra rotation 
-    rot_size = 1 # radians
-    extra_rotation = np.array([
-        [np.cos(rot_size), 0, np.sin(rot_size)],
-        [0, 1, 0], 
-        [-np.sin(rot_size), 0, np.cos(rot_size)]
-    ])
+        rotation_matrix = np.eye(3) + np.sin(angle) * K + (1 - np.cos(angle)) * K @ K
+
+    # Add a small extra rotation
+    rot_size = 1  # radians
+    extra_rotation = np.array(
+        [[np.cos(rot_size), 0, np.sin(rot_size)], [0, 1, 0], [-np.sin(rot_size), 0, np.cos(rot_size)]]
+    )
     rotation_matrix = rotation_matrix @ extra_rotation
 
     # Apply the rotation to the atomic positions

@@ -6,7 +6,6 @@ The reason it needs sorting is because the Preprocessor.preprocess() was not sor
 Therefore, we have provided the used split here in a hardcoded manner in order to be able to reproduce the results.
 """
 
-
 import argparse
 import numpy as np
 from src.data.reference_dataloader import ReferenceDataLoader
@@ -36,7 +35,6 @@ def parse_cmd():
         default=True,
     )
     return parser.parse_args()
-
 
 
 qm7_split_from_paper = {
@@ -196,7 +194,7 @@ qm7_split_from_paper = {
         "H4C5OS",
         "HC3NO2S",
         "H2C4O2S",
-        "H3C6N"
+        "H3C6N",
     ],
     "test": [
         "H6C3O",
@@ -218,13 +216,12 @@ qm7_split_from_paper = {
         "H6C7",
         "H5C4NO",
         "H7C2N",
-        "H3C4N3"
-    ]
+        "H3C4N3",
+    ],
 }
 
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
     args = parse_cmd()
 
     # Load the reference data
@@ -232,12 +229,10 @@ if __name__ == '__main__':
     ref_data = loader._load_data(mol_dataset=args.mol_dataset)
     energies = loader.get_benchmark_energies(ref_data)
 
-
     if args.use_hardcoded_split and args.mol_dataset == "qm7":
         split = qm7_split_from_paper
     else:
-
-        bags = sorted(list(energies.keys())) # A deterministic sorting should be used here to ensure reproducibility.
+        bags = sorted(list(energies.keys()))  # A deterministic sorting should be used here to ensure reproducibility.
         num_bags = len(bags)
         print(f"Number of bags: {num_bags}")
         print(f"Bags: {bags}")
@@ -256,13 +251,12 @@ if __name__ == '__main__':
         # Save the split
         split = dict(train=train_bags, test=test_bags)
 
-
     if args.mol_dataset == "qm7":
         # Assert that the generated bag split matches the "qm7_split_from_paper" split below.
-        assert set(split['train']) == set(qm7_split_from_paper['train']), "Mismatch in train split"
-        assert set(split['test']) == set(qm7_split_from_paper['test']), "Mismatch in test split"
+        assert set(split["train"]) == set(qm7_split_from_paper["train"]), "Mismatch in train split"
+        assert set(split["test"]) == set(qm7_split_from_paper["test"]), "Mismatch in test split"
         print("Split matches the qm7_split_from_paper split")
 
-    split_path = f'{args.data_dir}/{args.mol_dataset}/processed/split.json'
+    split_path = f"{args.data_dir}/{args.mol_dataset}/processed/split.json"
     IOHandler.write_json(split, split_path)
     print(f"Split saved to {split_path}")

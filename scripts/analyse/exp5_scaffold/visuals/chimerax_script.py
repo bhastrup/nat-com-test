@@ -2,24 +2,26 @@ import sys
 import re
 from chimerax.core.commands import run
 
+
 def calc_edge_width(width, height):
     return width / 200
 
+
 def execute_chimerax_commands(
-        session,
-        pdb_file_path, 
-        image_path, 
-        movie_path, 
-        atoms_to_deselect,
-        selected_action,
-        bg_color,
-        width, 
-        height, 
-        edge_width, 
-        image_supersample,
-        video_supersample, 
-        video_width, 
-        video_height
+    session,
+    pdb_file_path,
+    image_path,
+    movie_path,
+    atoms_to_deselect,
+    selected_action,
+    bg_color,
+    width,
+    height,
+    edge_width,
+    image_supersample,
+    video_supersample,
+    video_width,
+    video_height,
 ):
     print("Opening PDB file...")
     run(session, f"open {pdb_file_path}")
@@ -43,12 +45,11 @@ def execute_chimerax_commands(
         if selected_action == "hide":
             print("Hiding selected atoms...")
             run(session, "hide sel atoms")
-            #print("Showing selected atoms...")
-            #run(session, "show sel atoms")
+            # print("Showing selected atoms...")
+            # run(session, "show sel atoms")
         elif selected_action == "highlight":
             print(f"Setting selection highlight width to {edge_width}...")
             run(session, f"graphics selection width {edge_width}")
-
 
     perform_random_rotation = False
     if perform_random_rotation:
@@ -83,7 +84,7 @@ def parse_sys_args(sys_argv):
         raw_args = raw_args[1:-1].strip()
 
     # Use regex to correctly split key-value pairs **without breaking lists**
-    key_value_pairs = re.findall(r'(\w+):\s*(\[.*?\]|\S+)', raw_args)
+    key_value_pairs = re.findall(r"(\w+):\s*(\[.*?\]|\S+)", raw_args)
 
     args_dict = {}
     for key, value in key_value_pairs:
@@ -101,16 +102,13 @@ def parse_sys_args(sys_argv):
 
         args_dict[key] = value
 
-    for k,v in args_dict.items():
+    for k, v in args_dict.items():
         if v == "null":
             args_dict[k] = None
 
     print(f"✅ Parsed Arguments: {args_dict}")
 
     return args_dict
-
-
-
 
 
 # Call the function with sys.argv
@@ -145,7 +143,7 @@ execute_chimerax_commands(
     image_supersample=image_supersample,
     video_supersample=video_supersample,
     video_width=video_width,
-    video_height=video_height
+    video_height=video_height,
 )
 
 

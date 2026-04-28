@@ -35,8 +35,16 @@ class PPOBufferContainer:
         values: np.ndarray,
         logps: np.ndarray,
     ) -> None:
-        assert len(observations) == actions.shape[0] == rewards.shape[0] == len(
-            next_observations) == terminals.shape[0] == values.shape[0] == logps.shape[0] == len(self.buffers)
+        assert (
+            len(observations)
+            == actions.shape[0]
+            == rewards.shape[0]
+            == len(next_observations)
+            == terminals.shape[0]
+            == values.shape[0]
+            == logps.shape[0]
+            == len(self.buffers)
+        )
 
         for i, buffer in enumerate(self.buffers):
             buffer.store(
@@ -89,8 +97,16 @@ class PPOBufferContainerDeploy(PPOBufferContainer):
         values: np.ndarray,
         logps: np.ndarray,
     ) -> None:
-        assert len(observations) == actions.shape[0] == rewards.shape[0] == len(next_observations) \
-            == terminals.shape[0] == values.shape[0] == logps.shape[0] == len(self.active_buffers) # len(self.buffers)
+        assert (
+            len(observations)
+            == actions.shape[0]
+            == rewards.shape[0]
+            == len(next_observations)
+            == terminals.shape[0]
+            == values.shape[0]
+            == logps.shape[0]
+            == len(self.active_buffers)
+        )  # len(self.buffers)
 
         for i, i_original in enumerate(self.active_buffers):
             self.buffers[i_original].store(

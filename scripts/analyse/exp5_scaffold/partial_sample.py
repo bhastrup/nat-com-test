@@ -2,6 +2,7 @@
 Scaffold-functionalization task: use a trained agent to complete a partial molecule
 (core scaffold + bag of atoms to place). Define the scaffold and run in CONFIG below.
 """
+
 import itertools
 import time
 from copy import deepcopy
@@ -32,7 +33,6 @@ from src.rl.reward import InteractionReward
 from src.rl.envs.env_partial_canvas import FormulaType
 
 
-
 class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
     """Single scaffold + fixed bag to place; one formula per env."""
 
@@ -41,8 +41,8 @@ class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
         assert len(molecule_df) == 1
         self.molecule_df = molecule_df
         # Full molecule formula (bag tuple) for evaluator save key
-        self.formulas = [molecule_df['formulas'].iloc[0]]
-        self.new_bag = molecule_df['new_bag'].iloc[0]
+        self.formulas = [molecule_df["formulas"].iloc[0]]
+        self.new_bag = molecule_df["new_bag"].iloc[0]
         indices = np.arange(len(self.molecule_df))
         self.index_cycle = itertools.cycle(indices)
         self.obs_reset = self.reset()
@@ -50,9 +50,9 @@ class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
     def reset(self):
         index = next(self.index_cycle)
         mol = self.molecule_df.iloc[index]
-        pos = np.array(mol['pos'])
-        elements = np.array(mol['atomic_nums'])
-        atoms_to_remove = mol['atoms_to_remove']
+        pos = np.array(mol["pos"])
+        elements = np.array(mol["atomic_nums"])
+        atoms_to_remove = mol["atoms_to_remove"]
 
         sorted_indices = np.array([i for i in range(len(elements)) if i not in atoms_to_remove])
         sorted_indices = np.concatenate((sorted_indices, np.array(atoms_to_remove))).astype(int)
@@ -79,7 +79,6 @@ class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
         return (canvas_atoms, new_bag)
 
 
-
 def load_reference_df(data_dir: str, mol_dataset: str = "QM7") -> pd.DataFrame:
     """Load and polish reference molecule dataframe. Reuse for many write_atoms_to_remove calls."""
     loader = ReferenceDataLoader(data_dir=data_dir)
@@ -90,7 +89,6 @@ def load_reference_df(data_dir: str, mol_dataset: str = "QM7") -> pd.DataFrame:
     )
     ref_data.df = ref_data.df.reset_index(drop=True)
     return ref_data.df
-
 
 
 def dict_to_bag(spec: dict, zs: List[int]) -> FormulaType:
@@ -125,12 +123,10 @@ def build_scaffold_tasks(cfg: dict, zs: List[int]):
             molecule_df = ref_df.iloc[[mol_index]].copy()
             molecule_df["atoms_to_remove"] = [valid]
 
-
             for spec in new_bags_specs:
                 mdf = molecule_df.copy()
                 mdf["new_bag"] = [dict_to_bag(spec, zs)]
                 yield mdf
-
 
 
 CONFIG = {
@@ -140,7 +136,6 @@ CONFIG = {
     "log_name": "pretrain_run-0.json",
     "tag": "scaffold_eval",
     "data_dir": "data",
-
     "scaffold_tasks": {
         # "QM7": [
         #     {
@@ -155,22 +150,17 @@ CONFIG = {
         "QM9": [
             {
                 "mol_index": 450,
-                "atoms_to_remove": [3,4,6,7,8,9],
+                "atoms_to_remove": [3, 4, 6, 7, 8, 9],
                 "new_bags": [{"H": 4, "C": 2}],
                 "new_bags": [{"H": 6, "C": 2}],
-
                 "new_bags": [{"H": 6, "C": 3}],
                 "new_bags": [{"H": 8, "C": 3}],
-
                 "new_bags": [{"H": 6, "C": 4}],
                 "new_bags": [{"H": 8, "C": 4}],
                 "new_bags": [{"H": 10, "C": 4}],
             },
         ],
     },
-
-
-
     # Sampling
     "num_episodes": 5,
     "num_envs": 1,
@@ -188,14 +178,13 @@ if __name__ == "__main__":
     model, start_num_steps = get_model(config, ph)
     print(f"Successfully loaded model from {ph.cp_path}")
 
-    util.set_seeds(seed=config['seed'])
+    util.set_seeds(seed=config["seed"])
     action_space = model.action_space
     observation_space = model.observation_space
     zs_model = model.action_space.zs
     if zs_model != [0, 1, 6, 7, 8, 16]:
         raise ValueError(f"Model action space zs {zs_model} does not match QM7 zs [0, 1, 6, 7, 8, 16]")
     print(f"Model action space zs: {zs_model}")
-
 
     # (b) Build one env per (molecule_df, new_bag, label) from scaffold tasks
     reward_coefs = {"rew_abs_E": 1.0, "rew_valid": 3.0}
@@ -229,7 +218,6 @@ if __name__ == "__main__":
     evaluator.reset(ph.eval_save_dir)
     print(f"Created evaluator with IO base directory: {evaluator.io.base_dir}")
 
-
     # (c) Sample and relax
     t0 = time.time()
     evaluator._rollout(ac=model, rollouts_from_file=False)
@@ -238,7 +226,6 @@ if __name__ == "__main__":
     evaluator._calc_features(features_from_file=False, perform_optimization=cfg["relax"])
     print(f"Features (relax={cfg['relax']}) done in {time.time() - t0:.1f}s")
     evaluator._get_metrics_by_formula(dfs_from_file=False)
-
 
     print(f"Metrics done in {time.time() - t0:.1f}s")
 
@@ -256,6 +243,3 @@ if __name__ == "__main__":
         if out_csv.parent.exists():
             df.to_csv(out_csv, index=False)
     print(f"Results under {out_dir}")
-
-
-

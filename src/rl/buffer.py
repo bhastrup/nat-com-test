@@ -7,15 +7,23 @@ from src.rl.spaces import ObservationType
 from src.tools import util
 
 
-
 class DynamicPPOBuffer:
     """
     A buffer for storing trajectories experienced by a PPO agent interacting
     with the environment, and using Generalized Advantage Estimation (GAE-Lambda)
     for calculating the advantages of state-action pairs.
     """
+
     BUFFER_FIELDS = [
-        'obs_buf', 'act_buf', 'rew_buf', 'next_obs_buf', 'term_buf', 'val_buf', 'logp_buf', 'adv_buf', 'ret_buf'
+        "obs_buf",
+        "act_buf",
+        "rew_buf",
+        "next_obs_buf",
+        "term_buf",
+        "val_buf",
+        "logp_buf",
+        "adv_buf",
+        "ret_buf",
     ]
 
     def __init__(self, gamma=0.99, lam=0.95) -> None:
@@ -38,8 +46,16 @@ class DynamicPPOBuffer:
         self.current_index = 0
         self.start_index = 0
 
-    def store(self, obs: ObservationType, act: np.ndarray, reward: float, next_obs: ObservationType, terminal: bool,
-              value: float, logp: float) -> None:
+    def store(
+        self,
+        obs: ObservationType,
+        act: np.ndarray,
+        reward: float,
+        next_obs: ObservationType,
+        terminal: bool,
+        value: float,
+        logp: float,
+    ) -> None:
         """Append one time step of agent-environment interaction to the buffer."""
         self.obs_buf.append(obs)
         self.act_buf.append(act)
@@ -110,11 +126,13 @@ class DynamicPPOBuffer:
 
         adv_buf_standard = (adv_buf - adv_mean) / adv_std
 
-        return dict(obs=self.obs_buf,
-                    act=np.array(self.act_buf),
-                    ret=np.array(self.ret_buf),
-                    adv=adv_buf_standard,
-                    logp=np.array(self.logp_buf))
+        return dict(
+            obs=self.obs_buf,
+            act=np.array(self.act_buf),
+            ret=np.array(self.ret_buf),
+            adv=adv_buf_standard,
+            logp=np.array(self.logp_buf),
+        )
 
     def get_data_unnormalized(self) -> dict:
         """
@@ -124,26 +142,28 @@ class DynamicPPOBuffer:
         """
         assert self.is_finished()
 
-        return dict(obs=self.obs_buf,
-                    act=np.array(self.act_buf),
-                    ret=np.array(self.ret_buf),
-                    adv=np.array(self.adv_buf),
-                    logp=np.array(self.logp_buf))
+        return dict(
+            obs=self.obs_buf,
+            act=np.array(self.act_buf),
+            ret=np.array(self.ret_buf),
+            adv=np.array(self.adv_buf),
+            logp=np.array(self.logp_buf),
+        )
+
 
 def compute_buffer_stats(buffer: DynamicPPOBuffer) -> Dict[str, float]:
     return {
-        'value_mean': np.mean(buffer.val_buf).item(),
-        'value_std': np.std(buffer.val_buf).item(),
-        'logp_mean': np.mean(buffer.logp_buf).item(),
-        'logp_std': np.std(buffer.logp_buf).item(),
+        "value_mean": np.mean(buffer.val_buf).item(),
+        "value_std": np.std(buffer.val_buf).item(),
+        "logp_mean": np.mean(buffer.logp_buf).item(),
+        "logp_std": np.std(buffer.logp_buf).item(),
     }
-
 
 
 def get_batch_generator(indices: np.ndarray, batch_size: int) -> Iterator[np.ndarray]:
     assert len(indices.shape) == 1
     indices = np.random.permutation(indices)
-    batches = indices[:len(indices) // batch_size * batch_size].reshape(-1, batch_size)
+    batches = indices[: len(indices) // batch_size * batch_size].reshape(-1, batch_size)
     for batch in batches:
         yield batch
     remainder = len(indices) % batch_size

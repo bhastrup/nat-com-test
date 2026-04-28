@@ -5,20 +5,12 @@ import numpy as np
 from ase import Atoms
 
 
-NULL_SYMBOL = 'X'
+NULL_SYMBOL = "X"
 
-from .spaces import (
-    CanvasItemType, 
-    CanvasType, 
-    BagType, 
-    FormulaType,
-    CanvasItemSpace, 
-    CanvasSpace, 
-    BagSpace
-)
+from .spaces import CanvasItemType, CanvasType, BagType, FormulaType, CanvasItemSpace, CanvasSpace, BagSpace
 
 
-# Alternatively: https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html (BondType) 
+# Alternatively: https://www.rdkit.org/docs/source/rdkit.Chem.rdchem.html (BondType)
 # or: BondType = Tuple[int, ...] # length b+1, with b=#bond types.
 
 ConnectivityType = np.ndarray  # A 2D numpy array with shape (max_atoms, max_atoms)
@@ -31,7 +23,7 @@ ActionType = Tuple[CanvasItemType, AtomConnectivityType]
 
 class ActionSpace(gym.spaces.Tuple):
     def __init__(self, zs: List[int], max_atoms: int):
-        assert 0 in zs, '0 has to be in the list of atomic numbers'
+        assert 0 in zs, "0 has to be in the list of atomic numbers"
 
         self.zs = zs
         self.max_atoms = max_atoms
@@ -40,7 +32,6 @@ class ActionSpace(gym.spaces.Tuple):
         self.bond_space = gym.spaces.Box(low=0, high=3, shape=(max_atoms,), dtype=np.int8)
 
         super().__init__((self.canvas_item_space, self.bond_space))
-
 
 
 class ConnectivitySpace(gym.spaces.Box):
@@ -59,7 +50,6 @@ class ConnectivitySpace(gym.spaces.Box):
         return connectivity_data
 
 
-
 class ObservationSpace2d(gym.spaces.Tuple):
     def __init__(self, canvas_size: int, zs: List[int]):
         self.zs = zs
@@ -69,9 +59,15 @@ class ObservationSpace2d(gym.spaces.Tuple):
         super().__init__((self.canvas_space, self.bag_space, self.connectivity_space))
 
     def build(self, atoms: Atoms, formula: FormulaType, connectivity: ConnectivityType) -> ObservationType:
-        return self.canvas_space.from_atoms(atoms), self.bag_space.from_formula(formula), \
-            self.connectivity_space.from_connectivity(connectivity)
+        return (
+            self.canvas_space.from_atoms(atoms),
+            self.bag_space.from_formula(formula),
+            self.connectivity_space.from_connectivity(connectivity),
+        )
 
     def parse(self, observation: ObservationType) -> Tuple[Atoms, FormulaType]:
-        return self.canvas_space.to_atoms(observation[0]), self.bag_space.to_formula(observation[1]), \
-            self.connectivity_space.to_connectivity(observation[2])
+        return (
+            self.canvas_space.to_atoms(observation[0]),
+            self.bag_space.to_formula(observation[1]),
+            self.connectivity_space.to_connectivity(observation[2]),
+        )

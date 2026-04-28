@@ -21,22 +21,22 @@ class ModelPathInfo:
 
 
 class ModelIO:
-    def __init__(self, directory: str, tag: str, keep: bool = False, checkpoints: Sequence[int]=None) -> None:
-        """ Make sure to distinguish between number of env steps and number of training steps (training iters). """
+    def __init__(self, directory: str, tag: str, keep: bool = False, checkpoints: Sequence[int] = None) -> None:
+        """Make sure to distinguish between number of env steps and number of training steps (training iters)."""
         self.directory = directory
         self.tag = tag
         self.keep = keep
         self.old_path: Optional[str] = None
 
-        self._steps_string = '_steps-'
-        self._suffix = '.model'
-        self._iter_suffix = '.txt'
+        self._steps_string = "_steps-"
+        self._suffix = ".model"
+        self._iter_suffix = ".txt"
 
         if checkpoints:
             if 0 not in checkpoints:
                 checkpoints = [0] + list(checkpoints)
         self._checkpoints = checkpoints
-        self._checkpoints_string = '_CP-'
+        self._checkpoints_string = "_CP-"
 
     def _get_model_filename(self, num_steps: int) -> str:
         return self.tag + self._steps_string + str(num_steps) + self._suffix
@@ -47,25 +47,25 @@ class ModelIO:
 
     def _parse_model_path(self, path: str) -> Optional[ModelPathInfo]:
         filename = os.path.basename(path)
-        regex = re.compile(rf'(?P<tag>.*){self._steps_string}(?P<num_steps>\d+){self._suffix}')
+        regex = re.compile(rf"(?P<tag>.*){self._steps_string}(?P<num_steps>\d+){self._suffix}")
         match = regex.match(filename)
         if not match:
             return None
 
         return ModelPathInfo(
             path=path,
-            tag=match.group('tag'),
-            num_steps=int(match.group('num_steps')),
+            tag=match.group("tag"),
+            num_steps=int(match.group("num_steps")),
         )
 
     def save(self, module: AbstractActorCritic, num_steps: int) -> None:
         if not self.keep and self.old_path:
-            logging.debug(f'Deleting old model: {self.old_path}')
+            logging.debug(f"Deleting old model: {self.old_path}")
             os.remove(self.old_path)
 
         filename = self._get_model_filename(num_steps)
         path = os.path.join(self.directory, filename)
-        logging.debug(f'Saving model: {path}')
+        logging.debug(f"Saving model: {path}")
         torch.save(obj=module, f=path)
         self.old_path = path
 
@@ -75,7 +75,7 @@ class ModelIO:
         if model_info is None:
             raise RuntimeError(f"Cannot find model '{path}'")
 
-        logging.info(f'Loading model: {model_info.path}')
+        logging.info(f"Loading model: {model_info.path}")
         model = torch.load(f=model_info.path, map_location=device)
         # model.set_device(device)
 
@@ -91,19 +91,17 @@ class ModelIO:
 
         latest_model_info = max(selected_model_infos, key=lambda info: info.num_steps)
 
-        logging.info(f'Loading model: {latest_model_info.path}')
+        logging.info(f"Loading model: {latest_model_info.path}")
         model = torch.load(f=latest_model_info.path, map_location=device)
         model.set_device(device)
 
         return model, latest_model_info.num_steps
 
-
     def save_after_full_replica(self, module: AbstractActorCritic, num_steps: int, epochs: int) -> None:
-        filename = self.tag + '_epoch_' + str(epochs) + self._steps_string + str(num_steps) +  self._suffix
+        filename = self.tag + "_epoch_" + str(epochs) + self._steps_string + str(num_steps) + self._suffix
         path = os.path.join(self.directory, filename)
-        logging.debug(f'Saving agent after epoch {epochs} at: {path}')
+        logging.debug(f"Saving agent after epoch {epochs} at: {path}")
         torch.save(obj=module, f=path)
-
 
     def save_if_checkpoint(self, module: AbstractActorCritic, num_steps: int) -> None:
         # TODO: Somewhere, we should read model folder to see if user have updated checkpoint list
@@ -111,80 +109,71 @@ class ModelIO:
             cp_num = str(self._checkpoints.index(num_steps))
             filename = self.tag + self._checkpoints_string + cp_num + self._steps_string + str(num_steps) + self._suffix
             path = os.path.join(self.directory, filename)
-            logging.debug(f'Saving agent at checkpoint {cp_num} at step number {str(num_steps)} at: {path}')
+            logging.debug(f"Saving agent at checkpoint {cp_num} at step number {str(num_steps)} at: {path}")
             torch.save(obj=module, f=path)
 
             return path
 
-
     def save_at_skill_change(self, module: AbstractActorCritic, num_steps: int, skill: int) -> None:
-        """ When using curriculum learning, we want to save the model at the point where skill changes."""
+        """When using curriculum learning, we want to save the model at the point where skill changes."""
         filename = self._get_model_filename(num_steps)
-        filename += '-skill-' + str(skill)
+        filename += "-skill-" + str(skill)
 
         path = os.path.join(self.directory, filename)
-        logging.debug(f'Saving model: {path}')
+        logging.debug(f"Saving model: {path}")
         torch.save(obj=module, f=path)
 
 
-
 def get_model(
-    config: dict, 
-    observation_space: ObservationSpace, 
-    action_space: ActionSpace, 
-    device: torch.device,
-    tag: str
+    config: dict, observation_space: ObservationSpace, action_space: ActionSpace, device: torch.device, tag: str
 ) -> Tuple[AbstractActorCritic, int, ModelIO, int]:
 
     model_handler = ModelIO(
-        directory=config['model_dir'], 
-        tag=tag, 
-        keep=config['keep_models'], 
-        checkpoints=config["checkpoints"]
+        directory=config["model_dir"], tag=tag, keep=config["keep_models"], checkpoints=config["checkpoints"]
     )
-    if config['load_latest']:
+    if config["load_latest"]:
         model, start_num_steps = model_handler.load_latest(device=device)
-    elif config['load_model'] is not None:
-        model, start_num_steps = model_handler.load(device=device, path=config['load_model'])
+    elif config["load_model"] is not None:
+        model, start_num_steps = model_handler.load(device=device, path=config["load_model"])
     else:
         model = build_model(config, observation_space=observation_space, action_space=action_space, device=device)
         start_num_steps = 0
-    if config['model'] != 'covariant':
+    if config["model"] != "covariant":
         model.set_device(device)
 
     var_counts = count_vars(model)
-    logging.info(f'Number of parameters: {var_counts}')
+    logging.info(f"Number of parameters: {var_counts}")
 
     return model, start_num_steps, model_handler, var_counts
 
 
-
-def build_model(config: dict, observation_space: ObservationSpace, action_space: ActionSpace,
-                device: torch.device) -> AbstractActorCritic:
-    if config['model'] == 'covariant':
+def build_model(
+    config: dict, observation_space: ObservationSpace, action_space: ActionSpace, device: torch.device
+) -> AbstractActorCritic:
+    if config["model"] == "covariant":
         raise NotImplementedError("Covariant model is not implemented")
         return CovariantAC(
             observation_space=observation_space,
             action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
-            maxl=config['maxl'],
-            num_cg_levels=config['num_cg_levels'],
-            num_channels_hidden=config['num_channels_hidden'],
-            num_channels_per_element=config['num_channels_per_element'],
-            num_gaussians=config['num_gaussians'],
-            bag_scale=config['bag_scale'],
-            beta=float(config['beta']) if config['beta'] is not None else config['beta'],
+            min_max_distance=(config["min_mean_distance"], config["max_mean_distance"]),
+            network_width=config["network_width"],
+            maxl=config["maxl"],
+            num_cg_levels=config["num_cg_levels"],
+            num_channels_hidden=config["num_channels_hidden"],
+            num_channels_per_element=config["num_channels_per_element"],
+            num_gaussians=config["num_gaussians"],
+            bag_scale=config["bag_scale"],
+            beta=float(config["beta"]) if config["beta"] is not None else config["beta"],
             hydrogen_delay=config["hydrogen_delay"],
             no_hydrogen_focus=config["no_hydrogen_focus"],
             device=device,
         )
-    elif config['model'] == 'painn':
+    elif config["model"] == "painn":
         return PainnAC(
             observation_space=observation_space,
             action_space=action_space,
-            min_max_distance=(config['min_mean_distance'], config['max_mean_distance']),
-            network_width=config['network_width'],
+            min_max_distance=(config["min_mean_distance"], config["max_mean_distance"]),
+            network_width=config["network_width"],
             num_interactions=config["num_interactions"],
             cutoff=config["cutoff"],
             hydrogen_delay=config["hydrogen_delay"],
@@ -193,5 +182,4 @@ def build_model(config: dict, observation_space: ObservationSpace, action_space:
             device=device,
         )
     else:
-        raise RuntimeError(f'Model \'{config["model"]}\' is not available.')
-
+        raise RuntimeError(f"Model '{config['model']}' is not available.")

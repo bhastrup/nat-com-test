@@ -3,6 +3,7 @@ from typing import Tuple, List, Optional
 import ase
 import ase.data
 import numpy as np
+
 # import schnetpack as spk
 import torch
 import torch.distributions
@@ -62,24 +63,29 @@ class SchNetAC(AbstractActorCritic):
             output_dims=(network_width, 1),
         )
 
-        self.log_stds = torch.nn.Parameter(torch.log(torch.tensor([0.15, 0.25, 0.25], dtype=torch.float32)),
-                                           requires_grad=True)
+        self.log_stds = torch.nn.Parameter(
+            torch.log(torch.tensor([0.15, 0.25, 0.25], dtype=torch.float32)), requires_grad=True
+        )
 
         # Reparametrization of continuous variables: values are between [-1, 1] after tanh
         self.min_distance, self.max_distance = min_max_distance
         self.min_angle, self.max_angle = 0, np.pi
         self.min_dihedral, self.max_dihedral = 0, np.pi
 
-        self.action_width = torch.tensor([
-            self.max_distance - self.min_distance,
-            self.max_angle - self.min_angle,
-            self.max_dihedral - self.min_dihedral,
-        ])  # (3, )
-        self.action_center = 0.5 * torch.tensor([
-            self.max_distance + self.min_distance,
-            self.max_angle + self.min_angle,
-            self.max_dihedral + self.min_dihedral,
-        ])  # (3, )
+        self.action_width = torch.tensor(
+            [
+                self.max_distance - self.min_distance,
+                self.max_angle - self.min_angle,
+                self.max_dihedral - self.min_dihedral,
+            ]
+        )  # (3, )
+        self.action_center = 0.5 * torch.tensor(
+            [
+                self.max_distance + self.min_distance,
+                self.max_angle + self.min_angle,
+                self.max_dihedral + self.min_dihedral,
+            ]
+        )  # (3, )
 
         self.critic = MLP(
             input_dim=self.num_latent,
@@ -101,11 +107,9 @@ class SchNetAC(AbstractActorCritic):
 
         atoms, bag = self.observation_space.parse(observation)
         positions = [atom.position for atom in atoms]
-        position = zmat.position_atom_helper(positions=positions,
-                                             focus=focus,
-                                             distance=distance,
-                                             angle=angle,
-                                             dihedral=sign * dihedral)
+        position = zmat.position_atom_helper(
+            positions=positions, focus=focus, distance=distance, angle=angle, dihedral=sign * dihedral
+        )
         atomic_number_index = self.action_space.zs.index(self.observation_space.bag_space.zs[element])
         return atomic_number_index, tuple(position)
 
@@ -113,9 +117,9 @@ class SchNetAC(AbstractActorCritic):
         self, observations: List[ObservationType]
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
 
-        features = torch.zeros(size=(len(observations), self.num_atoms, self.num_afeats),
-                               dtype=torch.float32,
-                               device=self.device)
+        features = torch.zeros(
+            size=(len(observations), self.num_atoms, self.num_afeats), dtype=torch.float32, device=self.device
+        )
         focus_mask = torch.zeros(size=(len(observations), self.num_atoms), dtype=torch.int, device=self.device)
         focus_mask_next = torch.zeros(size=(len(observations), self.num_atoms), dtype=torch.int, device=self.device)
         element_count = torch.zeros(size=(len(observations), self.num_zs), dtype=torch.float32, device=self.device)
@@ -125,9 +129,9 @@ class SchNetAC(AbstractActorCritic):
             atoms, formula = self.observation_space.parse(observation)
             bag_tuple = [count for atomic_num, count in formula]
             if len(atoms) > 0:
-                features[i, :len(atoms), :] = self.embedding_fn(self.converter(atoms))
-                focus_mask[i, :len(atoms)] = 1
-                focus_mask_next[i, :len(atoms) + 1] = 1
+                features[i, : len(atoms), :] = self.embedding_fn(self.converter(atoms))
+                focus_mask[i, : len(atoms)] = 1
+                focus_mask_next[i, : len(atoms) + 1] = 1
             else:
                 focus_mask[i, :1] = 1  # focus null-atom
                 focus_mask_next[i, :2] = 1
@@ -150,8 +154,15 @@ class SchNetAC(AbstractActorCritic):
             action_mask,  # n_obs x n_actions
         )
 
-    def surrogate_features(self, observations: List[ObservationType], focus: torch.Tensor, element: torch.Tensor,
-                           distance: torch.Tensor, angle: torch.Tensor, dihedral: torch.Tensor) -> torch.Tensor:
+    def surrogate_features(
+        self,
+        observations: List[ObservationType],
+        focus: torch.Tensor,
+        element: torch.Tensor,
+        distance: torch.Tensor,
+        angle: torch.Tensor,
+        dihedral: torch.Tensor,
+    ) -> torch.Tensor:
 
         features = torch.zeros(size=(len(observations), self.num_afeats), dtype=torch.float32, device=self.device)
         focus = to_numpy(focus)
@@ -304,8 +315,8 @@ class SchNetAC(AbstractActorCritic):
 
         if actions is None:
             actions = torch.cat(
-                [stop, focus.float(), element.float(), distance, angle, dihedral,
-                 kappa.float()], dim=-1)
+                [stop, focus.float(), element.float(), distance, angle, dihedral, kappa.float()], dim=-1
+            )
 
         # Critic
         weights = focus_mask.unsqueeze(-1).float()  # n_obs x n_atoms x 1
@@ -343,11 +354,10 @@ class SchNetAC(AbstractActorCritic):
         entropy = entropy * action_mask
 
         return {
-            'a': actions,  # n_obs x n_subactions
-            'logp': log_prob.sum(dim=-1, keepdim=False),  # n_obs
-            'ent': entropy[:, 0:2].sum(dim=-1, keepdim=False),  # n_obs
-            'v': v.squeeze(-1),  # n_obs
-
+            "a": actions,  # n_obs x n_subactions
+            "logp": log_prob.sum(dim=-1, keepdim=False),  # n_obs
+            "ent": entropy[:, 0:2].sum(dim=-1, keepdim=False),  # n_obs
+            "v": v.squeeze(-1),  # n_obs
             # Actions in action space
-            'actions': [self.to_action_space(a, o) for a, o in zip(actions, observations)],
+            "actions": [self.to_action_space(a, o) for a, o in zip(actions, observations)],
         }

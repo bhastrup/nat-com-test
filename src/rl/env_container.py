@@ -15,6 +15,7 @@ class VecEnv(ABC):
     each observation becomes an batch of observations, and expected action is a batch of actions to
     be applied per-environment.
     """
+
     @abstractmethod
     def reset(self) -> List[ObservationType]:
         """
@@ -62,7 +63,7 @@ class VecEnv(ABC):
         self.step_async(actions)
         return self.step_wait()
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         raise NotImplementedError
 
     @abstractmethod
@@ -73,6 +74,7 @@ class VecEnv(ABC):
     def reset_if_terminal(self, observations: List[ObservationType], terminals: List[bool]):
         raise NotImplementedError
 
+
 import concurrent.futures
 import multiprocessing as mp
 
@@ -82,6 +84,7 @@ import multiprocessing as mp
 # we should use multiprocessing instead. See this one:
 # https://github.com/ZimmermanGroup/conformer-rl/blob/master/src/conformer_rl/environments/environment_wrapper.py
 # https://github.com/DLR-RM/stable-baselines3/blob/master/stable_baselines3/common/vec_env/subproc_vec_env.py
+
 
 class SimpleEnvContainer(VecEnv):
     def __init__(self, environments: List[gym.Env]):
@@ -129,14 +132,15 @@ class SimpleEnvContainer(VecEnv):
             use_threading = False
             if use_threading:
                 with concurrent.futures.ThreadPoolExecutor() as executor:
-                    results = [executor.submit(step, env, action) for env, action in zip(self.environments, self.actions)]
+                    results = [
+                        executor.submit(step, env, action) for env, action in zip(self.environments, self.actions)
+                    ]
                     obs_list, rewards, done_list, infos = zip(*[result.result() for result in results])
             else:
                 results = [step(env, action) for env, action in zip(self.environments, self.actions)]
                 obs_list, rewards, done_list, infos = zip(*results)
 
         return obs_list, np.array(rewards), np.array(done_list), infos
-
 
     def reset(self):
         return [env.reset() for env in self.environments]
@@ -159,5 +163,5 @@ class SimpleEnvContainer(VecEnv):
     def close(self):
         pass
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         raise NotImplementedError

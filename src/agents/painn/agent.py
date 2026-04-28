@@ -66,10 +66,7 @@ class PainnAC(AbstractActorCritic):
 
         # Setup interaction networks
         self.interactions = nn.ModuleList(
-            [
-                layer.PaiNNInteraction(self.hidden_state_size, edge_size, self.cutoff)
-                for _ in range(num_interactions)
-            ]
+            [layer.PaiNNInteraction(self.hidden_state_size, edge_size, self.cutoff) for _ in range(num_interactions)]
         )
         self.scalar_vector_update = nn.ModuleList(
             [layer.PaiNNUpdate(self.hidden_state_size, rms_norm=rms_norm_update) for _ in range(num_interactions)]
@@ -101,24 +98,29 @@ class PainnAC(AbstractActorCritic):
             output_dims=(network_width, 1),
         )
 
-        self.log_stds = torch.nn.Parameter(torch.log(torch.tensor([0.15, 0.25, 0.25], dtype=torch.float32)),
-                                           requires_grad=True)
+        self.log_stds = torch.nn.Parameter(
+            torch.log(torch.tensor([0.15, 0.25, 0.25], dtype=torch.float32)), requires_grad=True
+        )
 
         # Reparametrization of continuous variables: values are between [-1, 1] after tanh
         self.min_distance, self.max_distance = min_max_distance
         self.min_angle, self.max_angle = 0, np.pi
         self.min_dihedral, self.max_dihedral = 0, np.pi
 
-        self.action_width = torch.tensor([
-            self.max_distance - self.min_distance,
-            self.max_angle - self.min_angle,
-            self.max_dihedral - self.min_dihedral,
-        ])  # (3, )
-        self.action_center = 0.5 * torch.tensor([
-            self.max_distance + self.min_distance,
-            self.max_angle + self.min_angle,
-            self.max_dihedral + self.min_dihedral,
-        ])  # (3, )
+        self.action_width = torch.tensor(
+            [
+                self.max_distance - self.min_distance,
+                self.max_angle - self.min_angle,
+                self.max_dihedral - self.min_dihedral,
+            ]
+        )  # (3, )
+        self.action_center = 0.5 * torch.tensor(
+            [
+                self.max_distance + self.min_distance,
+                self.max_angle + self.min_angle,
+                self.max_dihedral + self.min_dihedral,
+            ]
+        )  # (3, )
 
         self.critic = MLP(
             input_dim=self.num_latent,
@@ -133,10 +135,9 @@ class PainnAC(AbstractActorCritic):
             for module in self.modules():
                 module.register_forward_hook(nan_to_num_hook)
 
-
     def set_device(self, device: torch.device):
         self.device = device
-        self.pin = (device == torch.device("cuda"))
+        self.pin = device == torch.device("cuda")
 
     def to_action_space(self, action: torch.Tensor, observation: ObservationType) -> ActionType:
         stop, focus, element, distance, angle, dihedral, kappa = to_numpy(action)
@@ -151,21 +152,19 @@ class PainnAC(AbstractActorCritic):
 
         atoms, bag = self.observation_space.parse(observation)
         positions = [atom.position for atom in atoms]
-        position = zmat.position_atom_helper(positions=positions,
-                                             focus=focus,
-                                             distance=distance,
-                                             angle=angle,
-                                             dihedral=sign * dihedral)
+        position = zmat.position_atom_helper(
+            positions=positions, focus=focus, distance=distance, angle=angle, dihedral=sign * dihedral
+        )
         atomic_number_index = self.action_space.zs.index(self.observation_space.bag_space.zs[element])
         return atomic_number_index, tuple(position)
 
     def make_atomic_tensors(
         self, observations: List[ObservationType]
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        
-        features = torch.zeros(size=(len(observations), self.num_atoms, self.num_afeats),
-                               dtype=torch.float32,
-                               device=self.device)
+
+        features = torch.zeros(
+            size=(len(observations), self.num_atoms, self.num_afeats), dtype=torch.float32, device=self.device
+        )
         focus_mask = torch.zeros(size=(len(observations), self.num_atoms), dtype=torch.int, device=self.device)
         focus_mask_next = torch.zeros(size=(len(observations), self.num_atoms), dtype=torch.int, device=self.device)
         element_count = torch.zeros(size=(len(observations), self.num_zs), dtype=torch.float32, device=self.device)
@@ -183,8 +182,8 @@ class PainnAC(AbstractActorCritic):
                 graph_states.append(graph_state)
                 worker_index_all.append(i)
 
-                focus_mask[i, :len(atoms)] = 1
-                focus_mask_next[i, :len(atoms) + 1] = 1
+                focus_mask[i, : len(atoms)] = 1
+                focus_mask_next[i, : len(atoms) + 1] = 1
             else:
                 focus_mask[i, :1] = 1  # focus null-atom
                 focus_mask_next[i, :2] = 1
@@ -202,19 +201,19 @@ class PainnAC(AbstractActorCritic):
         # Get PaiNN embeddings for all observations
         if len(graph_states) > 0:
             batch_host = data_painn.collate_atomsdata(graph_states, pin_memory=self.pin)
-            batch = {
-                k: v.to(device=self.device, non_blocking=True)
-                for (k, v) in batch_host.items()
-            }
+            batch = {k: v.to(device=self.device, non_blocking=True) for (k, v) in batch_host.items()}
             nodes_scalar, _, edge_offset = self._get_painn_embeddings(batch)
             edge_offset = edge_offset.squeeze(-1).squeeze(-1)
 
         for i, obs in enumerate(observations):
-            atoms, formula = self.observation_space.parse(obs) # TODO: also calculated in the previous loop. could take it from there and save parse()
+            atoms, formula = self.observation_space.parse(
+                obs
+            )  # TODO: also calculated in the previous loop. could take it from there and save parse()
             if len(atoms) > 0:
                 worker_index = worker_index_all.index(i)
-                features[i, :len(atoms), :] = nodes_scalar[edge_offset[worker_index]:edge_offset[worker_index]+batch['num_nodes'][worker_index], :]
-
+                features[i, : len(atoms), :] = nodes_scalar[
+                    edge_offset[worker_index] : edge_offset[worker_index] + batch["num_nodes"][worker_index], :
+                ]
 
         return (
             features,  # n_obs x n_atoms x n_afeats
@@ -224,9 +223,15 @@ class PainnAC(AbstractActorCritic):
             action_mask,  # n_obs x n_actions
         )
 
-
-    def surrogate_features(self, observations: List[ObservationType], focus: torch.Tensor, element: torch.Tensor,
-                           distance: torch.Tensor, angle: torch.Tensor, dihedral: torch.Tensor) -> torch.Tensor:
+    def surrogate_features(
+        self,
+        observations: List[ObservationType],
+        focus: torch.Tensor,
+        element: torch.Tensor,
+        distance: torch.Tensor,
+        angle: torch.Tensor,
+        dihedral: torch.Tensor,
+    ) -> torch.Tensor:
 
         features = torch.zeros(size=(len(observations), self.num_afeats), dtype=torch.float32, device=self.device)
         focus = to_numpy(focus)
@@ -252,20 +257,16 @@ class PainnAC(AbstractActorCritic):
             atoms.append(new_atom)
             graph_states.append(self.transformer(atoms))
 
-
         batch_host = data_painn.collate_atomsdata(graph_states, pin_memory=self.pin)
-        batch = {
-            k: v.to(device=self.device, non_blocking=True)
-            for (k, v) in batch_host.items()
-        }
+        batch = {k: v.to(device=self.device, non_blocking=True) for (k, v) in batch_host.items()}
 
-        #print(f'batch[num_nodes] : {batch["num_nodes"]}')
+        # print(f'batch[num_nodes] : {batch["num_nodes"]}')
         # exit()
         nodes_scalar, nodes_vector, edge_offset = self._get_painn_embeddings(batch)
         # print(f'edge_offset : {edge_offset}')
 
         # Select "nodes_scalar" of "yet to be placed" atoms (along batch dimension)
-        new_atom_index_batch = batch['num_nodes'] + edge_offset.squeeze(-1).squeeze(-1)
+        new_atom_index_batch = batch["num_nodes"] + edge_offset.squeeze(-1).squeeze(-1)
         # print(f'new_atom_index_batch : {new_atom_index_batch}')
         new_atom_index_batch = new_atom_index_batch - 1
         # print(f'new_atom_index_batch : {new_atom_index_batch}')
@@ -279,13 +280,10 @@ class PainnAC(AbstractActorCritic):
 
         return features
 
-
     def _get_painn_embeddings(self, input_dict: dict) -> Tuple[torch.tensor, torch.tensor, torch.tensor]:
 
         # Unpad and concatenate edges and features into batch (0th) dimension
-        edges_displacement = layer.unpad_and_cat(
-            input_dict["edges_displacement"], input_dict["num_edges"]
-        )
+        edges_displacement = layer.unpad_and_cat(input_dict["edges_displacement"], input_dict["num_edges"])
         edge_offset = torch.cumsum(
             torch.cat(
                 (
@@ -300,9 +298,7 @@ class PainnAC(AbstractActorCritic):
         edges = layer.unpad_and_cat(edges, input_dict["num_edges"])
 
         # Unpad and concatenate all nodes into batch (0th) dimension
-        nodes_xyz = layer.unpad_and_cat(
-            input_dict["nodes_xyz"], input_dict["num_nodes"]
-        )
+        nodes_xyz = layer.unpad_and_cat(input_dict["nodes_xyz"], input_dict["num_nodes"])
         nodes_scalar = layer.unpad_and_cat(input_dict["nodes"], input_dict["num_nodes"])
         nodes_scalar = self.atom_embeddings(nodes_scalar)
         nodes_vector = torch.zeros(
@@ -322,14 +318,10 @@ class PainnAC(AbstractActorCritic):
         )
 
         # Expand edge features in Gaussian basis
-        edge_state = layer.sinc_expansion(
-            edges_distance, [(self.distance_embedding_size, self.cutoff)]
-        )
+        edge_state = layer.sinc_expansion(edges_distance, [(self.distance_embedding_size, self.cutoff)])
 
         # Apply interaction layers
-        for int_layer, update_layer in zip(
-            self.interactions, self.scalar_vector_update
-        ):
+        for int_layer, update_layer in zip(self.interactions, self.scalar_vector_update):
             nodes_scalar, nodes_vector = int_layer(
                 nodes_scalar,
                 nodes_vector,
@@ -342,9 +334,9 @@ class PainnAC(AbstractActorCritic):
 
         return nodes_scalar, nodes_vector, edge_offset
 
-
-    def mask_out_hydrogen(self, focus_mask: torch.Tensor, element_mask: torch.Tensor, 
-                          observations: List[ObservationType]) -> Tuple[torch.Tensor, torch.Tensor]:
+    def mask_out_hydrogen(
+        self, focus_mask: torch.Tensor, element_mask: torch.Tensor, observations: List[ObservationType]
+    ) -> Tuple[torch.Tensor, torch.Tensor]:
         """
         hydrogen_delay masks out hydrogen as new atom type until all heavy atoms are placed.
         no_hydrogen_focus masks out hydrogen as focus atom at all times.
@@ -352,8 +344,7 @@ class PainnAC(AbstractActorCritic):
 
         for i, obs in enumerate(observations):
             labels, pos = zip(*[(l, p) for l, p in obs[0]])
-            n_atoms = sum([1 for l in labels if l>0])
-
+            n_atoms = sum([1 for l in labels if l > 0])
 
             if self.no_hydrogen_focus:
                 # atoms, _ = self.observation_space.parse(obs)
@@ -366,16 +357,13 @@ class PainnAC(AbstractActorCritic):
                     if element == 1:
                         focus_mask[i, j] = torch.tensor(0, dtype=torch.int, device=self.device)
 
-
                 if n_atoms == 0:
                     element_mask[i, 1] = torch.tensor(0, dtype=torch.int, device=self.device)
-
 
             if self.hydrogen_delay and (element_mask[i, 2:].sum() > 0):
                 element_mask[i, 1] = torch.tensor(0, dtype=torch.int, device=self.device)
 
         return focus_mask, element_mask
-
 
     def step(self, observations: List[ObservationType], actions: Optional[np.ndarray] = None) -> dict:
         # atomic_feats: n_obs x n_atoms x n_afeats
@@ -385,16 +373,20 @@ class PainnAC(AbstractActorCritic):
 
         # print(f'observations: {observations}')
 
-        atomic_feats, focus_mask_perceive, focus_mask_next, element_count, action_mask = self.make_atomic_tensors(observations)
+        atomic_feats, focus_mask_perceive, focus_mask_next, element_count, action_mask = self.make_atomic_tensors(
+            observations
+        )
         element_mask = (element_count > 0).int()
 
-        focus_mask_choose, element_mask = self.mask_out_hydrogen(focus_mask_perceive, element_mask, observations) \
-            if self.hydrogen_delay or self.no_hydrogen_focus else (focus_mask_perceive, element_mask)
+        focus_mask_choose, element_mask = (
+            self.mask_out_hydrogen(focus_mask_perceive, element_mask, observations)
+            if self.hydrogen_delay or self.no_hydrogen_focus
+            else (focus_mask_perceive, element_mask)
+        )
 
-
-        #print("atomic_feats shape: " + str(atomic_feats.shape))
-        #print(atomic_feats)
-        #exit()
+        # print("atomic_feats shape: " + str(atomic_feats.shape))
+        # print(atomic_feats)
+        # exit()
         # stop: this agent does not stop
         stop = torch.zeros(size=(len(observations), 1), dtype=torch.float, device=self.device)
 
@@ -411,17 +403,14 @@ class PainnAC(AbstractActorCritic):
         focus_logits = self.phi_focus(latent_states)  # n_obs x n_atoms x 1
         focus_logits = focus_logits.squeeze(-1)  # n_obs x n_atoms
 
-
-        
-
-        focus_p = masked_softmax(focus_logits, mask=focus_mask_choose.bool())  # n_obs x n_atoms        
+        focus_p = masked_softmax(focus_logits, mask=focus_mask_choose.bool())  # n_obs x n_atoms
         focus_p = torch.nan_to_num(focus_p, nan=0.0, posinf=1e10, neginf=-1e10)
         focus_dist = torch.distributions.Categorical(probs=focus_p)
 
-        #print(f'focus_p: {focus_p}')
-        #print(f'focus_mask_choose: {focus_mask_choose}')
-        #print(f'focus_mask_perceive: {focus_mask_perceive}')
-        #print(f'focus_logits: {focus_logits}')
+        # print(f'focus_p: {focus_p}')
+        # print(f'focus_mask_choose: {focus_mask_choose}')
+        # print(f'focus_mask_perceive: {focus_mask_perceive}')
+        # print(f'focus_logits: {focus_logits}')
 
         # Cast action to Tensor
         if actions is not None:
@@ -523,8 +512,8 @@ class PainnAC(AbstractActorCritic):
 
         if actions is None:
             actions = torch.cat(
-                [stop, focus.float(), element.float(), distance, angle, dihedral,
-                 kappa.float()], dim=-1)
+                [stop, focus.float(), element.float(), distance, angle, dihedral, kappa.float()], dim=-1
+            )
 
         # Critic
         weights = focus_mask_perceive.unsqueeze(-1).float()  # n_obs x n_atoms x 1
@@ -561,13 +550,11 @@ class PainnAC(AbstractActorCritic):
         # Mask
         entropy = entropy * action_mask
 
-
         return {
-            'a': actions,  # n_obs x n_subactions
-            'logp': log_prob.sum(dim=-1, keepdim=False),  # n_obs
-            'ent': entropy[:, 0:2].sum(dim=-1, keepdim=False),  # n_obs
-            'v': v.squeeze(-1),  # n_obs
-
+            "a": actions,  # n_obs x n_subactions
+            "logp": log_prob.sum(dim=-1, keepdim=False),  # n_obs
+            "ent": entropy[:, 0:2].sum(dim=-1, keepdim=False),  # n_obs
+            "v": v.squeeze(-1),  # n_obs
             # Actions in action space
-            'actions': [self.to_action_space(a, o) for a, o in zip(actions, observations)],
+            "actions": [self.to_action_space(a, o) for a, o in zip(actions, observations)],
         }

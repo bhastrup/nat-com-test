@@ -9,16 +9,14 @@ import pandas as pd
 from src.tools import util
 from src.data.io_handler import IOHandler
 from src.performance.energetics import EnergyConverter, EnergyUnit, str_to_EnergyUnit
-from src.data.data_util import (
-    unpack_upper_triangular_to_full
-)
+from src.data.data_util import unpack_upper_triangular_to_full
 
 
 class FileType(Enum):
-    METADATA = 'meta_data.json'
-    DF = 'dataframe.pkl'
-    SMILES = 'bags_and_smiles.json'
-    ENERGIES = 'bags_and_energies.json'
+    METADATA = "meta_data.json"
+    DF = "dataframe.pkl"
+    SMILES = "bags_and_smiles.json"
+    ENERGIES = "bags_and_energies.json"
 
 
 @dataclass
@@ -32,6 +30,7 @@ class ReferenceData:
     def get_mean_energies(self) -> Dict[str, float]:
         return {k: np.mean(v) for k, v in self.energies.items()}
 
+
 BenchmarkEnergyType = Dict[str, float]
 
 
@@ -40,23 +39,20 @@ class ReferenceDataFinder:
         self.data_dir = data_dir
 
     def _build_path(self, dataset_name: str, file_type: FileType) -> str:
-        return os.path.join(self.data_dir, dataset_name.lower(), 'processed', file_type.value)
+        return os.path.join(self.data_dir, dataset_name.lower(), "processed", file_type.value)
 
     def _dataset_is_good(self, dataset_name: str) -> bool:
         required_files = [self._build_path(dataset_name, file_type) for file_type in FileType]
         return all(os.path.exists(file) for file in required_files)
 
     def find_good_datasets(self) -> List[str]:
-        candidates = [
-            os.path.basename(f) for f in glob.glob(os.path.join(self.data_dir, '*')) 
-            if os.path.isdir(f)
-        ]
+        candidates = [os.path.basename(f) for f in glob.glob(os.path.join(self.data_dir, "*")) if os.path.isdir(f)]
         good_datasets = [dataset_name for dataset_name in candidates if self._dataset_is_good(dataset_name)]
         logging.info(f"Found the following datasets: {good_datasets}")
         return good_datasets
 
     def get_good_datasets(self) -> List[str]:
-        if not hasattr(self, 'good_datasets'):
+        if not hasattr(self, "good_datasets"):
             self.good_datasets = self.find_good_datasets()
         return self.good_datasets
 
@@ -66,7 +62,7 @@ class ReferenceDataFinder:
         for dataset_name in good_datasets:
             bag_dict[dataset_name] = self.get_reference_bags_for_dataset(dataset_name)
         return bag_dict
-    
+
     def get_reference_bags_for_dataset(self, dataset_name: str) -> List[str]:
         return IOHandler.read_json(self._build_path(dataset_name, FileType.SMILES))
 
@@ -76,21 +72,20 @@ class ReferenceDataFinder:
         return matching_datasets
 
 
-
 class ReferenceDataLoader:
-    """ Class for loading and post-processing the reference dataset. """
+    """Class for loading and post-processing the reference dataset."""
 
-    energy_column = 'energy_GFN2'
+    energy_column = "energy_GFN2"
 
-    def __init__(self, data_dir: str = 'data'):
+    def __init__(self, data_dir: str = "data"):
         data_dir = os.path.join(os.getcwd(), data_dir)
         self.finder = ReferenceDataFinder(data_dir)
 
     def _has_smiles(self, metadata: Dict[str, Any]) -> bool:
-        return metadata['include_smiles'] == True
+        return metadata["include_smiles"] == True
 
     def load_and_polish(self, mol_dataset: str, new_energy_unit: EnergyUnit, fetch_df: bool = True) -> ReferenceData:
-        """ Load the reference data and polish it. """
+        """Load the reference data and polish it."""
 
         logging.info(f"Loading reference data {mol_dataset}. Using energy_unit: {new_energy_unit}")
 
@@ -104,16 +99,16 @@ class ReferenceDataLoader:
         return ref_data
 
     def get_benchmark_energies(self, reference_data: ReferenceData) -> BenchmarkEnergyType:
-        """ Get the benchmark energies from the dataframe. """
+        """Get the benchmark energies from the dataframe."""
         return reference_data.get_mean_energies()
 
     def _load_data(self, mol_dataset: str, fetch_df: bool = True) -> ReferenceData:
-        """ Load the metadata and data from disk. """
+        """Load the metadata and data from disk."""
         metadata = IOHandler.read_json(self.finder._build_path(mol_dataset, FileType.METADATA))
 
         if fetch_df:
             data = IOHandler.read_pickle(self.finder._build_path(mol_dataset, FileType.DF))
-            df = pd.DataFrame.from_dict(data, orient='index')
+            df = pd.DataFrame.from_dict(data, orient="index")
         else:
             df = None
 
@@ -123,34 +118,30 @@ class ReferenceDataLoader:
         return ReferenceData(metadata=metadata, df=df, energies=energies, smiles=smiles)
 
     def _change_energy_unit(self, ref_data: ReferenceData, new_energy_unit: EnergyUnit) -> ReferenceData:
-        """ Change the energy unit of the dataframe and update the metadata. """
+        """Change the energy unit of the dataframe and update the metadata."""
 
-        old_energy_unit = str_to_EnergyUnit(ref_data.metadata['energy_unit'])
+        old_energy_unit = str_to_EnergyUnit(ref_data.metadata["energy_unit"])
 
         if ref_data.df is not None:
             ref_data.df[self.energy_column] = EnergyConverter.convert(
-                values=ref_data.df[self.energy_column].values,
-                old_unit=old_energy_unit,
-                new_unit=new_energy_unit
+                values=ref_data.df[self.energy_column].values, old_unit=old_energy_unit, new_unit=new_energy_unit
             )
 
         ref_data.energies = {
-            k: EnergyConverter.convert(v, old_energy_unit, new_energy_unit)
-            for k, v in ref_data.energies.items()
+            k: EnergyConverter.convert(v, old_energy_unit, new_energy_unit) for k, v in ref_data.energies.items()
         }
 
-        ref_data.metadata['energy_unit'] = new_energy_unit        
+        ref_data.metadata["energy_unit"] = new_energy_unit
 
         return ref_data
-    
+
     def _add_columns(self, df: pd.DataFrame) -> pd.DataFrame:
-        df['formulas'] = df['bag_repr'].apply(lambda x: util.string_to_formula(x))
-        if 'con_upper_triangular' in df.columns and np.all(df['con_upper_triangular'].notnull()):
-            df['con_mat'] = df.apply(
-                lambda x: unpack_upper_triangular_to_full(x['con_upper_triangular'], x['n_atoms']),
-                axis=1
+        df["formulas"] = df["bag_repr"].apply(lambda x: util.string_to_formula(x))
+        if "con_upper_triangular" in df.columns and np.all(df["con_upper_triangular"].notnull()):
+            df["con_mat"] = df.apply(
+                lambda x: unpack_upper_triangular_to_full(x["con_upper_triangular"], x["n_atoms"]), axis=1
             )
-        return df.drop(columns=['con_upper_triangular'])
+        return df.drop(columns=["con_upper_triangular"])
 
     def _remove_invalid_mols(self, ref_data: ReferenceData) -> pd.DataFrame:
         df = ref_data.df
@@ -158,7 +149,7 @@ class ReferenceDataLoader:
         if self._has_smiles(ref_data.metadata):
             """ Filter out mols that couldn't be converted to RdKit mol object (SMILES = None) """
             logging.info(f"SMILES == None for : {len(df[df['SMILES'].isnull()])} / {len(df)}")
-            df = df[~df['SMILES'].isnull()]
+            df = df[~df["SMILES"].isnull()]
 
         return df
 
@@ -167,20 +158,20 @@ from ase import Atoms
 from src.performance.energetics import XTBOptimizer
 from src.tools.util import symbols_to_str_formula
 
-class RaeCalculator:
-    """ Calculates the Relative Atomic Energy (RAE) of the molecule. """
-    def __init__(self, ref_data: ReferenceData = None) -> None:
-        
-        self.benchmark_energies: Dict[str, float] = ref_data.get_mean_energies()
-        if type(ref_data.metadata['energy_unit']) == str:
-            self.energy_unit_old = str_to_EnergyUnit(ref_data.metadata['energy_unit'])
-        else:
-            self.energy_unit_old = ref_data.metadata['energy_unit']
 
+class RaeCalculator:
+    """Calculates the Relative Atomic Energy (RAE) of the molecule."""
+
+    def __init__(self, ref_data: ReferenceData = None) -> None:
+
+        self.benchmark_energies: Dict[str, float] = ref_data.get_mean_energies()
+        if type(ref_data.metadata["energy_unit"]) == str:
+            self.energy_unit_old = str_to_EnergyUnit(ref_data.metadata["energy_unit"])
+        else:
+            self.energy_unit_old = ref_data.metadata["energy_unit"]
 
         self.energy_unit_new = EnergyUnit.EV
-        self.calc = XTBOptimizer(method='GFN2-xTB', energy_unit=self.energy_unit_new)
-
+        self.calc = XTBOptimizer(method="GFN2-xTB", energy_unit=self.energy_unit_new)
 
     def _calculate_energy(self, atoms: Atoms) -> float:
         return self.calc.calc_potential_energy(atoms)
@@ -194,8 +185,8 @@ class RaeCalculator:
         return rae
 
     def _get_formula(self, atoms: Atoms) -> str:
-        assert hasattr(self, 'benchmark_energies'), 'Benchmark energies must be set to calculate RAE'
-        assert self.benchmark_energies is not None, 'Benchmark energies cannot be None'
+        assert hasattr(self, "benchmark_energies"), "Benchmark energies must be set to calculate RAE"
+        assert self.benchmark_energies is not None, "Benchmark energies cannot be None"
         bag_repr = symbols_to_str_formula([a.symbol for a in atoms])
-        assert bag_repr in self.benchmark_energies, f'Formula {bag_repr} not in benchmark energies'
+        assert bag_repr in self.benchmark_energies, f"Formula {bag_repr} not in benchmark energies"
         return bag_repr

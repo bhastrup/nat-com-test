@@ -28,8 +28,8 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
         max_solo_distance=2.0,  # Angstrom
         min_reward=-0.6,  # Hartree
         seed=0,
-        energy_unit='eV',
-        worker_id=None
+        energy_unit="eV",
+        worker_id=None,
     ):
 
         self.constant_reward = 0.1
@@ -54,7 +54,6 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
 
         self.worker_id = worker_id
 
-
         # if self.use_intermediate_rewards:
         #     intermediate_rew_coefs = reward.reward_coefs.copy()
         #     intermediate_rew_coefs.pop('rew_valid')
@@ -64,25 +63,26 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
         #         energy_unit=reward.energy_unit
         #     )
 
-
     @abc.abstractmethod
     def reset(self) -> ObservationType:
         raise NotImplementedError
 
-    def _reward_logic(self, new_atom: Atom, terminal: bool, use_intermediate_rewards: bool = False) -> Tuple[float, bool, dict]:
+    def _reward_logic(
+        self, new_atom: Atom, terminal: bool, use_intermediate_rewards: bool = False
+    ) -> Tuple[float, bool, dict]:
         done = True if terminal else False
         if not use_intermediate_rewards and not terminal:
             return self.constant_reward, done, {}
-        
+
         reward, info = self.reward.calculate(self.current_atoms, new_atom, terminal, self.worker_id)
         if terminal:
-            info['termination_info'] = 'full_formula'
-        
+            info["termination_info"] = "full_formula"
+
         if reward is None:
             return self.min_reward, True, info
-        
+
         # if we are considering an intermediate reward
-        # TODO: experiment with allowing one or more steps after invalid action, 
+        # TODO: experiment with allowing one or more steps after invalid action,
         # i.e. initialize counter
         # reward = reward / 5
 
@@ -94,7 +94,12 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
         done = atomic_number == 0
 
         if done:
-            return self.observation_space.build(self.current_atoms, self.current_formula), 0.0, done, {'termination_info': 'stop_token'}
+            return (
+                self.observation_space.build(self.current_atoms, self.current_formula),
+                0.0,
+                done,
+                {"termination_info": "stop_token"},
+            )
 
         new_atom = self.action_space.to_atom(action)
         if not self._is_valid_action(current_atoms=self.current_atoms, new_atom=new_atom):
@@ -102,7 +107,7 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
                 self.observation_space.build(self.current_atoms, self.current_formula),
                 self.min_reward,
                 True,
-                {'termination_info': 'invalid_action'},
+                {"termination_info": "invalid_action"},
             )
 
         is_terminal = self._is_terminal(lag=1)
@@ -114,12 +119,14 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
         # Check if state is terminal
         if self._is_terminal(lag=0):
             done = True
-        
+
         return self.observation_space.build(self.current_atoms, self.current_formula), reward, done, info
 
     def _is_terminal(self, lag: int = 1) -> bool:
-        return len(self.current_atoms) + lag == self.observation_space.canvas_space.size or get_formula_size(
-            self.current_formula) == lag
+        return (
+            len(self.current_atoms) + lag == self.observation_space.canvas_space.size
+            or get_formula_size(self.current_formula) == lag
+        )
 
     def _is_valid_action(self, current_atoms: Atoms, new_atom: Atom) -> bool:
         if self._is_too_close(current_atoms, new_atom):
@@ -131,7 +138,7 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
         # Check distances between new and old atoms
         for existing_atom in existing_atoms:
             if np.linalg.norm(existing_atom.position - new_atom.position) < self.min_atomic_distance:
-                logging.debug('Atoms are too close')
+                logging.debug("Atoms are too close")
                 return True
 
         return False
@@ -143,10 +150,9 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
     #     reward, info = self.intermediate_reward.calculate(self.current_atoms, new_atom)
     #     return (reward if reward else self.min_reward, info)
 
-
     def _all_covered(self, existing_atoms: Atoms, new_atom: Atom) -> bool:
         # Ensure that certain atoms are not too far away from the nearest heavy atom to avoid H2, F2,... formation
-        candidates = ['H', 'F', 'Cl', 'Br']
+        candidates = ["H", "F", "Cl", "Br"]
         if len(existing_atoms) == 0 or new_atom.symbol not in candidates:
             return True
 
@@ -158,10 +164,10 @@ class AbstractMolecularEnvironment(gym.Env, abc.ABC):
             if distance < self.max_solo_distance:
                 return True
 
-        logging.debug('There is a single atom floating around')
+        logging.debug("There is a single atom floating around")
         return False
 
-    def render(self, mode='human'):
+    def render(self, mode="human"):
         pass
 
     def seed(self, seed=None) -> int:
@@ -199,7 +205,7 @@ class HeavyFirst(AbstractMolecularEnvironment):
         self.formula_counter = 0
         self.reshuffle_formula_list()
 
-        self.first_atom = 'heavy_first' # 'any_non_hydro', None
+        self.first_atom = "heavy_first"  # 'any_non_hydro', None
         self.obs_reset = self.reset()
 
     def reset(self) -> ObservationType:
@@ -209,20 +215,19 @@ class HeavyFirst(AbstractMolecularEnvironment):
         self.current_atoms = Atoms()
         self.current_formula = next(self.formula_cycle)
         self.benchmark_energy = next(self.benchmark_energy_cycle)
-        
-        self.reward.reset_old_energies(self.worker_id) # self.reward.reset_old_energy()
+
+        self.reward.reset_old_energies(self.worker_id)  # self.reward.reset_old_energy()
 
         elements = [z for (z, _) in self.current_formula]
 
-
         if self.first_atom is None:
             return self.observation_space.build(self.current_atoms, self.current_formula)
-        elif self.first_atom == 'heavy_first':
+        elif self.first_atom == "heavy_first":
             first_atom_index = self.action_space.zs.index(max(elements))
-        elif self.first_atom == 'any_non_hydro':
+        elif self.first_atom == "any_non_hydro":
             first_atom_index = np.random.choice([i for i, z in enumerate(elements) if z != 1])
         else:
-            raise ValueError(f'Unknown first atom type: {self.first_atom}')
+            raise ValueError(f"Unknown first atom type: {self.first_atom}")
 
         # Take a step to add the first atom on the canvas
         obs, _, _, _ = self.step(action=(first_atom_index, (0, 0, 0)))
@@ -233,7 +238,7 @@ class HeavyFirst(AbstractMolecularEnvironment):
         if self._is_too_close(current_atoms, new_atom):
             return False
         return True
-    
+
     def reshuffle_formula_list(self):
         self.formula_counter = 0
         random_permutation = np.random.permutation(len(self.formulas))
@@ -245,16 +250,54 @@ class HeavyFirst(AbstractMolecularEnvironment):
             self.benchmark_energy_cycle = itertools.cycle(self.benchmark_energies)
 
 
-
 class tmqmEnv(AbstractMolecularEnvironment):
-
     transition_metals = [
-        'Sc', 'Ti', 'V', 'Cr', 'Mn', 'Fe', 'Co', 'Ni', 'Cu', 'Zn',
-        'Y', 'Zr', 'Nb', 'Mo', 'Tc', 'Ru', 'Rh', 'Pd', 'Ag', 'Cd',
-        'Hf', 'Ta', 'W', 'Re', 'Os', 'Ir', 'Pt', 'Au', 'Hg', 'Rf',
-        'Db', 'Sg', 'Bh', 'Hs', 'Mt', 'Ds', 'Rg', 'Cn', 'Nh', 'Fl',
-        'Mc', 'Lv', 'Ts', 'Og']
-    
+        "Sc",
+        "Ti",
+        "V",
+        "Cr",
+        "Mn",
+        "Fe",
+        "Co",
+        "Ni",
+        "Cu",
+        "Zn",
+        "Y",
+        "Zr",
+        "Nb",
+        "Mo",
+        "Tc",
+        "Ru",
+        "Rh",
+        "Pd",
+        "Ag",
+        "Cd",
+        "Hf",
+        "Ta",
+        "W",
+        "Re",
+        "Os",
+        "Ir",
+        "Pt",
+        "Au",
+        "Hg",
+        "Rf",
+        "Db",
+        "Sg",
+        "Bh",
+        "Hs",
+        "Mt",
+        "Ds",
+        "Rg",
+        "Cn",
+        "Nh",
+        "Fl",
+        "Mc",
+        "Lv",
+        "Ts",
+        "Og",
+    ]
+
     transition_metal_numbers = [ase.data.atomic_numbers[tm] for tm in transition_metals]
 
     def __init__(self, formulas: List[FormulaType], benchmark_energy: List[float] = [None], *args, **kwargs):
@@ -270,7 +313,7 @@ class tmqmEnv(AbstractMolecularEnvironment):
         self.current_atoms = Atoms()
         self.current_formula = next(self.formula_cycle)
         self.benchmark_energy = next(self.benchmark_energy_cycle)
-        self.reward.reset_old_energies(self.worker_id) # self.reward.reset_old_energy()
+        self.reward.reset_old_energies(self.worker_id)  # self.reward.reset_old_energy()
 
         # Take a step to add the TM to the canvas
         tm_element = [z for (z, count) in self.current_formula if z in self.transition_metal_numbers][0]

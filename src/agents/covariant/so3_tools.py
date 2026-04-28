@@ -28,7 +28,7 @@ def spherical_to_cartesian(theta_phi: np.ndarray) -> np.ndarray:
 
 
 def cartesian_to_spherical(pos: np.ndarray) -> np.ndarray:
-    theta_phi = np.empty(shape=pos.shape[:-1] + (2, ))
+    theta_phi = np.empty(shape=pos.shape[:-1] + (2,))
 
     x, y, z = pos[..., 0], pos[..., 1], pos[..., 2]
     r = np.linalg.norm(pos, axis=-1)
@@ -51,7 +51,7 @@ def sum_product_alms_ylms(a_lms: SO3Vec, y_lms: SO3Vec) -> torch.Tensor:
     summands = []
     for ell in a_lms.ells:
         product = complex_product(a_lms[ell], y_lms[ell])
-        summand = torch.einsum('...tmx->...x', product)  # sum over tau and m
+        summand = torch.einsum("...tmx->...x", product)  # sum over tau and m
         summands.append(summand)
 
     # sum over ell's
@@ -62,9 +62,9 @@ def get_normalization_constant(a_lms: SO3Vec) -> torch.Tensor:
     # Dimensions of SO3Vec's for each ell: (batches, taus, ms, 2)
     summands = []
     for ell in a_lms.ells:
-        a_lm = torch.einsum('...btmx->...bmx', a_lms[ell])  # sum over tau's
+        a_lm = torch.einsum("...btmx->...bmx", a_lms[ell])  # sum over tau's
         squared = torch.square(a_lm)
-        item = torch.einsum('...bmx->...b', squared)  # sum over m's and real and imaginary components
+        item = torch.einsum("...bmx->...b", squared)  # sum over m's and real and imaginary components
         summands.append(item)
 
     return torch.sum(torch.stack(summands, dim=0), dim=0)  # sum over ell's
@@ -110,7 +110,7 @@ def select_atomic_covariats(vec: SO3Vec, focus: torch.Tensor) -> SO3Vec:
     # focus: [batches, atoms]
     vectors = []
     for ell in vec.ells:
-        vectors.append(torch.einsum('ba,batmx->btmx', focus, vec[ell]))  # type: ignore
+        vectors.append(torch.einsum("ba,batmx->btmx", focus, vec[ell]))  # type: ignore
 
     return SO3Vec(vectors)  # (batches, taus, ms, 2)
 
@@ -129,7 +129,7 @@ def select_atomic_invariats(invariats: torch.Tensor, focus: torch.Tensor) -> tor
     # invariats: [batches, atoms, feats]
     # focus: [batches, atoms]
     # return: [batches, feats]
-    return torch.einsum('ba,baf->bf', focus, invariats)  # type: ignore
+    return torch.einsum("ba,baf->bf", focus, invariats)  # type: ignore
 
 
 def select_element(vec: SO3Vec, element_oh: torch.Tensor) -> SO3Vec:
@@ -137,7 +137,7 @@ def select_element(vec: SO3Vec, element_oh: torch.Tensor) -> SO3Vec:
     # element_oh: [batches, taus]
     tensors = []
     for ell in vec.ells:
-        t = torch.einsum('bt,btmx->bmx', element_oh, vec[ell])  # type: ignore # [batches, ms, 2]
+        t = torch.einsum("bt,btmx->bmx", element_oh, vec[ell])  # type: ignore # [batches, ms, 2]
         t = t.unsqueeze(dim=-3)  # [batches, 1, ms, 2]
         tensors.append(t)
 
@@ -150,6 +150,7 @@ class AtomicScalars(torch.nn.Module):
     Construct a set of scalar feature vectors for each atom by using the
     covariant atom :class:`SO3Vec` representations.
     """
+
     def __init__(self, maxl: int, full_scalars=True, device=None, dtype=torch.float):
         super().__init__()
 
@@ -176,8 +177,9 @@ class AtomicScalars(torch.nn.Module):
 
         if self.full_scalars:
             # Scalar product with itself
-            scalars_prod = [(sign * part * part.flip(-2)).sum(dim=(-1, -2), keepdim=True)
-                            for part, sign in zip(vec, self.signs)]  # (..., taus, 1, 1)
+            scalars_prod = [
+                (sign * part * part.flip(-2)).sum(dim=(-1, -2), keepdim=True) for part, sign in zip(vec, self.signs)
+            ]  # (..., taus, 1, 1)
 
             # SO3 invariant norm
             scalars_norm = [(part * part).sum(dim=(-1, -2), keepdim=True) for part in vec]  # (..., taus, 1, 1)

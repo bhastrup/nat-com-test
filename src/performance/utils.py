@@ -1,9 +1,9 @@
-
 import os, sys
 
 
 # Global variable to control print redirection
 REDIRECT_PRINT = False
+
 
 def no_print_wrapper(func: callable, *args, **kwargs):
     """Wrapper to suppress stdout and stderr during the execution of a function"""
@@ -16,7 +16,7 @@ def no_print_wrapper(func: callable, *args, **kwargs):
     original_stderr = os.dup(sys.stderr.fileno())
 
     # Open /dev/null to redirect the outputs
-    with open(os.devnull, 'w') as fnull:
+    with open(os.devnull, "w") as fnull:
         # Redirect stdout and stderr to /dev/null
         os.dup2(fnull.fileno(), sys.stdout.fileno())
         os.dup2(fnull.fileno(), sys.stderr.fileno())

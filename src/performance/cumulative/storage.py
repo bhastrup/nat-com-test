@@ -1,5 +1,3 @@
-
-
 from dataclasses import dataclass, field
 from typing import List, Dict, Set
 import numpy as np
@@ -7,8 +5,8 @@ import numpy as np
 
 @dataclass
 class MolCandidate:
-    num_env_steps: int    # total number of training steps taken in the environment
-    elements: List[int]     
+    num_env_steps: int  # total number of training steps taken in the environment
+    elements: List[int]
     pos: np.ndarray
     reward: float
     energy: float

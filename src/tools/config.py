@@ -4,12 +4,12 @@ import argparse
 def str2bool(v):
     if isinstance(v, bool):
         return v
-    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+    if v.lower() in ("yes", "true", "t", "y", "1"):
         return True
-    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+    elif v.lower() in ("no", "false", "f", "n", "0"):
         return False
     else:
-        raise argparse.ArgumentTypeError('Boolean value expected.')
+        raise argparse.ArgumentTypeError("Boolean value expected.")
 
 
 def default_config() -> dict:
@@ -28,7 +28,6 @@ def default_config() -> dict:
         # PPO loop budget
         max_num_steps=int(3e7),
         num_steps_per_iter=512,
-
         # PPO hyperparameters
         clip_ratio=0.2,
         vf_coef=0.5,
@@ -37,13 +36,10 @@ def default_config() -> dict:
         gradient_clip=0.5,
         max_num_train_iters=7,
         lam=0.97,
-
         # Optimizer
-        optimizer='adam',       # 'adam' | 'amsgrad'
-
+        optimizer="adam",  # 'adam' | 'amsgrad'
         # Device — overwritten from outer config before training starts
-        device='cuda',
-
+        device="cuda",
         # Optional schedules — set to a dict in the experiment script to activate
         entropy_schedule=None,
         reward_coef_schedule=None,
@@ -51,79 +47,67 @@ def default_config() -> dict:
 
     config = dict(
         # --- Identity ---
-        name='train',
+        name="train",
         seed=0,
-
         # --- Output directories (overwritten by set_directories in launch_utils) ---
-        log_dir='logs',
-        model_dir='models',
-        data_dir='data',
-        results_dir='results',
-
+        log_dir="logs",
+        model_dir="models",
+        data_dir="data",
+        results_dir="results",
         # --- Compute ---
-        device='cuda',
-
+        device="cuda",
         # --- Data ---
-        mol_dataset='QM7',          # 'QM7' | 'QM9'
-        energy_unit='eV',
-        split_method='read_split_from_disk',
-
+        mol_dataset="QM7",  # 'QM7' | 'QM9'
+        energy_unit="eV",
+        split_method="read_split_from_disk",
         # --- Environment ---
         formulas=None,
         num_envs=8,
         min_atomic_distance=0.6,
         max_solo_distance=2.0,
         min_reward=-3,
-        build_mode='fix_heavy',     # 'fix_heavy' | 'fix_TM' | 'none'
+        build_mode="fix_heavy",  # 'fix_heavy' | 'fix_TM' | 'none'
         hydrogen_delay=False,
         no_hydrogen_focus=False,
         relax_steps_final=0,
         safe_xtb=False,
-
         # --- Reward ---
-        reward_coefs={'rew_atomisation': 1.0},
-
+        reward_coefs={"rew_atomisation": 1.0},
         # --- Agent (PaiNN) ---
-        model='painn',
+        model="painn",
         network_width=128,
         num_interactions=3,
         cutoff=4.0,
         min_mean_distance=1.0,
         max_mean_distance=1.6,
         rms_norm_update=False,
-
         # --- Model IO ---
         load_model=None,
         load_latest=False,
         checkpoints=[0, 100, 1000],
         save_freq=10,
         keep_models=False,
-
         # --- Outer training loop ---
         num_epochs=1000,
-        rl_algo_online='PPO',
+        rl_algo_online="PPO",
         learning_rate=2e-5,
         mini_batch_size=256,
-        train_mode='tabula_rasa',
-
+        train_mode="tabula_rasa",
         # --- Evaluation ---
         eval_freq=1500,
         eval_freq_fast=100,
-
         # --- Logging ---
-        log_level='INFO',
-        save_rollouts='none',       # 'none' | 'train' | 'eval' | 'all'
-
+        log_level="INFO",
+        save_rollouts="none",  # 'none' | 'train' | 'eval' | 'all'
         # --- Weights & Biases (all optional — set save_to_wandb=False to disable) ---
         save_to_wandb=False,
-        entity='',                  # or set via: export WANDB_ENTITY=your_username
-        wandb_project='isomer-discovery',
-        wandb_group='',
-        wandb_job_type='',
-        wandb_name='',
-        wandb_mode='online',
+        entity="",  # or set via: export WANDB_ENTITY=your_username
+        wandb_project="isomer-discovery",
+        wandb_group="",
+        wandb_job_type="",
+        wandb_name="",
+        wandb_mode="online",
         wandb_watch_model=False,
-
         # --- Inner PPO loop config ---
         config_ft=config_ft,
     )

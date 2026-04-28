@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+
 class RewardScaler:
     """A buffer for storing rewards, online estimation of rewards standard deviations, and adaptively adjusting scale to match target std."""
 
@@ -16,27 +17,27 @@ class RewardScaler:
         self.mean_sq: Dict[str, float] = {name: 0 for name in self.reward_names}
         self.alpha = 0.01
 
-
     def _calculate_scale_factors(self) -> Dict[str, float]:
-        stds = {name: (self.mean_sq[name] - self.mean[name]**2)**0.5 \
-                    for name in self.reward_names}
+        stds = {name: (self.mean_sq[name] - self.mean[name] ** 2) ** 0.5 for name in self.reward_names}
         std_total = sum(stds.values())
-        ratio = {name: stds[name] / std_total if std_total > 0 else self.target_ratios[name] \
-                         for name in self.reward_names}
-        print(f'current_ratio: {ratio}')
-        scale_factor = {name: self.target_ratios[name] / ratio[name] \
-                        if ratio[name] > 0 else 1.0 for name in self.reward_names}
+        ratio = {
+            name: stds[name] / std_total if std_total > 0 else self.target_ratios[name] for name in self.reward_names
+        }
+        print(f"current_ratio: {ratio}")
+        scale_factor = {
+            name: self.target_ratios[name] / ratio[name] if ratio[name] > 0 else 1.0 for name in self.reward_names
+        }
         return scale_factor
 
     def get_scaled_reward(self, new_rewards: Dict[str, float]) -> float:
         assert len(new_rewards.keys()) == len(self.reward_names)
 
         scale_factor = self._calculate_scale_factors()
-        print(f'scale_factor: {scale_factor}')
+        print(f"scale_factor: {scale_factor}")
         scaled_rewards = {name: new_rewards[name] * scale_factor[name] for name in self.reward_names}
 
         return sum(scaled_rewards.values())
-    
+
     # def _online_exponential_std(self, alpha: float = 0.05) -> None:
     #     for name in self.reward_names:
     #         if self.rews[name]:
@@ -54,8 +55,9 @@ class RewardScaler:
     def _exp_mean(self, new: float, old: float) -> float:
         return self.alpha * new + (1 - self.alpha) * old
 
+
 if __name__ == "__main__":
-    reward_names = ['rew_abs_E', 'rew_valid', 'rew_basin']
+    reward_names = ["rew_abs_E", "rew_valid", "rew_basin"]
     target_ratios = [0.5, 0.3, 0.2]
 
     reward_buffer = RewardScaler(dict(zip(reward_names, target_ratios)))
@@ -63,4 +65,4 @@ if __name__ == "__main__":
     new_rewards = [0.2, -0.3, 0.5]
     reward = reward_buffer.get_scaled_reward(new_rewards=dict(zip(reward_names, new_rewards)))
     reward_buffer.add_rewards(new_rewards)
-    print(f'reward: {reward}')
+    print(f"reward: {reward}")

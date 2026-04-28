@@ -11,15 +11,15 @@ from src.tools.env_util import EnvMaker
 from src.performance.single_cpkt.evaluator import EvaluatorIO, SingleCheckpointEvaluator
 from src.performance.cumulative.discovery_logger import CumulativeDiscoveryTracker
 from src.rl.losses import EntropySchedule, RewardCoefficientSchedule
-from scripts.train.pretrain_bc import pretrain_agent
+from scripts.train.training_loop import training_loop
 
 
-def pretrain(config: dict) -> None:
+def train(config: dict) -> None:
     if 'reward_coefs' not in config:
         config['reward_coefs'] = {'rew_rae': 1.0 , 'rew_valid': 0.1}
 
     config_ft = config['config_ft']
-    config['name'] = 'pretrain'
+    config['name'] = 'train'
     tag = util.get_tag(config)
     util.set_seeds(seed=config['seed'])
     device = util.init_device(config['device'])
@@ -99,8 +99,7 @@ def pretrain(config: dict) -> None:
     total_num_iter = start_num_iter
     for epoch in range(config['num_epochs']):
 
-        print(f"Entering pretrain_agent")
-        total_num_steps = pretrain_agent(
+        total_num_steps = training_loop(
             total_num_iter=total_num_iter,
             ac=model,
             optimizer_online=optimizer_online,

@@ -166,7 +166,7 @@ def lightweight_eval(eval_envs, ac, gamma, lam, logger, info_saver, rollout_save
 
 
 
-def pretrain_agent(
+def training_loop(
     total_num_iter: int,
     ac: AbstractActorCritic,
     optimizer_online: Optimizer,

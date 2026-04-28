@@ -7,7 +7,7 @@ import submitit
 from xtb.ase.calculator import XTB
 
 from src.performance.energetics import EnergyUnit
-from scripts.train.run_bc import pretrain as submit_fn
+from scripts.train.train import train as submit_fn
 from src.tools.launch_utils import (
     load_default_configuration, get_sublog_name, generate_parameter_combinations, submit_jobs
 )

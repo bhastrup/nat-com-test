@@ -195,7 +195,7 @@ class Trainer:
 
         # Save model (big checkpoint)
         if self.total_num_iter in self.model_handler._checkpoints:
-            cp_path = self.model_handler.save_if_checkpoint(self.ac, self.total_num_iter)
+            self.model_handler.save_if_checkpoint(self.ac, self.total_num_iter)
 
     def log_infos(self, infos: dict):
         if not self.logger:

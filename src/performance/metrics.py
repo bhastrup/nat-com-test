@@ -161,7 +161,6 @@ class MoleculeProcessor:
 
         atoms = args["atoms"] if "atoms" in args else args["atoms_object_list"][args["index"]].copy()
         perform_optimization = args["perform_optimization"]
-        use_huckel = args["use_huckel"]
         calc_dipole = args["calc_dipole"]
         f_max = args["f_max"]
 

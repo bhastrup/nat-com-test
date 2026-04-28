@@ -149,7 +149,6 @@ class PCAProjector:
         self.embedder = get_embedder(model)
 
         self.concat_bag = False
-        dim_latent = self.embedder.num_latent if self.concat_bag else self.embedder.num_afeats
 
         seed = 42
         torch.manual_seed(seed)

@@ -5,12 +5,10 @@ import numpy as np
 import torch
 
 from src.performance.cumulative.cum_io import CumulativeIO
-from src.performance.cumulative.projections import SOAPProjector
 from src.performance.cumulative.investigator import (
     CummulativeInvestigator,
 )
 
-from scripts.analyse.exp3_CUM.scatter import make_scatter_plot
 from scripts.analyse.exp3_CUM.discovery_by_formula import (
     plot_rediscovery_novelty,
 )
@@ -27,7 +25,6 @@ def parse_cmd():
 
     parser.add_argument("--step_max", type=str, default="None", help="Maximum number of steps to consider")
     parser.add_argument("--make_discovery_by_formula_plot", type=str2bool, nargs="?", const=True, default=False)
-    parser.add_argument("--make_scatter_plot", type=str2bool, nargs="?", const=True, default=False)
     parser.add_argument("--make_time_series_plot", type=str2bool, nargs="?", const=True, default=False)
     parser.add_argument(
         "--aggregate_across_formulas", help="Avg. over formulas", type=str2bool, nargs="?", const=True, default=False
@@ -64,17 +61,6 @@ if __name__ == "__main__":
         plot_rediscovery_novelty(
             inv=investigator, tag=tag, num_formulas=None, mol_dataset=args.mol_dataset, undiscovered_gap=True
         )
-
-    if args.make_scatter_plot:
-        projector = SOAPProjector(
-            mol_dataset=args.mol_dataset,
-            data_dir=args.data_dir,
-            formulas=investigator.get_discovery_metrics(tag, args.mol_dataset)["formulas"],
-        )
-
-        step_size = step_max // 10
-        thresholds = np.arange(step_size, step_max + step_size, step_size, dtype=int)
-        make_scatter_plot(investigator, thresholds, tag, projector)
 
     if args.make_time_series_plot:
         for rediscovery in [True, False]:

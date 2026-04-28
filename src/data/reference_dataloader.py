@@ -7,11 +7,13 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
+from ase import Atoms
 
 from src.tools import util
+from src.tools.util import symbols_to_str_formula
 from src.data.io_handler import IOHandler
-from src.performance.energetics import EnergyConverter, EnergyUnit, str_to_EnergyUnit
 from src.data.data_util import unpack_upper_triangular_to_full
+from src.performance.energetics import EnergyConverter, EnergyUnit, XTBOptimizer, str_to_EnergyUnit
 
 
 class FileType(Enum):
@@ -155,10 +157,6 @@ class ReferenceDataLoader:
 
         return df
 
-
-from ase import Atoms
-from src.performance.energetics import XTBOptimizer
-from src.tools.util import symbols_to_str_formula
 
 
 class RaeCalculator:

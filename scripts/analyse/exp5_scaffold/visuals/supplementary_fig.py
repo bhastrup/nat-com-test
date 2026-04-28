@@ -1,4 +1,5 @@
 import os
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -253,8 +254,6 @@ FORMULA_COMMON_NAMES = {
     "H6C2OS": "Dimethyl sulfoxide (DMSO)",
     "H2C3O3": "Vinylene carbonate (VC)",
 }
-
-import re
 
 
 def build_eval_formulas_pretty() -> List[str]:

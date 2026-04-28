@@ -250,7 +250,7 @@ def training_loop(
         # Save model (big checkpoint)
         if model_handler:
             if total_num_iter in model_handler._checkpoints:
-                cp_path = model_handler.save_if_checkpoint(ac, total_num_iter)
+                model_handler.save_if_checkpoint(ac, total_num_iter)
 
         ####  Collect data online
         if rl_algo_online:

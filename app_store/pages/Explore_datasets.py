@@ -306,10 +306,7 @@ def view_decom_all(
     index, atoms_list, decom_params: dict, decom_method="bfs", cutoff=1.5, shuffle=True, mega_shuffle=False
 ):
 
-    action_decomposition_fn = decom_params["act_fn"]
     hydrogen_delay = decom_params["hydrogen_delay"]
-    no_hydrogen_focus = decom_params["no_hydrogen_focus"]
-    show_focus = decom_params["show_focus"]
 
     if st.session_state.update_multi_decom_view:
         # Find all decompositions (sorted_indices)
@@ -426,7 +423,6 @@ def investigate_decom(df: pd.DataFrame) -> None:
     )
 
     all_decoms = st.checkbox("View all decompositions", key="all_decoms")
-    view_fn = view_decom_all if all_decoms else view_decom_single
 
     act_fn_dict = {"pos_seq_to_actions": pos_seq_to_actions, "pos_seq_to_actions_emma": pos_seq_to_actions_emma}
 

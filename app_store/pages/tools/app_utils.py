@@ -72,16 +72,11 @@ def make_multi_button_columns(
     df = st.data_editor(df, key=unique_key, disabled=non_editable_cols)
 
     # Run functions upon click and ipdate button values in session state
-    do_rerun = False
     for button_name, func, args_dict in button_configs:
         button_info = button_dict[button_name]
 
         button_info["all_indices"] = set(df[df[button_name]].index)
         new_index = button_info["all_indices"] - button_info["old_indices"]
-        newly_removed = button_info["old_indices"] - button_info["all_indices"]
-
-        if len(newly_removed) > 0 or len(new_index) > 0:
-            do_rerun = True
 
         if len(new_index) == 1:
             new_index = list(new_index)[0]

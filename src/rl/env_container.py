@@ -1,3 +1,5 @@
+import concurrent.futures
+import multiprocessing as mp
 from abc import ABC, abstractmethod
 from typing import List, Tuple
 
@@ -74,9 +76,6 @@ class VecEnv(ABC):
     def reset_if_terminal(self, observations: List[ObservationType], terminals: List[bool]):
         raise NotImplementedError
 
-
-import concurrent.futures
-import multiprocessing as mp
 
 # This class is based on: DeepRL https://github.com/ShangtongZhang/DeepRL.
 

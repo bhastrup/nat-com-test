@@ -1,4 +1,5 @@
 import os
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -179,8 +180,6 @@ def default_eval_formulas() -> List[str]:
         #'H2C3O3', # vinylene carbonate (VC)
     ]
 
-
-import re
 
 
 def build_eval_formulas_pretty() -> List[str]:

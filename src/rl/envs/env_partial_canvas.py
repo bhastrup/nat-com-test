@@ -112,7 +112,7 @@ class CanvasGenerator:
                 self.buffer.push(canvas)
 
     def create_partial_molecules(self, mol: dict) -> List[Tuple[Atoms, FormulaType]]:
-        pos, elements, symbols, formula = mol["pos"], mol["atomic_nums"], mol["atomic_symbols"], mol["formulas"]
+        pos, elements, _, formula = mol["pos"], mol["atomic_nums"], mol["atomic_symbols"], mol["formulas"]
         n_atoms_to_place = min(len(elements), self.config["n_atoms_to_place"])
 
         pos = gaussian_perturbation(pos, sigma=0.02)

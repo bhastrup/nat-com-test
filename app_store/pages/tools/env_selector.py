@@ -20,6 +20,11 @@ from src.tools import util
 # from src.pretraining.data_utils import get_benchmark_energies
 
 from src.rl.envs.env_no_reward import HeavyFirstNoReward
+from src.rl.envs.env_partial_canvas import (
+    ObservationType,
+    FormulaType,
+    AbstractMolecularEnvironment,
+)
 
 # class LoadedEnv(SimpleEnvContainer):
 #     """A LoadedEnv should contain a SimpleEnvContainer and a name"""
@@ -198,12 +203,6 @@ def partial_canvas_selector():
                 st.write(f"Env {name} is already loaded.")
 
 
-from src.rl.envs.env_partial_canvas import (
-    ObservationType,
-    FormulaType,
-    AbstractMolecularEnvironment,
-)
-
 
 class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
     def __init__(self, molecule_df: pd.DataFrame, *args, **kwargs):
@@ -228,7 +227,7 @@ class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
         mol = self.molecule_df.iloc[index]
         # st.write(f"mol: {mol}")
 
-        pos, elements, symbols, formula = mol["pos"], mol["atomic_nums"], mol["atomic_symbols"], mol["formulas"]
+        pos, elements, _, _ = mol["pos"], mol["atomic_nums"], mol["atomic_symbols"], mol["formulas"]
         atoms_to_remove = mol["atoms_to_remove"]
 
         sorted_indices = np.array([int(i) for i in np.arange(len(elements)) if i not in atoms_to_remove])

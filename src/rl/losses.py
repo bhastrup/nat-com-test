@@ -1,8 +1,14 @@
-from typing import Dict, Tuple
+import time
+import logging
+from typing import Dict, Sequence, Tuple
+
+import numpy as np
 import torch
+from torch.optim.optimizer import Optimizer
 
 from src.agents.base import AbstractActorCritic
-from src.tools.util import to_numpy
+from src.rl.buffer import get_batch_generator, collect_data_batch, compute_mean_dict
+from src.tools.util import compute_gradient_norm, to_numpy
 
 
 def compute_loss_BC(ac: AbstractActorCritic, data: dict, device=None) -> Tuple[torch.Tensor, Dict[str, float]]:
@@ -116,17 +122,6 @@ def compute_loss(
 
     return loss, info
 
-
-import time
-import logging
-from typing import Sequence
-
-from torch.optim.optimizer import Optimizer
-
-import numpy as np
-
-from src.rl.buffer import get_batch_generator, collect_data_batch, compute_mean_dict
-from src.tools.util import compute_gradient_norm
 
 
 # Train policy with multiple steps of gradient descent

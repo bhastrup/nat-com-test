@@ -284,12 +284,6 @@ def pos_seq_to_actions(pos, atomic_numbers, zs, no_hydro_focus=True):
             kappa = torch.zeros(1, dtype=torch.float)
         else:
             first_neighbor, second_neighbor, third_neighbor = mutual_distances[focus, :i].argsort()[:3]
-            d1, d2, d3 = (
-                mutual_distances[focus, first_neighbor],
-                mutual_distances[focus, second_neighbor],
-                mutual_distances[focus, third_neighbor],
-            )
-            # print(f'd1: {d1}, d2: {d2}, d3: {d3}')
 
             # if torch.abs(d1 - d2) < 1e-7:
             #     # Can lead to disagreements with the zmat.position_atom_helper and thus to wrong actions
@@ -610,8 +604,6 @@ def replay_episode_with_adv(actions, pos, formula, model, observation_space, act
     buffer_container = PPOBufferContainer(size=envs.get_size(), gamma=1, lam=0.97)
 
     all_obs = []
-    all_rews = []
-    all_terminals = []
 
     # obs = env.obs_reset
     observations = [e.obs_reset for e in envs.environments]

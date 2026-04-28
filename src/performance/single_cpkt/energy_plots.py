@@ -142,7 +142,6 @@ def plot_rae_against_ref(
 
 def plot_single_etkdg_hist(enegies: List[float]):
     fig, ax = plt.subplots(figsize=(10, 6))
-    n_bins = 50
 
     ax.hist(enegies, bins=50, alpha=1.0, rwidth=0.90, label="ETKDG")
     # ax.set_xlim([bins[0], bins[-1]])
@@ -163,7 +162,7 @@ def get_etkdg_energies(
     ps.randomSeed = 0xF00D
 
     mol = Chem.AddHs(Chem.MolFromSmiles(smiles))
-    cids = rdDistGeom.EmbedMultipleConfs(mol, n_confs, ps)
+    rdDistGeom.EmbedMultipleConfs(mol, n_confs, ps)
     confs = mol.GetConformers()
 
     atoms_objects = []

@@ -166,7 +166,6 @@ def optimize_and_sort_mols(
         e_relaxed, m_relaxed = zip(*sorted(zip(e_relaxed, m_relaxed), key=lambda pair: pair[0]))
         energies_relaxed[formula] = list(e_relaxed)
         mols_relaxed[formula] = list(m_relaxed)
-        mols_to_view = mols_relaxed[formula]
 
     return mols_relaxed, energies_relaxed
 

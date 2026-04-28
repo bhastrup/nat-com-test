@@ -7,11 +7,13 @@ from src.performance.single_cpkt.stats import single_formula_metrics
 from src.tools.util import str_formula_to_size
 from app_store.pages.tools.playground import DoubleAgent
 from app_store.pages.tools.app_utils import make_multi_button_columns
+from app_store.pages.tools.generate import get_ref_energies
 from app_store.pages.tools.visualize import view_atoms_from_list, view_atoms_from_list_sequence, view_rdkit_mol
 from app_store.pages.tools.plots.rmsd import plot_basin_RMSD
 from app_store.pages.tools.plots.jackknife import jackknife_plot
 from app_store.pages.tools.plots.energy_histogram import energy_histogram_numpy, energy_histogram
 from app_store.pages.tools.plots.rae_vs_rae_relaxed import plot_rae_vs_rae_relaxed
+from src.performance.metrics import calc_rae
 
 
 def rae_missing_from_df(df: pd.DataFrame) -> bool:
@@ -136,9 +138,6 @@ def display_results_tabs():
             playground_results_tab(pg)
 
 
-from app_store.pages.tools.generate import get_ref_energies
-from src.performance.metrics import calc_rae
-
 
 def playground_results_tab(pg):
 
@@ -251,8 +250,6 @@ def agent_results_tab(da: DoubleAgent, name: str, pg_name: str):
                 if st.button("View all valid RELAXED", key=f"view_all_relaxed_{pg_name}_{name}_{str(formula)}"):
                     view([atoms for atoms in stoch_atoms_list_opt if atoms is not None])
 
-            unique_smiles = set(df_stoch["SMILES"].dropna().unique())
-            n_unique_smiles = len(unique_smiles)
             # Show df of unique smiles
 
             # Select one and see all its conformers

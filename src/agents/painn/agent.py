@@ -272,7 +272,6 @@ class PainnAC(AbstractActorCritic):
         # print(f'new_atom_index_batch : {new_atom_index_batch}')
         # new_index_batch = agent_num + edge_offset.squeeze(-1).squeeze(-1)
         new_atom_nodes_scalar = nodes_scalar[new_atom_index_batch, :]
-        new_atom_nodes_vector = nodes_vector[new_atom_index_batch, :, :]
 
         # print(f'new_atom_nodes_scalar shape : {new_atom_nodes_scalar.shape}')
 

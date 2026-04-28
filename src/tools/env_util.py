@@ -178,8 +178,6 @@ class EnvMaker:
     def _build_envs(self, data_dict: dict) -> Tuple[SimpleEnvContainer, SimpleEnvContainer, SimpleEnvContainer]:
         """Builds the environments and returns them in a SimpleEnvContainer."""
 
-        df_train = data_dict["df_train"]
-        df_eval = data_dict["df_eval"]
         benchmark_energies_train = data_dict["benchmark_energies_train"]
         benchmark_energies_eval = data_dict["benchmark_energies_eval"]
         train_formulas = data_dict["train_formulas"]

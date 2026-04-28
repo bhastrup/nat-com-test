@@ -3,7 +3,6 @@ from datetime import datetime
 from typing import List, Dict
 
 import numpy as np
-import wandb
 
 from src.rl.spaces import ObservationType
 from src.tools import util
@@ -53,6 +52,7 @@ class Logger():
         logging.info(f'Number of parameters: {var_counts}')
 
         if cf['save_to_wandb']:
+            import wandb
 
             now = datetime.now()
             dt_string = now.strftime("%d_%m_%H_%M")

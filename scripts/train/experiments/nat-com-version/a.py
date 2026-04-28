@@ -1,3 +1,4 @@
+import os
 import sys
 from datetime import datetime
 import numpy as np
@@ -111,7 +112,7 @@ def main() -> None:
         dict(
             # Wandb
             save_to_wandb=True,
-            entity='bhastrup', # Specify your username if you have an acocunt. Otherwise set save_to_wandb=False in previous line.
+            entity=os.environ.get('WANDB_ENTITY', ''),  # Set via: export WANDB_ENTITY=your_username  (or set save_to_wandb=False)
             wandb_mode='online',
             wandb_project='isomer-discovery',
             train_mode='tabula_rasa',

@@ -79,27 +79,21 @@ QM9 is available also - see preprocess_data.py for arguments.
 
 
 ## RL training
-### Weights & Biases (WandB) Setup
-
-This project uses [Weights & Biases](https://wandb.ai/) for experiment tracking.
-
-#### 🔐 Login
-Before running training or analysis scripts that use WandB, you need to log in from your terminal:
-```bash
-wandb login
-```
-This will prompt you to paste an API key from your WandB account settings. If you're running on a remote machine (e.g., cluster), you can use:
-```bash
-wandb login YOUR_API_KEY
-```
-
 ### Launch training jobs
 Training scripts are available in the *scripts/train/* folder. Specifically, a training job can be launched as
 ``` bash
 python scripts/train/experiments/nat-com-version/a.py
 ```
-This files launches a training of "Agent A" from the paper. The script also contains instructions for how to setup the other agent trainings.
-During training, you can follow the evolving performance metrics in the Wandb browser window.
+This launches a training of "Agent A" from the paper. The script also contains instructions for how to set up the other agent trainings. All results are saved to disk under `pretrain_runs/` regardless of the logging settings below.
+
+### Weights & Biases (optional)
+Training metrics can optionally be tracked with [Weights & Biases](https://wandb.ai/). To disable it, set `save_to_wandb=False` in the training config — all metrics will then be saved to disk only.
+
+To enable W&B, log in and set your entity:
+```bash
+wandb login
+export WANDB_ENTITY=your_wandb_username
+```
 
 
 
@@ -137,15 +131,13 @@ This section tracks outstanding issues that should be addressed before or after 
 
 ### High priority
 
-- **Weights & Biases is currently required for training.** The codebase has a `save_to_wandb` flag, but W&B is still imported and called unconditionally in several places. Training should work without a W&B account by routing all logging to stdout/a local file when `save_to_wandb=False`. This is a barrier to openness that we want to remove.
-
-- **Hardcoded W&B entity.** The training config in `scripts/train/experiments/nat-com-version/a.py` has `entity='bhastrup'` hardcoded. Users must change this to their own username, or set `save_to_wandb=False`. We plan to make this an environment variable or remove it entirely once W&B is made optional.
-
 - **Confusing `config_ft` structure.** The online RL (PPO) parameters live inside `config["config_ft"]` — a name inherited from an earlier pretraining→finetuning workflow that was not used in the final paper. In the paper, all agents are trained from scratch (*tabula rasa*). The nesting and the name are confusing; we plan to flatten the config structure in a future refactor.
 
 - **No test suite.** The repository currently has no automated tests. We plan to add at minimum: smoke tests for environment step and reward calculation, and a forward-pass test for the PaiNN agent. This is important for verifying that the codebase runs correctly on a new machine without running a full training job.
 
-- **Make sure app is also tight and has documentation in the readme.
+- **App clean up.** Make sure app is also tight and has documentation in the readme. In the app, I know there is a issue with switch device, which is actually not even implemented yet. Should remove this.
+
+- **Fix "pretrain_runs"** - This name makes no sense anymore. Should simply be runs.
 
 ### Code quality
 

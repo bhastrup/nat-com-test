@@ -11,7 +11,7 @@ This is the codebase for "Rediscovering Chemical Space from First Principles wit
 ```bash
 # Create and activate the conda environment
 mamba env create -f env.yaml
-mamba activate nat-com-test
+mamba activate rl-env
 
 # Set PYTHONPATH (one-time, from project root)
 mkdir -p $CONDA_PREFIX/etc/conda/activate.d

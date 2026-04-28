@@ -37,21 +37,21 @@ Run the following command to create the environment from `env.yaml`:
 mamba env create -f env.yaml
 ```
 
-### 4. Activate the Environment
+### 5. Activate the Environment
 Once the installation is complete, activate the environment:
 ```bash
 eval "$(mamba shell hook --shell bash)"
 mamba activate rl-env
 ```
 
-### 5. Verify Installation
+### 6. Verify Installation
 Check that the required packages are installed:
 
 ```bash
 python -c 'import torch, ase, rdkit, streamlit, pandas; print("✅ All core packages are working!")'
 ```
 
-### 6. Set Up PYTHONPATH (One-Time)
+### 7. Set Up PYTHONPATH (One-Time)
 
 To ensure Python can locate the `src/` package, set the `PYTHONPATH` automatically when activating the environment: Run the following **from the root of the project directory** (where `src/` is located):
 
@@ -138,8 +138,6 @@ This section tracks outstanding issues that should be addressed before or after 
 - **App clean up.** Make sure app is also tight and has documentation in the readme. In the app, I know there is a issue with switch device, which is actually not even implemented yet. Should remove this.
 
 ### Code quality
-
-- **No linting configuration.** There is no `pyproject.toml`, `.flake8`, or `ruff.toml`. We plan to add a `ruff` configuration targeting Python 3.11 and enforce it in CI.
 
 - **Mixed logging styles.** Core modules in `src/` use a mix of `print()` and the `logging` module. We plan to standardise on `logging` throughout.
 

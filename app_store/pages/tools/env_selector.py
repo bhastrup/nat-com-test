@@ -391,9 +391,7 @@ def make_molgym_env(eval_formulas: List = None, num_envs: int = 1, mol_dataset: 
 
     if mol_dataset == "QM7":
         if eval_formulas is None:
-            df_train, eval_formulas, eval_smiles = get_pretraining_formulas_QMx(
-                n_atoms_min=9, n_atoms_max=9, n_test=num_envs, mol_dataset=mol_dataset
-            )
+            raise NotImplementedError("Automatic formula loading from pretraining data is not supported; pass eval_formulas explicitly.")
         zs = [0, 1, 6, 7, 8, 16]
         canvas_size = 23
     else:

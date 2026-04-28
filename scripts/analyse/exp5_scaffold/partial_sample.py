@@ -150,13 +150,15 @@ CONFIG = {
             {
                 "mol_index": 450,
                 "atoms_to_remove": [3, 4, 6, 7, 8, 9],
-                "new_bags": [{"H": 4, "C": 2}],
-                "new_bags": [{"H": 6, "C": 2}],
-                "new_bags": [{"H": 6, "C": 3}],
-                "new_bags": [{"H": 8, "C": 3}],
-                "new_bags": [{"H": 6, "C": 4}],
-                "new_bags": [{"H": 8, "C": 4}],
-                "new_bags": [{"H": 10, "C": 4}],
+                "new_bags": [
+                    {"H": 4, "C": 2},
+                    {"H": 6, "C": 2},
+                    {"H": 6, "C": 3},
+                    {"H": 8, "C": 3},
+                    {"H": 6, "C": 4},
+                    {"H": 8, "C": 4},
+                    {"H": 10, "C": 4},
+                ],
             },
         ],
     },
@@ -165,7 +167,6 @@ CONFIG = {
     "num_envs": 1,
     "relax": True,
     "out_dir": None,
-    "tag": "scaffold_eval",
 }
 
 if __name__ == "__main__":
@@ -238,7 +239,7 @@ if __name__ == "__main__":
         df_sorted = df.sort_values(energy_col)
         best = df_sorted.iloc[0]
         print(f"Formula {formula}: best {energy_col}={best[energy_col]:.4f} eV, SMILES={best.get('SMILES', 'N/A')}")
-        out_csv = out_dir / formula / "df.csv"
+        out_csv = cfg["out_dir"] / formula / "df.csv"
         if out_csv.parent.exists():
             df.to_csv(out_csv, index=False)
-    print(f"Results under {out_dir}")
+    print(f"Results under {cfg['out_dir']}")

@@ -167,18 +167,11 @@ class MultibagLogger(Logger):
             return None
         if isinstance(ac, PainnAC):
             stds = ac.log_stds.exp().detach().cpu().numpy()
-            if isinstance(ac, NewAC):
-                self.wandb_run.log(
-                    {"total_num_steps": total_num_iter, "distance_std": stds[0], "euclidean_std": stds[1]}
-                )
-            else:
-                self.wandb_run.log(
-                    {
-                        "total_num_steps": total_num_iter,
-                        "distance_std": stds[0],
-                        "angle_std": stds[1],
-                        "dihedral_std": stds[2],
-                    }
-                )
-        else:
-            return None
+            self.wandb_run.log(
+                {
+                    "total_num_steps": total_num_iter,
+                    "distance_std": stds[0],
+                    "angle_std": stds[1],
+                    "dihedral_std": stds[2],
+                }
+            )

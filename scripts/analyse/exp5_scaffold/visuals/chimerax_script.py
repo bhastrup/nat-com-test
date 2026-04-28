@@ -130,7 +130,7 @@ video_width = video_height = 800
 
 
 execute_chimerax_commands(
-    session=session,
+    session=session,  # noqa: F821 — injected by ChimeraX at runtime
     pdb_file_path=pdb_file_path,
     image_path=image_path,
     movie_path=movie_path,

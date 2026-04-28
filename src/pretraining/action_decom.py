@@ -237,7 +237,7 @@ def pos_seq_to_actions(pos, atomic_numbers, zs, no_hydro_focus=True):
     """
 
     # TODO: Remove loop and make it vectorized
-    from src.agents.internal.zmat import position_atom_helper
+    from src.agents.zmat import position_atom_helper
 
     pos = torch.tensor(pos, dtype=torch.double)
     atomic_numbers = torch.tensor(atomic_numbers, dtype=torch.long)

@@ -138,8 +138,7 @@ def get_model(
     else:
         model = build_model(config, observation_space=observation_space, action_space=action_space, device=device)
         start_num_steps = 0
-    if config["model"] != "covariant":
-        model.set_device(device)
+    model.set_device(device)
 
     var_counts = count_vars(model)
     logging.info(f"Number of parameters: {var_counts}")
@@ -150,25 +149,7 @@ def get_model(
 def build_model(
     config: dict, observation_space: ObservationSpace, action_space: ActionSpace, device: torch.device
 ) -> AbstractActorCritic:
-    if config["model"] == "covariant":
-        raise NotImplementedError("Covariant model is not implemented")
-        return CovariantAC(
-            observation_space=observation_space,
-            action_space=action_space,
-            min_max_distance=(config["min_mean_distance"], config["max_mean_distance"]),
-            network_width=config["network_width"],
-            maxl=config["maxl"],
-            num_cg_levels=config["num_cg_levels"],
-            num_channels_hidden=config["num_channels_hidden"],
-            num_channels_per_element=config["num_channels_per_element"],
-            num_gaussians=config["num_gaussians"],
-            bag_scale=config["bag_scale"],
-            beta=float(config["beta"]) if config["beta"] is not None else config["beta"],
-            hydrogen_delay=config["hydrogen_delay"],
-            no_hydrogen_focus=config["no_hydrogen_focus"],
-            device=device,
-        )
-    elif config["model"] == "painn":
+    if config["model"] == "painn":
         return PainnAC(
             observation_space=observation_space,
             action_space=action_space,

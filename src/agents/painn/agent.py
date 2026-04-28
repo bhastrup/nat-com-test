@@ -8,7 +8,7 @@ import torch.distributions
 from torch import nn
 
 from src.agents.base import AbstractActorCritic
-from src.agents.internal import zmat
+from src.agents import zmat
 from src.agents.modules import MLP, masked_softmax, to_one_hot
 from src.rl.spaces import ObservationSpace, ObservationType, ActionType, ActionSpace
 from src.tools.util import to_numpy

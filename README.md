@@ -135,7 +135,7 @@ This section tracks outstanding issues that should be addressed before or after 
 
 - **No test suite.** The repository currently has no automated tests. We plan to add at minimum: smoke tests for environment step and reward calculation, and a forward-pass test for the PaiNN agent. This is important for verifying that the codebase runs correctly on a new machine without running a full training job.
 
-- **App clean up.** Make sure app is also tight and has documentation in the readme. In the app, I know there is a issue with switch device, which is actually not even implemented yet. Should remove this.
+- **App clean up.** Make sure app is also tight and has documentation in the readme.
 
 ### Code quality
 

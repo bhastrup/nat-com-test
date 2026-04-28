@@ -124,7 +124,7 @@ def display_loaded_agents():
     if st.session_state.loaded_models:
         for model in st.session_state.loaded_models.values():
             st.write(model.name)
-            agent_col0, agent_col1, agent_col2 = st.columns([2, 3, 3])
+            agent_col0, agent_col1 = st.columns([2, 3])
             with agent_col0:
                 if st.button("Remove", key=f"unload_model_{model.name}"):
                     st.session_state.loaded_models.pop(model.name)
@@ -133,11 +133,6 @@ def display_loaded_agents():
             with agent_col1:
                 if st.button("To Playgrounds", key=f"to_playgrounds_{model.name}"):
                     st.session_state.pm.add_agent_to_pgs(model)
-                    st.rerun()
-
-            with agent_col2:
-                if st.button("switch_device_", key=f"switch_device_{model.name}"):
-                    st.write("Not implemented yet.")
                     st.rerun()
 
             # if isinstance(model.model, PainnAC):

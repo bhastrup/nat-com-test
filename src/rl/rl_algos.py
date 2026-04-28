@@ -238,7 +238,7 @@ class PPO(PolicyOptimizer):
         vf_loss = self.vf_coef * (pred["v"] - ret).pow(2).mean()
 
         # Total loss
-        if burn_in == True:
+        if burn_in:
             loss = vf_loss
         else:
             loss = policy_loss + entropy_loss + vf_loss

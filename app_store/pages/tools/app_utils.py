@@ -76,7 +76,7 @@ def make_multi_button_columns(
     for button_name, func, args_dict in button_configs:
         button_info = button_dict[button_name]
 
-        button_info["all_indices"] = set(df[df[button_name] == True].index)
+        button_info["all_indices"] = set(df[df[button_name]].index)
         new_index = button_info["all_indices"] - button_info["old_indices"]
         newly_removed = button_info["old_indices"] - button_info["all_indices"]
 

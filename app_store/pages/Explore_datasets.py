@@ -311,7 +311,7 @@ def view_decom_all(
     no_hydrogen_focus = decom_params["no_hydrogen_focus"]
     show_focus = decom_params["show_focus"]
 
-    if st.session_state.update_multi_decom_view == True:
+    if st.session_state.update_multi_decom_view:
         # Find all decompositions (sorted_indices)
         atoms = atoms_list[index]
 

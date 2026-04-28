@@ -42,7 +42,7 @@ def _get_mol(atoms: Atoms, use_huckel: bool = True) -> dict:
             embed_chiral=True,
             use_atom_maps=False,
         )
-    except:
+    except Exception:
         return {"mol": None, "info": "crashed"}
 
     if not molecule:
@@ -51,7 +51,7 @@ def _get_mol(atoms: Atoms, use_huckel: bool = True) -> dict:
     if len(Chem.GetMolFrags(molecule[0])) != 1:
         return {"mol": None, "info": "fragmented"}
 
-    if check_charge_neutrality(molecule[0]) == False:
+    if not check_charge_neutrality(molecule[0]):
         return {"mol": None, "info": "charged_or_radical"}
 
     return {"mol": molecule[0], "info": "valid"}
@@ -111,7 +111,7 @@ class MoleculeAnalyzer:
                 embed_chiral=True,
                 use_atom_maps=False,
             )
-        except:
+        except Exception:
             return {"mol": None, "info": "crashed"}
 
         if not molecule:
@@ -120,7 +120,7 @@ class MoleculeAnalyzer:
         if len(Chem.GetMolFrags(molecule[0])) != 1:
             return {"mol": None, "info": "fragmented"}
 
-        if self.check_charge_neutrality(molecule[0]) == False:
+        if not self.check_charge_neutrality(molecule[0]):
             return {"mol": None, "info": "charged_or_radical"}
 
         return {"mol": molecule[0], "info": "valid"}

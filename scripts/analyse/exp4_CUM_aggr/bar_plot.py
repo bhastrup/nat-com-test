@@ -92,7 +92,7 @@ def plot_cum_discovery_seeds(
     # Set y-axis to log scale
     ax.set_yscale("log")
 
-    if ratio == False:
+    if not ratio:
         ax.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     # thicker spine

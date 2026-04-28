@@ -92,7 +92,7 @@ def plot_global_rediscovery_novelty(
     else:
         ax.set_yticks([])
 
-    if ratio == False:
+    if not ratio:
         ax.yaxis.set_major_locator(MaxNLocator(integer=True)) if vertical else ax.xaxis.set_major_locator(
             MaxNLocator(integer=True)
         )

@@ -226,7 +226,7 @@ class EnvMaker:
         if self.cf["mol_dataset"] == "TMQM":
             RLEnvironment = tmqmEnv
         elif self.cf["mol_dataset"] == "QM7" or self.cf["mol_dataset"] == "QM9":
-            RLEnvironment = HeavyFirst if self.cf["calc_rew"] == True else HeavyFirstNoReward
+            RLEnvironment = HeavyFirst if self.cf["calc_rew"] else HeavyFirstNoReward
         else:
             raise ValueError(f"Unknown molecule dataset: {self.cf['mol_dataset']}")
 

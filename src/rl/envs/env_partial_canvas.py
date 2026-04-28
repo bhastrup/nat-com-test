@@ -157,7 +157,7 @@ class CanvasGenerator:
 
         sorted_indices = None
         iter = 0
-        while type(sorted_indices) != np.ndarray:
+        while not isinstance(sorted_indices, np.ndarray):
             iter += 1
             if iter > 10:
                 print("Couldn't find a valid decomposition")

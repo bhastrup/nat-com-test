@@ -66,7 +66,7 @@ class Logger:
                 reinit=True,
             )
 
-            if cf["wandb_watch_model"] == True and model is not None:
+            if cf["wandb_watch_model"] and model is not None:
                 wandb_run.watch(model, log="gradients", log_freq=1000)
 
         self.wandb_run = wandb_run if cf["save_to_wandb"] else None

@@ -97,7 +97,7 @@ def load_default_agents():
     models = st.session_state.loaded_models
 
     models_is_empty = len(models) == 0
-    if models_is_empty == False:
+    if not models_is_empty:
         return
 
     # Get models from model_folder using glob

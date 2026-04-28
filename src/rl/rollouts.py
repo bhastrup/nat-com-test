@@ -148,8 +148,8 @@ def rollout_n_eps_per_env(
         # viewer.set_atoms(atoms)
 
     num_envs = envs.get_size()
-    num_eps_total = num_envs * num_episodes if type(num_episodes) == int else sum(num_episodes)
-    max_steps = 100 * num_episodes if type(num_episodes) == int else 100 * max(num_episodes)
+    num_eps_total = num_envs * num_episodes if isinstance(num_episodes, int) else sum(num_episodes)
+    max_steps = 100 * num_episodes if isinstance(num_episodes, int) else 100 * max(num_episodes)
 
     for i in range(num_envs):
         envs.environments[i].n_eps = 0
@@ -198,7 +198,7 @@ def rollout_n_eps_per_env(
             if term:
                 env.n_eps += 1
                 bag_or_int = next_obs[1]
-                atoms_to_go = bag_or_int if type(bag_or_int) == int else sum(bag_or_int)
+                atoms_to_go = bag_or_int if isinstance(bag_or_int, int) else sum(bag_or_int)
                 if atoms_to_go == 0:
                     final_atoms = ac.observation_space.canvas_space.to_atoms(next_obs[0])
                     print(f"Successfully ---------------------- : {final_atoms}")
@@ -214,9 +214,9 @@ def rollout_n_eps_per_env(
                 break
 
         # Bookkeeping for discarding envs that have completed num_episodes
-        if type(num_episodes) == int:
+        if isinstance(num_episodes, int):
             rollouts_done = [env.n_eps >= num_episodes for env in envs.environments]
-        elif type(num_episodes) == list:
+        elif isinstance(num_episodes, list):
             rollouts_done = [
                 env.n_eps >= num_episodes[i] for env, i in zip(envs.environments, buffer_container.active_buffers)
             ]

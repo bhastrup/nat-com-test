@@ -132,7 +132,7 @@ class Trainer:
         )
 
     def collect_online_data(self) -> Tuple[dict, dict]:
-        if self.online_learning == False or self.total_num_iter < self.burn_in[0]:
+        if not self.online_learning or self.total_num_iter < self.burn_in[0]:
             return None, None
 
         online_container = PPOBufferContainer(size=self.train_envs_online.get_size(), gamma=1.0, lam=0.97)

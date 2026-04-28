@@ -84,7 +84,7 @@ class ReferenceDataLoader:
         self.finder = ReferenceDataFinder(data_dir)
 
     def _has_smiles(self, metadata: Dict[str, Any]) -> bool:
-        return metadata["include_smiles"] == True
+        return metadata["include_smiles"]
 
     def load_and_polish(self, mol_dataset: str, new_energy_unit: EnergyUnit, fetch_df: bool = True) -> ReferenceData:
         """Load the reference data and polish it."""
@@ -167,7 +167,7 @@ class RaeCalculator:
     def __init__(self, ref_data: ReferenceData = None) -> None:
 
         self.benchmark_energies: Dict[str, float] = ref_data.get_mean_energies()
-        if type(ref_data.metadata["energy_unit"]) == str:
+        if isinstance(ref_data.metadata["energy_unit"], str):
             self.energy_unit_old = str_to_EnergyUnit(ref_data.metadata["energy_unit"])
         else:
             self.energy_unit_old = ref_data.metadata["energy_unit"]

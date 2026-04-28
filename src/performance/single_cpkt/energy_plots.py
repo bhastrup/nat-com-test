@@ -234,7 +234,7 @@ def get_etkdg_dict(
             rl_energies = get_rl_energies(isomer_rollouts, relax=True, df=df_smiles, fmax=fmax, step_max=step_max)
             try:
                 etkdg_energies = get_etkdg_energies(smiles, n_confs, relax=True, fmax=fmax, step_max=step_max)
-            except:
+            except Exception:
                 print("Failed to fetch ETKDG energies")
                 continue
 

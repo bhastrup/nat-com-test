@@ -16,7 +16,7 @@ from src.tools.launch_utils import (
 def main() -> None:
     
 
-    wandb_group = 'A-30k-Fixed' 	# Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
+    wandb_group = 'A-30k-cap-0.5' 	# Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
 
     
     # Section A: Config and optional rerun
@@ -152,9 +152,9 @@ def main() -> None:
                 end_iter=30000,
             ),
             reward_coef_schedule = dict(
-                schedules = {'rew_dipole': (0.0, 2.0)},
+                schedules = {'rew_dipole': (0.0, 0.5)},
                 start_iter = 30000,   # matches start_num_iter of loaded checkpoint
-                end_iter = 32500,     # ramp over 2500 iterations
+                end_iter = 31000,     # ramp over 2500 iterations
             ),
         )
     )

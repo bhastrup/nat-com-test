@@ -14,7 +14,6 @@ import pandas as pd
 
 from src.tools import util
 from src.data.io_handler import IOHandler
-from src.performance.energetics import XTBOptimizer, EnergyUnit
 from src.performance.reward_metrics_rings import get_max_view_positions
 
 
@@ -84,21 +83,28 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--smiles_col", type=str, default="SMILES", help="SMILES column name in df.csv.")
     parser.add_argument("--stratify_on_smiles", action=argparse.BooleanOptionalAction, default=True)
 
-    parser.add_argument("--bg_color_str", type=str, default="black", help="ChimeraX background color.")
-    parser.add_argument("--show_relaxed", action=argparse.BooleanOptionalAction, default=True, help="Relax molecules and sort by relaxed dipole.")
+    parser.add_argument("--n_mols", type=int, default=3, help="Max molecules to render per formula.")
+    parser.add_argument("--bg_color_str", type=str, default="white", help="ChimeraX background color.")
     parser.add_argument("--illustration_dir_name", type=str, default=None, help="Output dir name under each run_dir (defaults to exp5_<bg>_<sorting_key>).")
     return parser.parse_args()
 
 
 def default_eval_formulas() -> List[str]:
     return [
-        'H4C3O3',  # Bad
-        'H6C3O3',  # Good
-        'H6C4O3',  # Bad
-        'H8C4O3',  # Good
-        'H6C5O3',  # Bad
-        'H8C5O3',  # Bad
-        'H10C5O3', # Good
+        'H4C3O3',  # Bad - Ethylene carbonate (EC) -> in qm7? No
+        'H6C3O3',  # Good - Dimethyl carbonate (DMC) -> in qm7? No
+
+        'H6C4O3',  # Bad - Propylene carbonate (PC) -> in qm7? No
+        'H8C4O3',  # Good - Ethyl methyl carbonate (EMC) -> in qm7? No
+
+        #'H6C5O3',  # Bad - Diethenylcarbonate (DMC) (double bonded carbons)
+        #'H8C5O3',  # Bad - 1,2-Butylene carbonate (ring-like)
+        'H10C5O3', # Good - Diethyl carbonate (DEC) / Methyl propyl carbonate (MPC) -> in qm7? No
+
+        # Others
+        'H10C4O2', # 1,2-Dimethoxyethane (DME), (glyme) -> in qm7? Yes
+        'H6C2OS',  # Dimethyl sulfoxide (DMSO) -> in qm7? No
+        'H2C3O3',  # Vinylene carbonate (VC) -> in qm7? No
     ]
 
 
@@ -137,13 +143,11 @@ def get_all_dfs(eval_formulas: List[str], run_dirs: List[str], tag: str) -> Tupl
             df = pd.read_csv(os.path.join(seed_path, 'df.csv'))
             dfs[formula].append(df)
 
-
-            # load atoms.traj
-            atoms_traj_path = os.path.join(seed_path, 'atoms.traj')
-            atoms_list = read(atoms_traj_path, index=':')
+            # prefer relaxed atoms; fall back to raw rollout atoms for older run dirs
+            relaxed_path = os.path.join(seed_path, 'atoms_relaxed.traj')
+            traj_path = relaxed_path if os.path.exists(relaxed_path) else os.path.join(seed_path, 'atoms.traj')
+            atoms_list = read(traj_path, index=':')
             trajs[formula].extend(atoms_list)
-            #break
-        #break
 
     valid_formulas = [formula for formula in eval_formulas if len(dfs.get(formula, [])) > 0]
 
@@ -231,39 +235,6 @@ def find_candidate_mols(
 
 
 
-def optimize_and_sort_mols(
-    best_mols: Dict[str, List[Atoms]],
-    eval_formulas: List[str],
-) -> Tuple[Dict[str, List[Atoms]], Dict[str, List[float]]]:
-    calc = XTBOptimizer(method='GFN2-xTB', energy_unit=EnergyUnit.EV, use_mp=False)
-
-    dipoles_relaxed = {}
-    mols_relaxed = {}
-    for formula in tqdm(eval_formulas, desc='Optimizing and sorting molecules'):
-        print(f"Optimizing and sorting molecules for {formula}")
-        dipoles = []
-        m_relaxed = []
-        for mol in tqdm(best_mols[formula], desc='Relaxing molecules'):
-            opt_info = calc.optimize_atoms(mol, max_steps=1000, fmax=0.05, redirect_logfile=False)
-            relaxed_mol = opt_info['new_atoms']
-            # Calculate dipole moment for the optimized molecule
-            dipole = calc.calc_dipole(relaxed_mol)
-            # Use 0.0 if dipole calculation failed (None)
-            dipole = dipole if dipole is not None else 0.0
-            dipoles.append(dipole)
-            m_relaxed.append(relaxed_mol)
-
-        if not m_relaxed:
-            print(f"No valid molecules for {formula}; skipping.")
-            continue
-
-        # Sort based on dipole moment (largest first)
-        dipoles, m_relaxed = zip(*sorted(zip(dipoles, m_relaxed), key=lambda pair: pair[0], reverse=True))
-        dipoles_relaxed[formula] = list(dipoles)
-        mols_relaxed[formula] = list(m_relaxed)
-        mols_to_view = mols_relaxed[formula]
-
-    return mols_relaxed, dipoles_relaxed
 
 
 
@@ -356,13 +327,7 @@ if __name__ == "__main__":
         )
         print(f"c) Time taken to find candidate molecules: {time.time() - start_time} seconds")
 
-        # Optimize and sort molecules
-        start_time = time.time()
-        if args.show_relaxed:
-            mols_to_view, _dipoles_relaxed = optimize_and_sort_mols(best_mols, list(best_mols.keys()))
-        else:
-            mols_to_view = best_mols
-        print(f"d) Time taken to optimize and sort molecules: {time.time() - start_time} seconds")
+        mols_to_view = {f: mols[:args.n_mols] for f, mols in best_mols.items()}
 
         # Rotate molecules
         start_time = time.time()

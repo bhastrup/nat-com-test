@@ -56,16 +56,24 @@ if __name__ == '__main__':
 
     split_method = 'hardcoded'
     eval_formulas = [
-        'H4C3O3', # Bad
-        'H6C3O3', # Good
+        'H4C3O3', # Bad - Ethylene carbonate (EC)
+        'H6C3O3', # Good - Dimethyl carbonate (DMC)
 
-        'H6C4O3', # Bad
-        'H8C4O3', # Good
+        'H6C4O3', # Bad - Propylene carbonate (PC)
+        'H8C4O3', # Good - Ethyl methyl carbonate (EMC)
 
-        'H6C5O3', # Bad
-        'H8C5O3', # Bad
-        'H10C5O3' # Good
+        #'H6C5O3', # Bad -Diethenylcarbonate (DMC) (double bonded carbons)
+        #'H8C5O3', # Bad - 1,2-Butylene carbonate (ring-like)
+        'H10C5O3', # Good - Diethyl carbonate (DEC) / Methyl propyl carbonate (MPC),
+
+        # Others
+        'H10C4O2', # 1,2-Dimethoxyethane (DME), (glyme),
+        'H6C2OS', # Dimethyl sulfoxide (DMSO),
+        'H2C3O3', # vinylene carbonate (VC)
     ]
+
+
+
 
     ph = PathHelper(run_dir, model_name, log_name, tag=tag)
     config = process_config(IOHandler.read_json(ph.log_path))
@@ -105,6 +113,7 @@ if __name__ == '__main__':
     evaluator._calc_features(
         features_from_file=False, 
         perform_optimization=True,
+        f_max=0.025
     )
     print(f"Done calculating features {time.time()-start_time_features}")
 

@@ -130,6 +130,7 @@ class MoleculeProcessor:
             'RMSD': float,
             'e_relaxed': float,
             'rae_relaxed': float,
+            'dipole_relaxed': float,
         }
 
     @staticmethod
@@ -146,6 +147,7 @@ class MoleculeProcessor:
         perform_optimization = args['perform_optimization']
         use_huckel = args['use_huckel']
         calc_dipole = args['calc_dipole']
+        f_max = args['f_max']
 
 
         mol_info = self.analyzer.get_mol(atoms)
@@ -176,11 +178,9 @@ class MoleculeProcessor:
                 benchmark_energy = benchmark_energy, 
                 n_atoms = len(atoms)
             )
-        # dipole = None
-        if calc_dipole:
+        dipole = None
+        if calc_dipole and not perform_optimization:
             dipole = calc.calc_dipole(atoms)
-        
-        print(f"dipole: {dipole}")
 
 
         # Get the SMILES representation
@@ -199,9 +199,10 @@ class MoleculeProcessor:
         RMSD = None
         e_relaxed = None
         rae_relaxed = None
+        dipole_relaxed = None
 
         if valid and perform_optimization:
-            opt_info = calc.optimize_atoms(atoms, max_steps=200, fmax=0.10)
+            opt_info = calc.optimize_atoms(atoms, max_steps=200, fmax=f_max)
             new_atoms = opt_info['new_atoms']
 
             new_mol_info = self.analyzer.get_mol(new_atoms)
@@ -217,10 +218,12 @@ class MoleculeProcessor:
             e_relaxed = opt_info["energy_after"]
             if do_calc_rae:
                 rae_relaxed = self.calc_rae(
-                    energy = opt_info["energy_after"], 
-                    benchmark_energy = benchmark_energy, 
+                    energy = opt_info["energy_after"],
+                    benchmark_energy = benchmark_energy,
                     n_atoms = len(atoms)
                 )
+            if calc_dipole and new_atoms is not None:
+                dipole_relaxed = calc.calc_dipole(new_atoms)
             if valid and relax_stable and opt_info['converged']:
                 basin_distance = abs(opt_info['energy_after'] - opt_info['energy_before']) 
                 RMSD = Chem.rdMolAlign.GetBestRMS(mol, new_mol)
@@ -242,6 +245,7 @@ class MoleculeProcessor:
             'RMSD': RMSD,
             'e_relaxed': e_relaxed,
             'rae_relaxed': rae_relaxed,
+            'dipole_relaxed': dipole_relaxed,
         }, {
             'mol': mol,
             'new_mol': new_mol,
@@ -254,6 +258,7 @@ class MoleculeProcessor:
         benchmark_energies: dict = None,
         perform_optimization: bool = False,
         calc_dipole: bool = False,
+        f_max: float = 0.025,
     ) -> Tuple[pd.DataFrame, List[dict]]:
 
         feature_cols = list(self.features_dict.keys())
@@ -275,7 +280,8 @@ class MoleculeProcessor:
                 'benchmark_energies': benchmark_energies,
                 'perform_optimization': perform_optimization,
                 'use_huckel': self.analyzer.use_huckel,
-                'calc_dipole': calc_dipole
+                'calc_dipole': calc_dipole,
+                'f_max': f_max
             })
             stats_list.append(stats)
             extra_data_list.append(extra_data)

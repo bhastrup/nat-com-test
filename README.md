@@ -84,7 +84,7 @@ Training scripts are available in the *scripts/train/* folder. Specifically, a t
 ``` bash
 python scripts/train/experiments/nat-com-version/a.py
 ```
-This launches a training of "Agent A" from the paper. The script also contains instructions for how to set up the other agent trainings. All results are saved to disk under `pretrain_runs/` regardless of the logging settings below.
+This launches a training of "Agent A" from the paper. The script also contains instructions for how to set up the other agent trainings. All results are saved to disk under `runs/` regardless of the logging settings below.
 
 ### Weights & Biases (optional)
 Training metrics can optionally be tracked with [Weights & Biases](https://wandb.ai/). To disable it, set `save_to_wandb=False` in the training config — all metrics will then be saved to disk only.
@@ -137,15 +137,12 @@ This section tracks outstanding issues that should be addressed before or after 
 
 - **App clean up.** Make sure app is also tight and has documentation in the readme. In the app, I know there is a issue with switch device, which is actually not even implemented yet. Should remove this.
 
-- **Fix "pretrain_runs"** - This name makes no sense anymore. Should simply be runs.
-
 ### Code quality
 
 - **No linting configuration.** There is no `pyproject.toml`, `.flake8`, or `ruff.toml`. We plan to add a `ruff` configuration targeting Python 3.11 and enforce it in CI.
 
 - **Mixed logging styles.** Core modules in `src/` use a mix of `print()` and the `logging` module. We plan to standardise on `logging` throughout.
 
-- **Leftover personal paths.** `src/tools/launch_utils.py` contains a hardcoded personal path (`/home/energy/bjaha/...`) in the `set_default_resources` helper. This function is not used in the main training script but should be cleaned up.
 
 ### Missing analysis scripts
 

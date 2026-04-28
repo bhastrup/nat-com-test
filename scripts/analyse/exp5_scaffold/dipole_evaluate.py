@@ -20,7 +20,7 @@ def parse_cmd():
     parser.add_argument(
         "--run_dir",
         type=str,
-        default="pretrain_runs/Atom/name_Atom",
+        default="runs/Atom/name_Atom",
     )
     parser.add_argument(
         "--model_name",

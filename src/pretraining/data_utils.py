@@ -128,7 +128,7 @@ def get_eval_formulas(mol_dataset):
     """From preprocessed data"""
 
     dir_path = os.path.dirname(os.path.realpath(__file__))
-    with open(os.path.join(dir_path, f'../../pretrain_runs/expert_data/{mol_dataset}_eval_bags.pkl'), 'rb') as f:
+    with open(os.path.join(dir_path, f'../../runs/expert_data/{mol_dataset}_eval_bags.pkl'), 'rb') as f:
         eval_formulas = pickle.load(f)
     eval_formulas = sorted(list(set(eval_formulas["eval_bags"])))
     benchmark_energies, _ = get_benchmark_energies(eval_formulas, mol_dataset)

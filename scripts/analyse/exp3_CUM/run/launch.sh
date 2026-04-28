@@ -30,7 +30,7 @@ REW_NAMES=("AV") #  "A" "F" "FV" "AFV")  # Removed commas between array elements
 
 for REW_NAME in ${REW_NAMES[@]}; do
     for SEED in 0 1 2; do
-        BASE_DIR="pretrain_runs/final-ent15-${REW_NAME}"
+        BASE_DIR="runs/final-ent15-${REW_NAME}"
         RUN_DIR="${BASE_DIR}/seed_${SEED}"
         echo "Processing seed ${SEED}..."
 

@@ -1,6 +1,6 @@
 
 # # Set default values for argparse options
-# RUN_DIR="pretrain_runs/A-30k-cap-0.5/seed_0"
+# RUN_DIR="runs/A-30k-cap-0.5/seed_0"
 # MODEL_NAME="pretrain_run-0_steps-31000.model"
 # TAG="thursday-new-31000"
 # NUM_EPISODES_CONST=500
@@ -28,7 +28,7 @@
 # ################################################################################
 
 # # Set default values for argparse options
-# RUN_DIR="pretrain_runs/A-30k-cap-0.5/seed_0"
+# RUN_DIR="runs/A-30k-cap-0.5/seed_0"
 # MODEL_NAME="pretrain_run-0_steps-32000.model"
 # TAG="thursday-new-32000"
 # NUM_EPISODES_CONST=500
@@ -55,7 +55,7 @@
 ################################################################################
 
 # Set default values for argparse options
-RUN_DIR="pretrain_runs/A-30k-cap-0.5/seed_0"
+RUN_DIR="runs/A-30k-cap-0.5/seed_0"
 MODEL_NAME="pretrain_run-0_steps-33000.model"
 TAG="thursday-new-33000"
 NUM_EPISODES_CONST=500

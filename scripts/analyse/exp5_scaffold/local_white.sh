@@ -1,6 +1,6 @@
 
 # Set default values for argparse options
-RUN_DIR="pretrain_runs/A-30k-Fixed/seed_0"
+RUN_DIR="runs/A-30k-Fixed/seed_0"
 MODEL_NAME="pretrain_run-0_steps-30000.model"
 TAG="monday-30k-dip-30000"
 NUM_EPISODES_CONST=500
@@ -30,7 +30,7 @@ python scripts/analyse/exp5_scaffold/visuals/visualize.py \
 # 30900 steps
 
 # Set default values for argparse options
-RUN_DIR="pretrain_runs/A-30k-Fixed/seed_0"
+RUN_DIR="runs/A-30k-Fixed/seed_0"
 MODEL_NAME="pretrain_run-0_steps-30900.model"
 TAG="monday-30k-dip-30900"
 NUM_EPISODES_CONST=500

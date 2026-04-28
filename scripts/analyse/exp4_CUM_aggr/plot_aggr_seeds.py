@@ -22,7 +22,7 @@ if __name__ == '__main__':
     mol_dataset = 'qm7'
     ref_value = 6465
 
-    base_dir = Path.cwd() / 'from_niflheim/digital_discovery/' # 'pretrain_runs'
+    base_dir = Path.cwd() / 'from_niflheim/digital_discovery/' # 'runs'
     exp_name = 'entropy-schedule'
     sample_tag = 'in_sample'
 

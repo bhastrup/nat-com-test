@@ -24,7 +24,7 @@ SEED=$((SLURM_ARRAY_TASK_ID / ${#RUN_NAMES[@]}))       # Adjust for seeds
 scontrol update job=$SLURM_JOB_ID name=feedback-${RUN_NAMES[$RUN_INDEX]}
 
 # Construct RUN_DIR using both indices
-RUN_DIR="pretrain_runs/${RUN_NAMES[$RUN_INDEX]}/${SEEDS[$SEED]}"
+RUN_DIR="runs/${RUN_NAMES[$RUN_INDEX]}/${SEEDS[$SEED]}"
 
 # Update MODEL_NAME to use SEED_INDEX instead of SLURM_ARRAY_TASK_ID
 # MODEL_NAME="pretrain_run-${SEED}_CP-6_steps-15000.model"

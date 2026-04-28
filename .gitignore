@@ -32,7 +32,6 @@ logs/
 results/
 runs/
 slurm_outputs/
-pretrain_runs/
 submitit_logs/
 sublog*
 

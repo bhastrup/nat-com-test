@@ -1,6 +1,6 @@
 
 # Set default values for argparse options
-RUN_DIR="from_niflheim/Atom/name_Atom" #"pretrain_runs/Atom/name_Atom"
+RUN_DIR="from_niflheim/Atom/name_Atom" #"runs/Atom/name_Atom"
 MODEL_NAME="pretrain_run-0_CP-4_steps-10000.model"
 TAG="exp1-10k-prop10000-thread"
 NUM_EPISODES_CONST=100

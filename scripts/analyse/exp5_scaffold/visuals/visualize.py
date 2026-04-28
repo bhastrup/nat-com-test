@@ -55,7 +55,7 @@ def parse_args() -> argparse.Namespace:
         nargs="+",
         default=None,
         help=(
-            "One or more run directories (e.g. pretrain_runs/A-30k-Fixed/seed_0). "
+            "One or more run directories (e.g. runs/A-30k-Fixed/seed_0). "
             "Expected layout: <run_dir>/results/<tag>/<formula>/{df.csv,atoms.traj}"
         ),
     )

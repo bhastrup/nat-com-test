@@ -40,7 +40,7 @@ if __name__ == '__main__':
     ]
 
     def get_path(run_name: str, seed: int, formula: str) -> Path:
-        return Path(f'pretrain_runs/{run_name}/seed_{seed}/results/{tag}/{formula}/metrics.json')
+        return Path(f'runs/{run_name}/seed_{seed}/results/{tag}/{formula}/metrics.json')
 
     # Calc mean and std over seeds
     data = {}

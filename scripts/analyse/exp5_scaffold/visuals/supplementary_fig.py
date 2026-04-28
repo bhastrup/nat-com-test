@@ -728,7 +728,7 @@ if __name__ == '__main__':
 
 
     # Define the experiment parameters
-    base_dir = 'pretrain_runs/A-30k-Fixed/seed_0'
+    base_dir = 'runs/A-30k-Fixed/seed_0'
     tag = 'EXP5_30000'
     n_seeds = 1
     model_names = {

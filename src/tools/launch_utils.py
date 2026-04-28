@@ -118,10 +118,10 @@ def generate_parameter_combinations(config, sweep_params, exp_name, ):
 
 
 def set_directories(parameter_dict: dict, exp_name: str, sweep_name: str):
-    parameter_dict['log_dir']=f"pretrain_runs/{exp_name}/{sweep_name}/logs"
-    parameter_dict['model_dir']=f"pretrain_runs/{exp_name}/{sweep_name}/models"
-    parameter_dict['data_dir']=f"pretrain_runs/{exp_name}/{sweep_name}/data"
-    parameter_dict['results_dir']=f"pretrain_runs/{exp_name}/{sweep_name}/results"
+    parameter_dict['log_dir']=f"runs/{exp_name}/{sweep_name}/logs"
+    parameter_dict['model_dir']=f"runs/{exp_name}/{sweep_name}/models"
+    parameter_dict['data_dir']=f"runs/{exp_name}/{sweep_name}/data"
+    parameter_dict['results_dir']=f"runs/{exp_name}/{sweep_name}/results"
     return parameter_dict
 
 

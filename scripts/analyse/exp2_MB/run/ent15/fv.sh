@@ -24,7 +24,7 @@ GRAD_STEPS=27500
 
 SEED="${SEEDS[$SLURM_ARRAY_TASK_ID]}" # Get the seed for this job
 LOG_NAME="pretrain_run-${SLURM_ARRAY_TASK_ID}.json"
-RUN_DIR="pretrain_runs/final-ent15-${REW_NAME}/$SEED"
+RUN_DIR="runs/final-ent15-${REW_NAME}/$SEED"
 MODEL_NAME="pretrain_run-${SLURM_ARRAY_TASK_ID}_CP-${CP_NUM}_steps-${GRAD_STEPS}.model"
 
 # Perform optimization

@@ -24,7 +24,7 @@ def main() -> None:
     # use_old_config: load config from the run (e.g. for finetuning with same base). Does not submit by itself.
     # rerun_only: submit a single job immediately and exit (e.g. to extend a crashed run). Set load_model and use_old_config.
     load_model = 'runs/nat-com-training/A/seed_0/models/pretrain_run-0_CP-12_steps-30000.model'
-    # 'pretrain_runs/Agent-A-30k-Schedule2500/seed_0/models/pretrain_run-0_steps-30250.model' # 
+    # 'runs/Agent-A-30k-Schedule2500/seed_0/models/pretrain_run-0_steps-30250.model' # 
     load_latest = False				# False
     use_old_config = True
     rerun_only = False				# True only for pure reruns (e.g. training crashed)

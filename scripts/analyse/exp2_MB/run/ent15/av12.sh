@@ -19,7 +19,7 @@ PROP_FACTOR=100
 
 SEED="${SEEDS[$SLURM_ARRAY_TASK_ID]}" # Get the seed for this job
 LOG_NAME="pretrain_run-${SLURM_ARRAY_TASK_ID}.json"
-RUN_DIR="pretrain_runs/final-ent15-AV/$SEED"
+RUN_DIR="runs/final-ent15-AV/$SEED"
 MODEL_NAME="pretrain_run-${SLURM_ARRAY_TASK_ID}_CP-6_steps-15000.model"
 
 # Run the Python script for this seed

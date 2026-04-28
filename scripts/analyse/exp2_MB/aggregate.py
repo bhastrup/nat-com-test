@@ -28,7 +28,7 @@ if __name__ == '__main__':
     run_names = list(run_names_map.keys())
 
     def get_path(run_name: str, seed: int) -> Path:
-        return Path(f'pretrain_runs/{run_name}/seed_{seed}/results/{tag}/global_metrics.json')
+        return Path(f'runs/{run_name}/seed_{seed}/results/{tag}/global_metrics.json')
 
     # Calc mean and std over seeds
     data = {}

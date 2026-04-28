@@ -11,7 +11,7 @@
 
 
 # Set default values for argparse options
-RUN_DIR="pretrain_runs/final-ent15-AV/seed_0"
+RUN_DIR="runs/final-ent15-AV/seed_0"
 MODEL_NAME="pretrain_run-0_CP-6_steps-15000.model"
 TAG="EVAL_p50"
 PROP_FACTOR=50

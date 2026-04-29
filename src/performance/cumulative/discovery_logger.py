@@ -37,13 +37,6 @@ def get_termination_flag(info: dict) -> str:
         return info.get("mol_info", {}).get("info")
 
 
-def mol_to_smiles_old(self, mol: Chem.Mol):
-    SMILES = Chem.MolToSmiles(mol)
-    mol_pos_free = Chem.MolFromSmiles(SMILES)
-    smiles_compact = Chem.MolToSmiles(mol_pos_free)
-    return smiles_compact
-
-
 def extract_bag_reprs(env_container: SimpleEnvContainer) -> List[str]:
     all_bags = set()
     for env in env_container.environments:

@@ -1,4 +1,3 @@
-import dataclasses
 import logging
 from datetime import datetime
 from typing import List, Dict
@@ -125,15 +124,6 @@ class Logger:
 
     def update_and_log_data(self, total_num_iter: int) -> None:
         pass
-
-
-@dataclasses.dataclass
-class MolCandidate:
-    atoms: ObservationType
-    energy: float
-    reward: float
-    relaxed_energy: float
-    num_episodes_rollout: int
 
 
 class MultibagLogger(Logger):

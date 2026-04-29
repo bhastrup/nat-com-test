@@ -260,20 +260,12 @@ class PainnAC(AbstractActorCritic):
         batch_host = data_painn.collate_atomsdata(graph_states, pin_memory=self.pin)
         batch = {k: v.to(device=self.device, non_blocking=True) for (k, v) in batch_host.items()}
 
-        # print(f'batch[num_nodes] : {batch["num_nodes"]}')
-        # exit()
         nodes_scalar, nodes_vector, edge_offset = self._get_painn_embeddings(batch)
-        # print(f'edge_offset : {edge_offset}')
 
         # Select "nodes_scalar" of "yet to be placed" atoms (along batch dimension)
         new_atom_index_batch = batch["num_nodes"] + edge_offset.squeeze(-1).squeeze(-1)
-        # print(f'new_atom_index_batch : {new_atom_index_batch}')
         new_atom_index_batch = new_atom_index_batch - 1
-        # print(f'new_atom_index_batch : {new_atom_index_batch}')
-        # new_index_batch = agent_num + edge_offset.squeeze(-1).squeeze(-1)
         new_atom_nodes_scalar = nodes_scalar[new_atom_index_batch, :]
-
-        # print(f'new_atom_nodes_scalar shape : {new_atom_nodes_scalar.shape}')
 
         features = new_atom_nodes_scalar
 
@@ -316,7 +308,7 @@ class PainnAC(AbstractActorCritic):
             return_diff=True,
         )
 
-        # Expand edge features in Gaussian basis
+        # Expand edge features in sinc basis
         edge_state = layer.sinc_expansion(edges_distance, [(self.distance_embedding_size, self.cutoff)])
 
         # Apply interaction layers
@@ -346,12 +338,6 @@ class PainnAC(AbstractActorCritic):
             n_atoms = sum([1 for label in labels if label > 0])
 
             if self.no_hydrogen_focus:
-                # atoms, _ = self.observation_space.parse(obs)
-                # symbols = atoms.get_chemical_symbols()
-                # for j, sym in enumerate(symbols):
-                #     if sym == 'H':
-                #         focus_mask[i, j] = torch.tensor(0, dtype=torch.int, device=self.device)
-
                 for j, element in enumerate(labels[:n_atoms]):
                     if element == 1:
                         focus_mask[i, j] = torch.tensor(0, dtype=torch.int, device=self.device)
@@ -365,13 +351,11 @@ class PainnAC(AbstractActorCritic):
         return focus_mask, element_mask
 
     def step(self, observations: List[ObservationType], actions: Optional[np.ndarray] = None) -> dict:
-        # atomic_feats: n_obs x n_atoms x n_afeats
-        # focus_mask: n_obs x n_atoms
-        # focus_mask: n_obs x n_atoms
-        # element_count: n_obs x n_zs
-
-        # print(f'observations: {observations}')
-
+        # atomic_feats:        n_obs x n_atoms x n_afeats
+        # focus_mask_perceive: n_obs x n_atoms
+        # focus_mask_next:     n_obs x n_atoms
+        # element_count:       n_obs x n_zs
+        # action_mask:         n_obs x n_actions
         atomic_feats, focus_mask_perceive, focus_mask_next, element_count, action_mask = self.make_atomic_tensors(
             observations
         )
@@ -383,9 +367,6 @@ class PainnAC(AbstractActorCritic):
             else (focus_mask_perceive, element_mask)
         )
 
-        # print("atomic_feats shape: " + str(atomic_feats.shape))
-        # print(atomic_feats)
-        # exit()
         # stop: this agent does not stop
         stop = torch.zeros(size=(len(observations), 1), dtype=torch.float, device=self.device)
 
@@ -405,11 +386,6 @@ class PainnAC(AbstractActorCritic):
         focus_p = masked_softmax(focus_logits, mask=focus_mask_choose.bool())  # n_obs x n_atoms
         focus_p = torch.nan_to_num(focus_p, nan=0.0, posinf=1e10, neginf=-1e10)
         focus_dist = torch.distributions.Categorical(probs=focus_p)
-
-        # print(f'focus_p: {focus_p}')
-        # print(f'focus_mask_choose: {focus_mask_choose}')
-        # print(f'focus_mask_perceive: {focus_mask_perceive}')
-        # print(f'focus_logits: {focus_logits}')
 
         # Cast action to Tensor
         if actions is not None:
@@ -445,8 +421,7 @@ class PainnAC(AbstractActorCritic):
         element_oh = to_one_hot(element, self.num_zs, device=self.device)  # n_obs x n_zs
 
         # Continuous variables
-        # f: n_obs x (n_latent + n_zs)
-        f = torch.cat([focused_atom, element_oh], dim=-1)
+        f = torch.cat([focused_atom, element_oh], dim=-1)  # n_obs x (n_latent + n_zs)
         distance_mean, angle_mean, dihedral_mean = torch.split(torch.tanh(self.phi_continuous(f)), 1, dim=-1)
 
         # Distance
@@ -518,7 +493,6 @@ class PainnAC(AbstractActorCritic):
         weights = focus_mask_perceive.unsqueeze(-1).float()  # n_obs x n_atoms x 1
         weights = weights.transpose(1, 2)  # n_obs x 1 x n_atoms
         sum_atomic_feats = (weights @ atomic_feats).squeeze(1)  # n_obs x n_afeats
-        # mean_atomic_feats = sum_atomic_feats / torch.sum(focus_mask, dim=-1, keepdim=True)
         v = self.critic(torch.cat([sum_atomic_feats, latent_bag], dim=-1))
 
         # Log probabilities

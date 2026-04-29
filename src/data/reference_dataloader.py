@@ -7,13 +7,11 @@ from enum import Enum
 
 import numpy as np
 import pandas as pd
-from ase import Atoms
 
 from src.tools import util
-from src.tools.util import symbols_to_str_formula
 from src.data.io_handler import IOHandler
 from src.data.data_util import unpack_upper_triangular_to_full
-from src.performance.energetics import EnergyConverter, EnergyUnit, XTBOptimizer, str_to_EnergyUnit
+from src.performance.energetics import EnergyConverter, EnergyUnit, str_to_EnergyUnit
 
 
 class FileType(Enum):
@@ -156,37 +154,3 @@ class ReferenceDataLoader:
             df = df[~df["SMILES"].isnull()]
 
         return df
-
-
-
-class RaeCalculator:
-    """Calculates the Relative Atomic Energy (RAE) of the molecule."""
-
-    def __init__(self, ref_data: ReferenceData = None) -> None:
-
-        self.benchmark_energies: Dict[str, float] = ref_data.get_mean_energies()
-        if isinstance(ref_data.metadata["energy_unit"], str):
-            self.energy_unit_old = str_to_EnergyUnit(ref_data.metadata["energy_unit"])
-        else:
-            self.energy_unit_old = ref_data.metadata["energy_unit"]
-
-        self.energy_unit_new = EnergyUnit.EV
-        self.calc = XTBOptimizer(method="GFN2-xTB", energy_unit=self.energy_unit_new)
-
-    def _calculate_energy(self, atoms: Atoms) -> float:
-        return self.calc.calc_potential_energy(atoms)
-
-    def _calc_rae(self, atoms: Atoms) -> float:
-        mean_reference_energy = self.benchmark_energies[self._get_formula(atoms)]
-        e_tot = self._calculate_energy(atoms)
-        rae = e_tot - mean_reference_energy
-        rae = rae / len(atoms)
-        rae = EnergyConverter.convert(rae, self.energy_unit_old, self.energy_unit_new)
-        return rae
-
-    def _get_formula(self, atoms: Atoms) -> str:
-        assert hasattr(self, "benchmark_energies"), "Benchmark energies must be set to calculate RAE"
-        assert self.benchmark_energies is not None, "Benchmark energies cannot be None"
-        bag_repr = symbols_to_str_formula([a.symbol for a in atoms])
-        assert bag_repr in self.benchmark_energies, f"Formula {bag_repr} not in benchmark energies"
-        return bag_repr

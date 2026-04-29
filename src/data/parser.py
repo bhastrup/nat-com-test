@@ -270,15 +270,6 @@ class tmQMParser(Parser):
 
         atomic_nums = [atomic_numbers[atomic_symbol] for atomic_symbol in atomic_symbols]
 
-        do_print = False
-        if do_print:
-            print(f"Number of atoms: {n_atoms}")
-            print(f"CSD code: {CSD_code}")
-            print(f"Charge: {charge}")
-            print(f"Spin: {spin}")
-            print(f"Stoichiometry: {stoichiometry}")
-            print(f"MND: {mnd}")
-
         return dict(
             num_atoms=n_atoms,
             atom_pos=pos,

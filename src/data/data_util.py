@@ -27,10 +27,6 @@ def get_benchmark_energies_from_df(df: pd.DataFrame) -> Dict[str, float]:
     return df.groupby("bag_repr")["energy_GFN2"].mean().to_dict()
 
 
-# Example usage:
-# energies_in_eV = convert_energy_units(energies_in_hartree, 'hartree', 'eV')
-
-
 ##################### Connectivity matrix functionality #####################
 bondtype_to_order = {
     RDKitBondType.SINGLE: 1,
@@ -38,50 +34,6 @@ bondtype_to_order = {
     RDKitBondType.TRIPLE: 3,
     RDKitBondType.AROMATIC: 4,
 }
-
-valency = {"H": (1,), "C": (4,), "N": (3,), "O": (2,), "S": (2, 6)}
-
-
-def valence_is_good(atom, valency):
-    return np.any([atom.GetExplicitValence() == v for v in valency[atom.GetSymbol()]])
-
-
-def get_con_mat(mol: Chem.Mol) -> np.ndarray:
-    """Returns a connectivity matrix of the molecule using the bondtype_to_order."""
-    n_atoms = mol.GetNumAtoms()
-    con_mat = np.zeros((n_atoms, n_atoms), dtype=np.int8)
-    for bond in mol.GetBonds():
-        i = bond.GetBeginAtomIdx()
-        j = bond.GetEndAtomIdx()
-        con_mat[i, j] = bondtype_to_order[bond.GetBondType()]
-        con_mat[j, i] = bondtype_to_order[bond.GetBondType()]
-
-    return con_mat
-
-
-def get_con_sparse(mol: Chem.Mol) -> dict:
-    """Returns a dictionary of the molecule connectivity matrix in sparse format."""
-
-    bond_dict = {}
-    for bond in mol.GetBonds():
-        i = bond.GetBeginAtomIdx()
-        j = bond.GetEndAtomIdx()
-        bond_dict[(i, j)] = bondtype_to_order[bond.GetBondType()]
-
-    return bond_dict
-
-
-def get_adj_mat(mol: Chem.Mol) -> np.ndarray:
-    """Returns an adjacency matrix of the molecule."""
-    n_atoms = mol.GetNumAtoms()
-    adj_mat = np.zeros((n_atoms, n_atoms), dtype=np.int8)
-    for bond in mol.GetBonds():
-        i = bond.GetBeginAtomIdx()
-        j = bond.GetEndAtomIdx()
-        adj_mat[i, j] = 1
-        adj_mat[j, i] = 1
-
-    return adj_mat
 
 
 def get_con_upper_triangular(mol: Chem.Mol) -> np.ndarray:

@@ -11,7 +11,7 @@ from src.performance.cumulative.performance_summary import Logger
 from src.performance.single_cpkt.evaluator import SingleCheckpointEvaluator, launch_eval_jobs
 from src.rl.buffer_container import PPOBufferContainer, PPOBufferContainerDeploy
 from src.rl.env_container import VecEnv
-from src.rl.rl_algos import PolicyOptimizer
+from src.rl.protected.rl_algos import PolicyOptimizer
 from src.rl.rollouts import batch_rollout_with_logging, rollout_n_eps_per_env
 from src.tools.model_util import ModelIO
 from src.tools.util import RolloutSaver, InfoSaver

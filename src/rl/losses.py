@@ -11,68 +11,6 @@ from src.rl.buffer import get_batch_generator, collect_data_batch, compute_mean_
 from src.tools.util import compute_gradient_norm, to_numpy
 
 
-def compute_loss_BC(ac: AbstractActorCritic, data: dict, device=None) -> Tuple[torch.Tensor, Dict[str, float]]:
-
-    pred = ac.step(data["obs"], data["act"])
-    bc_loss = -pred["logp"].mean()
-
-    info = dict(
-        bc_loss=to_numpy(bc_loss).item(),
-        bc_logp=to_numpy(pred["logp"]).mean(),
-    )
-
-    return bc_loss, info
-
-
-def compute_loss_MARWIL(
-    ac: AbstractActorCritic,
-    data: dict,
-    vf_coef: float = 0.5,
-    entropy_coef: float = 0.01,
-    beta: float = 0.5,
-    device=None,
-) -> Tuple[torch.Tensor, Dict[str, float]]:
-
-    # print(f'data["obs"]: {data["obs"]}')
-    # print(f'data["act"].shape: {data["act"].shape}, data["act"]: {data["act"]}')
-
-    pred = ac.step(data["obs"], data["act"])
-
-    # adv = torch.as_tensor(data['adv'], device=device)
-    ret = torch.as_tensor(data["ret"], device=device)
-
-    # Imitation loss (MARWIL)
-    with torch.no_grad():
-        adv_raw = ret - pred["v"]
-        adv = (adv_raw - adv_raw.mean()) / (adv_raw.std() + 1e-8)
-
-    imit_loss = -(torch.exp(beta * adv) * pred["logp"]).mean()
-
-    # Entropy loss
-    entropy_loss = -entropy_coef * pred["ent"].mean()
-
-    # Value loss
-    vf_loss = vf_coef * (pred["v"] - ret).pow(2).mean()
-
-    # Total loss
-    total_loss = imit_loss + entropy_loss + vf_loss
-
-    info = dict(
-        M_entropy_loss=to_numpy(entropy_loss).item(),
-        M_vf_loss=to_numpy(vf_loss).item(),
-        M_total_loss=to_numpy(total_loss).item(),
-        M_imit_loss=to_numpy(imit_loss).item(),
-        M_logp=to_numpy(pred["logp"]).mean(),
-        M_adv_raw_mean=to_numpy(adv_raw).mean(),
-        M_adv_max=to_numpy(adv).max(),
-        M_adv_min=to_numpy(adv).min(),
-        M_adv_std=to_numpy(adv).std(),
-        M_adv_norm_max=to_numpy(adv).max(),
-        M_mean_exp_bet_adv=to_numpy(torch.exp(beta * adv)).mean(),
-        M_max_exp_bet_adv=to_numpy(torch.exp(beta * adv)).max(),
-    )
-
-    return total_loss, info
 
 
 def compute_loss(
@@ -145,7 +83,6 @@ def train(
 
     num_epochs = 0
 
-    max_num_steps = 1 if rl_algo == "MARWIL" else max_num_steps
     for i in range(max_num_steps):
         optimizer.zero_grad()
 
@@ -154,19 +91,14 @@ def train(
         for batch_indices in batch_generator:
             data_batch = collect_data_batch(data, indices=batch_indices)
 
-            if rl_algo == "PPO":
-                batch_loss, batch_info = compute_loss(
-                    ac,
-                    data=data_batch,
-                    clip_ratio=clip_ratio,
-                    vf_coef=vf_coef,
-                    entropy_coef=entropy_coef,
-                    device=device,
-                )
-            elif rl_algo == "MARWIL":
-                batch_loss, batch_info = compute_loss_MARWIL(
-                    ac, data=data_batch, device=device, vf_coef=vf_coef, entropy_coef=entropy_coef
-                )
+            batch_loss, batch_info = compute_loss(
+                ac,
+                data=data_batch,
+                clip_ratio=clip_ratio,
+                vf_coef=vf_coef,
+                entropy_coef=entropy_coef,
+                device=device,
+            )
 
             batch_loss.backward(retain_graph=False)  # type: ignore
             batch_infos.append(batch_info)

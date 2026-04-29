@@ -15,8 +15,6 @@ from src.rl.buffer_container import PPOBufferContainer, PPOBufferContainerDeploy
 from src.rl.rollouts import batch_rollout_with_logging, rollout_n_eps_per_env
 from src.rl.losses import (
     compute_loss,
-    compute_loss_MARWIL,
-    compute_loss_BC,
     train,
     EntropySchedule,
     RewardCoefficientSchedule,
@@ -50,80 +48,8 @@ def optimize_agent(
             device=device,
             gradient_clip=gradient_clip,
         )
-    elif rl_algo_pretrain == "MARWIL":
-        loss_info = optimize_agent_MARWIL(
-            ac=ac,
-            data_batch=data_batch,
-            optimizer=optimizer,
-            vf_coef=vf_coef,
-            entropy_coef=entropy_coef,
-            beta=beta,
-            device=device,
-            gradient_clip=gradient_clip,
-            grad_steps_offline=grad_steps_offline,
-        )
-    elif rl_algo_pretrain == "bc":
-        loss_info = optimize_agent_bc(
-            ac=ac,
-            data_batch=data_batch,
-            optimizer=optimizer,
-            device=device,
-            gradient_clip=gradient_clip,
-            grad_steps=grad_steps_offline,
-        )
     else:
         raise ValueError(f"Unknown RL algorithm: {rl_algo_pretrain}")
-
-    return loss_info
-
-
-def optimize_agent_MARWIL(
-    ac: AbstractActorCritic,
-    data_batch: dict,
-    optimizer: Optimizer,
-    vf_coef: float,
-    entropy_coef: float,
-    beta: float,
-    device: torch.device,
-    gradient_clip: float = 0.5,
-    grad_steps_offline: int = 2,
-):
-
-    ac.training = True
-
-    for _ in range(grad_steps_offline):
-        optimizer.zero_grad()
-        loss, loss_info = compute_loss_MARWIL(
-            ac, data=data_batch, vf_coef=vf_coef, entropy_coef=entropy_coef, beta=beta, device=device
-        )
-
-        loss.backward()
-        loss_info["grad_norm"] = compute_gradient_norm(ac.parameters())
-        torch.nn.utils.clip_grad_norm_(ac.parameters(), max_norm=gradient_clip)
-        optimizer.step()
-
-    return loss_info
-
-
-def optimize_agent_bc(
-    ac: AbstractActorCritic,
-    data_batch: dict,
-    optimizer: Optimizer,
-    device: torch.device,
-    gradient_clip: float = 0.5,
-    grad_steps: int = 2,
-):
-
-    ac.training = True
-
-    for _ in range(grad_steps):
-        optimizer.zero_grad()
-        loss, loss_info = compute_loss_BC(ac, data=data_batch, device=device)
-
-        loss.backward()
-        loss_info["grad_norm"] = compute_gradient_norm(ac.parameters())
-        torch.nn.utils.clip_grad_norm_(ac.parameters(), max_norm=gradient_clip)
-        optimizer.step()
 
     return loss_info
 

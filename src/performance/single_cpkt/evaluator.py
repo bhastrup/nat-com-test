@@ -81,7 +81,7 @@ class EvaluatorIO:
         df.to_csv(os.path.join(formula_dir, "df.csv"), index=False)
 
     def save_dfs_to_csv(self, dfs: Dict[str, pd.DataFrame]):
-        Warning("This method is deprecated. Use save_df_to_csv instead.")
+        logging.warning("This method is deprecated. Use save_df_to_csv instead.")
         for formula, df in dfs.items():
             formula_dir = os.path.join(self.base_dir, formula)
             os.makedirs(formula_dir, exist_ok=True)
@@ -267,11 +267,9 @@ class SingleCheckpointEvaluator:
 
     def _calc_global_metrics(self, size_weighted: bool = True) -> Dict[str, Any]:
         """Aggregates metrics across all formulas."""
-        print(f"self.data['formula_metrics']: {self.data['formula_metrics']}")
         self.data["global_metrics"] = get_global_metrics(
             self.data["formula_metrics"].copy(), size_weighted=size_weighted
         )
-        print(f"Global metrics: {self.data['global_metrics']}")
         if self.io:
             self.io.save_global_metrics(self.data["global_metrics"].copy())
         return self.data["global_metrics"]
@@ -279,9 +277,7 @@ class SingleCheckpointEvaluator:
     def evaluate(self, args: dict):
         self._rollout(args["ac"], args["rollouts_from_file"])
         self._calc_features(args["features_from_file"], self.calc_dipole, self.f_max)
-        print(f"Formula dfs: {self.data['formula_dfs']}")
         self._get_metrics_by_formula()
-        print(f"Formula metrics: {self.data['formula_metrics']}")
         self._calc_global_metrics()
 
         logging.info(f"Global metrics: {self.data['global_metrics']}")
@@ -324,15 +320,12 @@ def launch_eval_jobs(
     if executor._executor.__class__.__name__ == "SlurmExecutor":
         executor._command = "/home/energy/bjaha/miniconda3/envs/delight-rl/bin/python"
         executor.update_parameters(
-            # slurm_partition="xeon16",
             slurm_partition="sm3090",
             slurm_num_gpus=1,
             cpus_per_task=8,
             tasks_per_node=1,
             slurm_nodes=1,
             slurm_time="0-06:00:00",
-            # slurm_mail_type="END,FAIL",
-            # mem_gb=16
         )
     elif executor._executor.__class__.__name__ == "LocalExecutor":
         executor.update_parameters(

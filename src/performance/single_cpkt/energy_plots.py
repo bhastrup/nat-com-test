@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, List
 
 import matplotlib.pyplot as plt
@@ -39,7 +40,6 @@ def plot_rae_distributions(formula_dfs: Dict[str, pd.DataFrame], column_name: st
         axes[i].hist(rae, bins=bins, alpha=1.0, label=formula)
         axes[i].set_xlim([x_min, x_max])
         axes[i].legend(loc="upper right", prop={"size": SUBTITLE_SIZE, "family": FONT_TYPE})
-        # axes[i].set_title(formula, fontsize=TITLE_SIZE, font=FONT_TYPE)
         axes[i].axvline(x=0, color="red", linestyle="--")
 
     # If the number of formulas is not a multiple of 3, turn off the unused axes
@@ -112,11 +112,6 @@ def plot_rae_against_ref(
 
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    # Reference RAE values
-    # ax.hist(ref_rae_values, bins=bins, alpha=1.0, rwidth=0.96, label='Reference')
-    # ax.hist(normalized_gen_hist, bins=gen_bin_edges, weights=normalized_gen_hist,
-    #         alpha=0.65, rwidth=0.96, label='Generated')
-
     rwidth = 0.96
     ax.bar(ref_bin_edges[:-1], ref_hist, width=bin_width * rwidth, alpha=1.0, label="Reference")
     ax.bar(gen_bin_edges[:-1], normalized_gen_hist, width=bin_width * rwidth, alpha=0.65, label="Generated")
@@ -127,27 +122,10 @@ def plot_rae_against_ref(
 
     ax.tick_params(axis="both", which="major", labelsize=SUBTITLE_SIZE)
 
-    # import matplotlib.font_manager as fm
-
-    # # Get a list of all available font names
-    # available_fonts = sorted([f.name for f in fm.fontManager.ttflist])
-    # for font in available_fonts:
-    #     print(font)
-
     return fig, ax
 
 
 ################################# ETKDG ########################################
-
-
-def plot_single_etkdg_hist(enegies: List[float]):
-    fig, ax = plt.subplots(figsize=(10, 6))
-
-    ax.hist(enegies, bins=50, alpha=1.0, rwidth=0.90, label="ETKDG")
-    # ax.set_xlim([bins[0], bins[-1]])
-    ax.legend()
-    ax.set_title("RAE Distributions")
-    plt.show()
 
 
 def get_etkdg_energies(
@@ -234,12 +212,8 @@ def get_etkdg_dict(
             try:
                 etkdg_energies = get_etkdg_energies(smiles, n_confs, relax=True, fmax=fmax, step_max=step_max)
             except Exception:
-                print("Failed to fetch ETKDG energies")
+                logging.warning("Failed to fetch ETKDG energies")
                 continue
-
-            # plot_single_etkdg_hist(etkdg_energies)
-
-            print(f"e_relaxed: {rl_energies}  ---- etkdg_energies mean {np.mean(etkdg_energies)}")
 
             n_atoms = len(atoms_list[0])
             best_rl_energy = min(rl_energies)
@@ -275,6 +249,5 @@ def plot_etkdg(results: Dict[str, dict]):
     ax.legend()
     ax.axvline(x=0, color="red", linestyle="--")
     ax.set_title("ETKDG Distributions", fontsize=TITLE_SIZE, fontname=FONT_TYPE)
-    # ax.set_xlim([-0.1, 0.1])
 
     return fig, ax

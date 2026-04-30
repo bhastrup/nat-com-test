@@ -1,69 +1,17 @@
 import os
 from pathlib import Path
-from typing import Any, Dict, List, Tuple, Union, Set
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 from tqdm import tqdm
 
 from src.data.io_handler import IOHandler
 from src.performance.cumulative.storage import FormulaData
-from src.performance.metrics import get_compact_smiles
 
 
 SmilesCounterType = Dict[str, Dict[str, List[Tuple[int, int]]]]
 MergedDBType = Dict[str, Dict[str, FormulaData]]
 RawDBType = Dict[int, Dict[str, Dict[str, FormulaData]]]
-
-
-def raw_to_smiles_batches(
-    thresholds: List[int],
-    db_raw: RawDBType,
-    tag: str = "in_sample",
-) -> Tuple[Dict[int, Set[Any]], int]:
-    """Convert raw data to sets of smiles representations"""
-
-    def extract_smiles_set(data: Dict[str, FormulaData]) -> Set[str]:
-        smiles_set = set()
-        for formula, formula_data in data.items():
-            smiles_old = formula_data.molecules.keys()
-            smiles = [get_compact_smiles(s) for s in smiles_old]
-            smiles_set.update(smiles)
-        return smiles_set
-
-    # assert that last threshold is larger than the first step in the data
-    assert thresholds[-1] >= min(db_raw.keys()), (
-        f"Last threshold {thresholds[-1]} is smaller than the first step in the data {min(db_raw.keys())}"
-    )
-
-    # db_raw = copy.deepcopy(db_raw)
-
-    # Initialize a dict of sets to store molecule representations
-    all_sets = {step: set() for step in thresholds}
-
-    # Loop through all the collected datasets and add the molecules to the sets
-    threshold_index = 0
-    current_set = set()
-    for step_count, data in tqdm(db_raw.items(), desc="Raw data -> batches"):
-        if step_count >= thresholds[-1]:
-            print(f"Done creating data batches up to {thresholds[-1]}. Last step: {step_count}")
-            # update last set
-            all_sets[thresholds[threshold_index]] = current_set
-            break
-
-        formula_dict = data[tag]  # Extract tag data
-
-        if step_count <= thresholds[threshold_index]:
-            # When step_count <= thresholds, we want to add the data to the current set
-            # Formula agnostic approach. Could also grow a collection of sets, one for each formula
-            current_set.update(extract_smiles_set(formula_dict))
-        else:
-            # When step_count exceeds the current threshold, store the current batch and move to the next set
-            all_sets[thresholds[threshold_index]] = current_set.copy()
-            threshold_index += 1
-            print(f"moving to next set at step_count: {step_count}")
-            current_set = extract_smiles_set(formula_dict)
-
-    return all_sets, step_count
 
 
 def process_raw_data(
@@ -96,12 +44,9 @@ def process_raw_data(
 
     # Merge all the data
     for steps, rollout in tqdm(db_raw.items(), desc="Raw data -> (MergedDBType SmilesCounterType)"):
-        # print(f"steps: {steps}")
         for in_oos_tag, formula_dict in rollout.items():
             for formula, formula_data in formula_dict.items():
                 for smiles, mol_candidate_list in formula_data.molecules.items():
-                    # smiles = get_compact_smiles(smiles)
-
                     # First, check if smiles is not already in the FormulaData object
                     if smiles not in full_db[in_oos_tag][formula].molecules:
                         full_db[in_oos_tag][formula].molecules[smiles] = []
@@ -109,7 +54,6 @@ def process_raw_data(
                     full_db[in_oos_tag][formula].molecules[smiles].extend(mol_candidate_list)
 
                     if smiles in ref_smiles[formula]:
-                        # print(f"rediscovered: {smiles}")
                         rediscovered_smiles[in_oos_tag][formula].add(smiles)
 
                 # Count the number of molecules found up until this point (steps)

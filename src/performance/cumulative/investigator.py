@@ -41,12 +41,9 @@ class CummulativeInvestigator:
         self.ref_data = ReferenceDataLoader(data_dir=data_dir).load_and_polish(
             mol_dataset, EnergyUnit.EV, fetch_df=False
         )
-        # ref_smiles = [smiles for smiles_list in ref_data.smiles.values() for smiles in smiles_list]
 
         self.discovery_metrics = {}
         self.aggregate_discovery_metrics = {}
-
-        # self.model_dir = (cum_io.save_dir / '..' / '..' / 'models').resolve()
 
     def dm_file_path(self, tag: str, mol_dataset: str, aggregate: bool = False) -> Path:
         """Get the file path for the discovery metrics"""
@@ -115,7 +112,6 @@ def make_discovery_metrics(
     full_db: dict, data_dir: Path, tag: str = "in_sample", mol_dataset: str = "qm7"
 ) -> DiscoveryCountType:
 
-    do_print = False
     db = full_db[tag]
 
     ref_data = ReferenceDataLoader(data_dir=data_dir).load_and_polish(mol_dataset, EnergyUnit.EV, fetch_df=False)
@@ -129,14 +125,11 @@ def make_discovery_metrics(
 
         # Discovered smiles
         new_set = set(db[formula].molecules.keys())
-        # print(f"new_set: {new_set}")
 
         new_set_fixed = set()
         for smiles in new_set:
             new_SMILES_Compact = get_compact_smiles(smiles)
             new_set_fixed.add(new_SMILES_Compact)
-
-        new_set_fixed
 
         # Reference smiles
         ref_set = set(ref_data.smiles[formula])
@@ -151,11 +144,6 @@ def make_discovery_metrics(
         discovery_counts[formula]["rediscovered"] = len(rediscovered_set)
         discovery_counts[formula]["novel"] = len(novel_set)
         discovery_counts[formula]["old_data_size"] = len(ref_set)
-
-        if do_print:
-            print(f"new_set_fixed: {new_set_fixed}")
-            print(f"ref_set: {ref_set}")
-            print(f"rediscovered_set: {rediscovered_set}")
 
     # To list for plotting
     rediscovered = [discovery_counts[formula]["rediscovered"] for formula in formulas]

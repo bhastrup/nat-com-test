@@ -172,7 +172,7 @@ def agent_results_tab(da: DoubleAgent, name: str, pg_name: str):
         if do_load_ref_data:
             ref_energies = get_ref_energies(bag_repr=formulas, key=f"{pg_name}_{name}")
             if ref_energies is not None:
-                da.ref_data_collection.update()
+                da.ref_data_collection.update(ref_energies)
 
     for formula in formulas:
         st.subheader(f"Formula: {formula}")
@@ -181,7 +181,6 @@ def agent_results_tab(da: DoubleAgent, name: str, pg_name: str):
         df_stoch = da.stoch_dict[formula]["df"] if show_stoch else None
 
         if not da.ref_data_collection:
-            st.write(f"da.ref_data_collection: {da.ref_data_collection}")
             SMILES_db = None
         else:
             with col1:

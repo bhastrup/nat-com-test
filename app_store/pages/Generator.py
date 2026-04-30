@@ -1,11 +1,5 @@
 
-import numpy as np
-import pandas as pd
-
-
 import streamlit as st
-
-import altair as alt
 
 from app_store.pages.tools.images.show_logo import show_logo
 from app_store.pages.tools.app_utils import configure_canvas, initialize_session_state
@@ -29,7 +23,6 @@ def main():
         load_from_file()
         with st.expander(r"$\textsf{\Large All agents}$"):
             display_loaded_agents()
-        # st.write(f'session_state: {st.session_state}')
 
     with env_col:
         env_header_cols = st.columns([3, 10])
@@ -47,18 +40,8 @@ def main():
         generate_buttons()
         st.session_state.pm.playgrounds_GUI()
 
-    st.markdown("---")  #############################################################################################
+    st.markdown("---")
     display_results_tabs()
-    # TODO: Idea: print results on the fly
-
-    latent_space_viz = False  # st.checkbox('Explore latent space')
-
-    if latent_space_viz:
-        df = pd.DataFrame(np.random.randn(200, 3), columns=["a", "b", "c"])
-
-        c = alt.Chart(df).mark_circle().encode(x="a", y="b", size="c", color="c", tooltip=["a", "b", "c"])
-
-        st.write(c)
 
 
 if __name__ == "__main__":

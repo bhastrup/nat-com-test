@@ -17,42 +17,6 @@ from src.performance.energetics import EnergyUnit
 from app_store.pages.tools.playground import Playground
 
 
-def from_nsamples_to_nworkers(n_samples: int, speed: str):
-    assert speed in ["Fast", "Medium", "Slow"], "speed must be either Fast, Medium or Slow"
-    assert n_samples > 0, "n_samples must be positive"
-
-    n_workers_max = 128
-    if speed == "Fast":
-        # When there is no rendering, we can use maximum number of workers
-        n_workers = min(n_workers_max, n_samples)
-    else:
-        if speed == "Medium":
-            # When rendering with bonds, we still want to use many workers
-            n_workers_max = 32
-            multiplier = 1
-        elif speed == "Slow":
-            # When rendering without bonds, it will still run fast, so we don't need to parallelize as much
-            n_workers_max = 16
-            multiplier = 2
-        n_workers = min(n_workers_max, int(multiplier * np.sqrt(n_samples)))
-
-    assert n_workers > 0, "n_workers must be positive"
-    return n_workers
-
-
-def determine_speed(render: bool, render_bonds: bool) -> str:
-    if render is False:
-        speed = "Fast"
-    elif render is True and render_bonds is False:
-        speed = "Slow"
-    elif render is True and render_bonds is True:
-        speed = "Medium"
-    else:
-        raise ValueError("render and render_bonds must be either True or False")
-
-    return speed
-
-
 def generate_samples(
     ac,
     eval_envs,
@@ -62,8 +26,6 @@ def generate_samples(
     render_bonds: bool = False,
     n_workers: int = None,
 ):
-    # TODO: With increasingly complex reward functions, allow skipping of reward calculation
-
     if mode not in ["stochastic", "argmax"]:
         raise ValueError("mode must be either stochastic or argmax")
     if mode == "argmax":
@@ -75,8 +37,6 @@ def generate_samples(
     for env in eval_envs.environments:
         assert len(env.formulas) == 1, "Only one formula per environment supported"
 
-    # speed = determine_speed(render, render_bonds)
-    # n_workers = from_nsamples_to_nworkers(num_samples, speed)
     eval_envs = SimpleEnvContainer([deepcopy(eval_envs.environments[0]) for _ in range(n_workers)])
     n_envs = eval_envs.get_size()
     num_samples_per_env = int(np.ceil(num_samples / n_envs))
@@ -194,8 +154,6 @@ def get_ref_energies(bag_repr: Union[str, List[str]], key: str = None) -> Dict[s
         return None
 
     dataset_name = select_dataset(matching_datasets, key)
-
-    print(f"Selected dataset: {dataset_name}")
 
     if dataset_name in matching_datasets:
         ref_data = loader.load_and_polish(mol_dataset=dataset_name, new_energy_unit=EnergyUnit.EV, fetch_df=False)

@@ -15,10 +15,6 @@ from src.rl.reward import InteractionReward
 from src.rl.envs.environment import tmqmEnv
 from src.rl.env_container import SimpleEnvContainer
 from src.tools import util
-
-# from src.pretraining.data_utils import get_pretraining_formulas_QMx # , get_pretraining_formulas
-# from src.pretraining.data_utils import get_benchmark_energies
-
 from src.rl.envs.env_no_reward import HeavyFirstNoReward
 from src.rl.envs.env_partial_canvas import (
     ObservationType,
@@ -78,7 +74,7 @@ def partial_canvas_selector():
     options = [f"{dataset_name}, {str(k)}, {v}" for dataset_name, k, v in zip(mol_dataset_names, mol_ids, values)]
 
     selected_mol = st.selectbox(
-        "Select molecule: # TODO: GRid with RdKit graph images", options=options, index=0, key="mol_selector"
+        "Select molecule:", options=options, index=0, key="mol_selector"
     )
     selected_mol_dataset_name = selected_mol.split(",")[0]
     selected_mol_id = int(selected_mol.split(",")[1])

@@ -62,16 +62,12 @@ def make_multi_button_columns(
         df[button_name] = False
         if button_name not in button_dict.keys():
             button_dict[button_name] = {"all_indices": set(), "new_index": None, "old_indices": set()}
-        # else:
-        #    st.write(f"button_dict[button_name]['all_indices']: {button_dict[button_name]['all_indices']}")
-        #    df[button_name].iloc[list(button_dict[button_name]['all_indices'])] = True
 
     # Create data_editor
     editable_cols = [button_name for (button_name, _, _) in button_configs]
     non_editable_cols = [col for col in df.columns if col not in editable_cols]
     df = st.data_editor(df, key=unique_key, disabled=non_editable_cols)
 
-    # Run functions upon click and ipdate button values in session state
     for button_name, func, args_dict in button_configs:
         button_info = button_dict[button_name]
 
@@ -83,38 +79,3 @@ def make_multi_button_columns(
             func(new_index, **args_dict)
 
         st.session_state[button_dict_key][button_name]["old_indices"] = button_info["all_indices"].copy()
-
-    # if do_rerun:
-    #    st.rerun() # Attempting to avoid ASE viewer unintendedly popping up again
-
-    # for (button_name, func, args_dict) in button_configs:
-    #     button_info = button_dict[button_name]
-    #     st.write(f"{button_name}: {button_info['all_indices']}")
-
-
-def is_hashable(obj):
-    try:
-        hash(obj)
-        return True
-    except TypeError:
-        return False
-
-
-def check_hashability(obj, path=None):
-    if path is None:
-        path = []
-
-    if is_hashable(obj):
-        print(f"{'.'.join(path)} is hashable")
-    else:
-        print(f"{'.'.join(path)} is not hashable")
-
-    if isinstance(obj, dict):
-        for key, value in obj.items():
-            check_hashability(value, path + [str(key)])
-    elif isinstance(obj, (list, tuple)):
-        for index, item in enumerate(obj):
-            check_hashability(item, path + [str(index)])
-    elif hasattr(obj, "__dict__"):
-        for attr_name, attr_value in obj.__dict__.items():
-            check_hashability(attr_value, path + [attr_name])

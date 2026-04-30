@@ -1,5 +1,6 @@
 from typing import List, Optional, Tuple
 
+import torch
 import streamlit as st
 import pandas as pd
 
@@ -255,8 +256,6 @@ def view_decom_single(
 
     st.write(f"elements: {elements}")
     st.write(f"pos: {pos}")
-    import torch
-
     pos_tensor = torch.tensor(pos, dtype=torch.float32)
     st.write(f"pos_tensor: {pos_tensor}")
 
@@ -616,49 +615,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# CSD_code = st.sidebar.radio(f'Select a molecule from {dataset}', list(data_dict.keys())[0:5])
-# st.sidebar.text_input("or provide CSD-code", key="name")
-# if st.sidebar.button('View molecule'):
-#     molecule_dict = data_dict[CSD_code]
-#     atoms = Atoms(symbols=molecule_dict['atomic_symbols'], positions=molecule_dict['pos'])
-#     view(atoms)
-
-
-# Column to exclude
-# column_to_exclude = 'pos'
-# def view_df(df, exclude_col = 'pos'):
-#     st.dataframe(df.drop(exclude_col, axis=1))
-# view_df(df, exclude_col=column_to_exclude)
-
-# with cols[1]:
-#     st.subheader('BagSampler')
-#     with st.expander('BagSampler explainer'):
-#         explain_sampler()
-
-
-# from molgym.pretraining.metrics import get_mol
-# from rdkit.Chem import Draw
-# from rdkit import Chem
-
-# def view_rdkit_mol_in_df(index: int, atoms_list: List[Atoms]):
-#     """
-#         Goal is to do this:
-#         https://discuss.streamlit.io/t/embedding-image-links-in-table-doesnt-show-image-saving-to-html-does/21751/6
-#     """
-#     atoms = atoms_list[index]
-
-#     mol = get_mol(atoms)['mol']
-#     if mol is None:
-#         st.write('No molecule found')
-#         return None
-
-#     cols = st.columns([1,1])
-#     with cols[0]:
-#         img = Draw.MolToImage(mol)
-#         st.image(img, use_column_width=True)
-#     with cols[1]:
-#         SMILES = Chem.MolToSmiles(mol) if mol else None
-#         mol_pos_free = Chem.MolFromSmiles(SMILES) if SMILES is not None else None
-#         img = Draw.MolToImage(mol_pos_free)

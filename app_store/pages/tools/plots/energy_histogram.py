@@ -1,10 +1,6 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objs as go
-import seaborn as sns
-import matplotlib.pyplot as plt
-
-
 import plotly.figure_factory as ff
 
 
@@ -152,106 +148,6 @@ def energy_histogram_numpy(df, column_name="abs_energy"):
             fig.update_layout(bargap=0.2, bargroupgap=0.1)
 
             st.plotly_chart(fig, use_container_width=False)
-
-        if len(valid_energies) == 0 and len(invalid_energies) == 0:
-            st.warning("No data to display for either 'Valid' or 'Invalid' category.")
-
-
-def energy_histogram_matplotlib(df):
-    """Plot the energy histogram of a dataframe"""
-
-    # Define opacity and width parameters
-    opacity = 0.5
-    width = 0.007
-    bin_size = 0.01  # Specify the bin_size
-
-    df["valid"] = df["valid"].astype(bool)
-
-    # Filter data for valid and invalid categories
-    valid_energies = df[df["valid"]]["abs_energy"].values
-    invalid_energies = df[~df["valid"]]["abs_energy"].values
-
-    # Calculate the bin edges using np.linspace
-    energy_range = (min(df["abs_energy"]), max(df["abs_energy"]))
-    num_bins = int((energy_range[1] - energy_range[0]) / bin_size) + 1
-    bins = np.linspace(energy_range[0], energy_range[1], num_bins)
-
-    # Check if there's data in each category before creating the plot
-    if len(valid_energies) > 0 and len(invalid_energies) > 0:
-        # Create histograms manually for both categories
-        valid_hist, valid_bins = np.histogram(valid_energies, bins=bins)
-        invalid_hist, invalid_bins = np.histogram(invalid_energies, bins=bins)
-
-        # Create a custom plot with Plotly for histograms
-        trace1 = go.Bar(x=valid_bins, y=valid_hist, name="Valid", opacity=1, width=width, marker=dict(color="navy"))
-        trace2 = go.Bar(
-            x=invalid_bins, y=invalid_hist, name="Invalid", opacity=opacity, width=width, marker=dict(color="orange")
-        )
-
-        layout = go.Layout(title="Energy Histogram", xaxis=dict(title="Energy"), yaxis=dict(title="Counts"))
-
-        data = [trace1, trace2]
-        fig = go.Figure(data=data, layout=layout)
-
-        st.plotly_chart(fig, use_container_width=False)
-
-        # Create KDE plots using Seaborn and Matplotlib
-        plt.figure(figsize=(8, 5))
-        sns.histplot(valid_energies, kde=True, color="navy", label="Valid", bins=bins, common_norm=False)
-        sns.histplot(invalid_energies, kde=True, color="orange", label="Invalid", bins=bins, common_norm=False)
-        plt.title("Energy Histogram with KDE")
-        plt.xlabel("Energy")
-        plt.ylabel("Density")
-        plt.legend()
-        plt.style.use("dark_background")
-        st.pyplot(
-            plt,
-            use_container_width=False,
-        )  # Set use_container_width=False for Matplotlib figure
-
-    else:
-        if len(valid_energies) > 0:
-            # Create a histogram for the 'Valid' category
-            valid_hist, valid_bins = np.histogram(valid_energies, bins=bins)
-            trace1 = go.Bar(
-                x=valid_bins, y=valid_hist, name="Valid", opacity=opacity, width=width, marker=dict(color="blue")
-            )
-            layout = go.Layout(title="Valid Energy Histogram", xaxis=dict(title="Energy"), yaxis=dict(title="Counts"))
-            fig = go.Figure(data=[trace1], layout=layout)
-
-            st.plotly_chart(fig, use_container_width=False)
-
-            # Create KDE plot for 'Valid' using Seaborn and Matplotlib
-            plt.figure(figsize=(8, 5))
-            sns.histplot(valid_energies, kde=True, color="blue", bins=bins, common_norm=False)
-            plt.title("Valid Energy Histogram with KDE")
-            plt.xlabel("Energy")
-            plt.ylabel("Density")
-            st.pyplot(plt)
-
-        if len(invalid_energies) > 0:
-            # Create a histogram for the 'Invalid' category
-            invalid_hist, invalid_bins = np.histogram(invalid_energies, bins=bins)
-            trace2 = go.Bar(
-                x=invalid_bins,
-                y=invalid_hist,
-                name="Invalid",
-                opacity=opacity,
-                width=width,
-                marker=dict(color="orange"),
-            )
-            layout = go.Layout(title="Invalid Energy Histogram", xaxis=dict(title="Energy"), yaxis=dict(title="Counts"))
-            fig = go.Figure(data=[trace2], layout=layout)
-
-            st.plotly_chart(fig, use_container_width=False)
-
-            # Create KDE plot for 'Invalid' using Seaborn and Matplotlib
-            plt.figure(figsize=(8, 5))
-            sns.histplot(invalid_energies, kde=True, color="orange", bins=bins, common_norm=False)
-            plt.title("Invalid Energy Histogram with KDE")
-            plt.xlabel("Energy")
-            plt.ylabel("Density")
-            st.pyplot(plt)
 
         if len(valid_energies) == 0 and len(invalid_energies) == 0:
             st.warning("No data to display for either 'Valid' or 'Invalid' category.")

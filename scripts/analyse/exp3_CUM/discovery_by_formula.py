@@ -38,9 +38,6 @@ def plot_rediscovery_novelty(
         if i == num_formulas - 1:
             break
 
-    # for i, y in enumerate(y_positions):
-    #     ax.hlines(y, 0, old_data[i], color='black', linestyle='-', linewidth=5, label='Old Data' if i == 0 else '')
-
     ax.set_yticks(y_positions)
     ax.set_yticklabels(formulas)
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))

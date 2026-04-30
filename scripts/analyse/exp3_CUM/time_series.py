@@ -50,7 +50,6 @@ def plot_cumulative_counts(
         )
 
         ref_counts = {f: len(ref_smiles[f]) for f in ref_smiles}
-        # print(f"ref_counts: {ref_counts}")
 
         # Normalize the counts in smiles_counter by the reference counts
         smiles_counter = normalize_counts(smiles_counter, ref_counts, tag)
@@ -77,7 +76,6 @@ def plot_individual(
     plt.figure(figsize=(10, 8))
     colors = plt.cm.hsv(np.linspace(0, 0.85, num_formulas))
     for idx, (formula, data) in enumerate(smiles_counter[tag].items()):
-        print(zip(*data))
         steps, counts = zip(*data)
         if log_scale:  # Logarithmic scale, base 10
             counts = np.log10(np.array(counts) + [0.001 if cc == 0 else 0 for cc in counts])

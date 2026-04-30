@@ -45,7 +45,6 @@ def train(config: dict) -> None:
     optimizer_online = Adam(
         model.parameters(), lr=config["learning_rate"], amsgrad=True if config_ft["optimizer"] == "amsgrad" else False
     )
-    # data_loader = get_pretrain_dataloader(df_train, model, observation_space, action_space, config)
 
     # Discovery trackers
     logger = CumulativeDiscoveryTracker(
@@ -118,6 +117,5 @@ def train(config: dict) -> None:
         model_handler.save_after_full_replica(module=model, num_steps=total_num_steps, epochs=epoch)
         if total_num_steps > model_handler._checkpoints[-1]:
             break
-        epoch += 1
 
     print(f"Finished training with {total_num_steps} steps. Saved checkpoints at {model_handler._checkpoints} steps.")

@@ -74,8 +74,6 @@ def get_all_dfs(eval_formulas: List[str], n_seeds: int, tag: str, run_name: str)
             atoms_traj_path = os.path.join(seed_path, "atoms.traj")
             atoms_list = read(atoms_traj_path, index=":")
             trajs[formula].extend(atoms_list)
-            # break
-        # break
 
     all_dfs = {formula: pd.concat(dfs[formula]).reset_index(drop=True) for formula in eval_formulas}
 
@@ -260,7 +258,7 @@ if __name__ == "__main__":
         # Optimize and sort molecules
         start_time = time.time()
         if show_relaxed:
-            mols_to_view, energies_relaxed = optimize_and_sort_mols(best_mols, eval_formulas, show_relaxed)
+            mols_to_view, energies_relaxed = optimize_and_sort_mols(best_mols, eval_formulas)
         else:
             mols_to_view = best_mols
             energies_relaxed = None

@@ -65,10 +65,6 @@ if __name__ == "__main__":
         bar_fig_split, (ax1_split, ax2_split) = plot_cum_discovery_seeds_2_subplots(
             dm_all_seeds, mol_dataset=mol_dataset, ratio=True
         )
-        # bar_fig_combined, ax_combined = plot_cum_discovery_seeds(
-        #     dm_all_seeds, mol_dataset = 'QM7', undiscovered_gap = True, ratio = True
-        # )
-
         # Save plot
         bar_fig_split.savefig(plot_dir / "cum_discovery_bars.png", dpi=300)
 
@@ -90,25 +86,6 @@ if __name__ == "__main__":
     for ax, fig in zip(axs, [fig_discovery, fig_rediscovery, fig_bar]):
         ax.imshow(fig)
         ax.axis("off")
-
-    labels = ["(a)", "(b)", "(c)"]  # '(d)', '(e)', '(f)']
-    label_iter = iter(labels)
-
-    def write_label(ax, label, height=1.0):
-        ax.text(
-            0.01,
-            height,
-            label,
-            transform=ax.transAxes,
-            fontsize=FONT_SIZE + 2,
-            fontfamily=FONT_TYPE,
-            va="center",
-            ha="center",
-            fontweight="bold",
-        )
-
-    # for ax, fig in zip(axs, [fig_discovery, fig_rediscovery, fig_bar]):
-    #    write_label(ax, next(label_iter))
 
     plt.tight_layout(h_pad=-0.5)  # Adjust spacing between subplots
     plt.savefig(plot_dir / f"combined_plots{'_horizontal' if horizontal else ''}.png", bbox_inches="tight", dpi=300)

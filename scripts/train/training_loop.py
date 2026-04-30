@@ -1,20 +1,16 @@
-import logging
-import time
 from typing import Optional
 from copy import deepcopy
 
-import numpy as np
 import torch
 from torch.optim.optimizer import Optimizer
 
 from src.tools.model_util import ModelIO
-from src.tools.util import RolloutSaver, InfoSaver, compute_gradient_norm
+from src.tools.util import RolloutSaver, InfoSaver
 from src.agents.base import AbstractActorCritic
 from src.rl.env_container import VecEnv
 from src.rl.buffer_container import PPOBufferContainer, PPOBufferContainerDeploy
 from src.rl.rollouts import batch_rollout_with_logging, rollout_n_eps_per_env
 from src.rl.losses import (
-    compute_loss,
     train,
     EntropySchedule,
     RewardCoefficientSchedule,
@@ -22,94 +18,6 @@ from src.rl.losses import (
 from src.rl.reward import InteractionReward
 from src.performance.single_cpkt.evaluator import SingleCheckpointEvaluator, launch_eval_jobs
 from src.performance.cumulative.performance_summary import Logger
-
-
-def optimize_agent(
-    ac: AbstractActorCritic,
-    data_batch: dict,
-    optimizer: Optimizer,
-    vf_coef: float,
-    entropy_coef: float,
-    beta: float,
-    device: torch.device,
-    gradient_clip: float = 0.5,
-    rl_algo_pretrain: str = "PPO",
-    grad_steps_offline: int = 1,
-):
-
-    if rl_algo_pretrain == "PPO":
-        loss_info = optimize_agent_PPO(
-            ac=ac,
-            data_batch=data_batch,
-            optimizer=optimizer,
-            vf_coef=vf_coef,
-            entropy_coef=entropy_coef,
-            beta=beta,
-            device=device,
-            gradient_clip=gradient_clip,
-        )
-    else:
-        raise ValueError(f"Unknown RL algorithm: {rl_algo_pretrain}")
-
-    return loss_info
-
-
-def optimize_agent_PPO(
-    ac: AbstractActorCritic,
-    data_batch: dict,
-    optimizer: Optimizer,
-    vf_coef: float,
-    entropy_coef: float,
-    beta: float,
-    device: torch.device,
-    gradient_clip: float = 0.5,
-):
-
-    target_kl = 0.05
-    clip_ratio = 0.2
-    max_num_steps = 7
-
-    ac.training = True
-    infos = {}
-    start_time = time.time()
-
-    with torch.no_grad():
-        data_batch["logp"] = ac.step(data_batch["obs"], data_batch["act"])["logp"]
-
-    num_epochs = 0
-    for i in range(max_num_steps):
-        optimizer.zero_grad()
-        loss, loss_info = compute_loss(
-            ac, data=data_batch, clip_ratio=clip_ratio, vf_coef=vf_coef, entropy_coef=entropy_coef, device=device
-        )
-        loss.backward(retain_graph=False)
-
-        loss_info["grad_norm"] = compute_gradient_norm(ac.parameters())
-
-        # Check KL
-        if loss_info["approx_kl"] > 1.5 * target_kl:
-            logging.debug(f"Early stopping at step {i} for reaching max KL.")
-            break
-
-        torch.nn.utils.clip_grad_norm_(ac.parameters(), max_norm=gradient_clip)
-        optimizer.step()
-
-        num_epochs += 1
-
-        # Logging
-        logging.debug(f"Loss {i}: {loss_info}")
-        infos.update(loss_info)
-
-    infos["num_opt_steps"] = num_epochs
-    infos["time"] = time.time() - start_time
-
-    return loss_info
-
-
-def merge_data(dict1: dict, dict2: dict):
-    return {
-        k: dict1[k] + dict2[k] if k == "obs" else np.concatenate([dict1[k], dict2[k]], axis=0) for k in dict2.keys()
-    }
 
 
 def lightweight_eval(eval_envs, ac, gamma, lam, logger, info_saver, rollout_saver, save_eval_rollout, total_num_iter):
@@ -223,7 +131,6 @@ def training_loop(
             infos.update(opt_info_online)
 
         if logger:
-            # TODO: Move inside logger. What happens here actually?
             if logger.wandb_run is not None:
                 infos["total_num_iter"] = total_num_iter
                 logger.wandb_run.log(infos)

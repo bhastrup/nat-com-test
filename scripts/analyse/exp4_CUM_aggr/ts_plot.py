@@ -99,10 +99,6 @@ def plot_time_series_figure(data, rediscovery=False, legends_on=True, ref_value:
             handles=handles, labels=labels, loc="upper left", ncol=2, prop={"size": FONT_SIZE - 5, "family": FONT_TYPE}
         )
 
-    # ax.tick_params(axis='both', which='major', labelsize=FONT_SIZE-2)
-    # plt.setp(ax.get_xticklabels(), family=FONT_TYPE, fontsize=FONT_SIZE-2)
-    # plt.setp(ax.get_yticklabels(), family=FONT_TYPE, fontsize=FONT_SIZE-2)
-
     ax.set_title(
         "Discovery (Novel)" if not rediscovery else "Rediscovery", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE
     )

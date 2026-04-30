@@ -107,8 +107,6 @@ def plot_cum_discovery_seeds(
     ax.set_ylabel(count_label, fontsize=FONT_SIZE, fontfamily=FONT_TYPE)
     ax.set_xlabel(dataset_label, fontsize=FONT_SIZE, fontfamily=FONT_TYPE)
 
-    # ax.set_title('Rediscovered and expansion of reference dataset ({})'.format(mol_dataset),
-    #             fontsize=FONT_SIZE, fontfamily=FONT_TYPE)
     ax.grid(axis="y", linestyle="--")
     ax.legend(fontsize=FONT_SIZE, prop={"family": FONT_TYPE})
 
@@ -160,12 +158,6 @@ def plot_cum_discovery_seeds_2_subplots(dm_all_seeds: dict, mol_dataset: str = "
         capthick=2,
     )
 
-    # Add reference dataset line to both plots
-    # for i, y in enumerate(categorical_positions):
-    #    ax1.plot([y-0.5, y+0.5], [old_data_means[i], old_data_means[i]],
-    #            color='black', linestyle='-', linewidth=5,
-    #            label=f'{mol_dataset}' if i == 0 else '')
-
     # Configure both subplots
     for ax in [ax1, ax2]:
         ax.set_xticks(categorical_positions)
@@ -180,7 +172,6 @@ def plot_cum_discovery_seeds_2_subplots(dm_all_seeds: dict, mol_dataset: str = "
             spine.set_linewidth(spine_width)
 
         ax.grid(axis="y", linestyle="-")
-        # ax.legend(fontsize=FONT_SIZE, prop={'family': FONT_TYPE})
         ax.tick_params(axis="both", which="major", labelsize=FONT_SIZE)
 
     # Remove x-axis labels from top subplot
@@ -191,7 +182,6 @@ def plot_cum_discovery_seeds_2_subplots(dm_all_seeds: dict, mol_dataset: str = "
     count_label = "Ratio" if ratio else "Counts"
     ax1.set_title(f"Expansion {count_label}", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE)
     ax2.set_title(f"Rediscovery {count_label}", fontsize=TITLE_FONT_SIZE, fontfamily=FONT_TYPE)
-    # ax2.set_xlabel(mol_dataset, fontsize=FONT_SIZE, fontfamily=FONT_TYPE)
 
     fig.tight_layout()
     return fig, (ax1, ax2)

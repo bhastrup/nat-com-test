@@ -5,7 +5,7 @@ import os
 import pickle
 import re
 import sys
-from typing import Optional, List, Iterable, Tuple, Dict, Union
+from typing import List, Iterable, Dict, Union
 
 
 import ase.data
@@ -16,8 +16,6 @@ from ase.data import atomic_numbers, chemical_symbols
 import numpy as np
 import scipy.signal
 import torch
-from torch.optim import Adam
-from torch.optim.optimizer import Optimizer
 
 from src.rl.spaces import FormulaType
 from src.rl.env_container import SimpleEnvContainer
@@ -28,10 +26,6 @@ def get_str_formulas_from_vecenv(envs: SimpleEnvContainer) -> List[str]:
     for env in envs.environments:
         assert len(env.formulas) == 1
     return [bag_tuple_to_str_formula(env.formulas[0]) for env in envs.environments]
-
-
-# def bag_tuple_to_str_formula(bag_tuple: FormulaType) -> str:
-#     return ''.join(f"{ase.data.chemical_symbols[z]}{count if count>1 else ''}" for z, count in bag_tuple)
 
 
 def str_formula_to_size(formula: str) -> int:
@@ -150,12 +144,6 @@ def to_numpy(t: torch.Tensor) -> np.ndarray:
     return t.cpu().detach().numpy()
 
 
-def combined_shape(length: int, shape: Optional[tuple] = None) -> tuple:
-    if shape is None:
-        return (length,)
-    return (length, shape) if np.isscalar(shape) else (length, *shape)
-
-
 def count_vars(module: torch.nn.Module) -> int:
     return sum(np.prod(p.shape) for p in module.parameters())
 
@@ -190,28 +178,11 @@ def discount_cumsum(x: np.ndarray, discount: float) -> np.ndarray:
     return scipy.signal.lfilter([1], [1, float(-discount)], x[::-1], axis=0)[::-1]
 
 
-# def set_seeds(seed: int) -> None:
-#     np.random.seed(seed)
-#     torch.manual_seed(seed)
-#     # set seed for pandas also
-#     pd.np.random.seed(seed)
-
-
 def set_seeds(seed: int) -> None:
     np.random.seed(seed)  # Sets seed for numpy
     torch.manual_seed(seed)  # Sets seed for PyTorch
     if hasattr(torch, "cuda"):  # Sets seed for CUDA (if using GPU)
         torch.cuda.manual_seed_all(seed)
-
-
-def split_formula_strings(formulas: str) -> List[str]:
-    return formulas.split(",")
-
-
-def parse_size_range(size_range: str) -> Tuple[int, int]:
-    parsed_range = [int(i) for i in size_range.split(",")]
-    assert len(parsed_range) == 2
-    return parsed_range[0], parsed_range[1]
 
 
 def get_tag(config: dict) -> str:
@@ -232,47 +203,6 @@ def save_config(config: dict, directory: str, tag: str, verbose=True):
 def create_directories(directories: List[str]):
     for directory in directories:
         os.makedirs(directory, exist_ok=True)
-
-
-# def setup_logger(config: dict, directory, tag: str):
-#     logger = logging.getLogger()
-#     logger.setLevel(config['log_level'])
-
-#     formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-#     ch = logging.StreamHandler(stream=sys.stdout)
-#     ch.setFormatter(formatter)
-#     logger.addHandler(ch)
-
-#     path = os.path.join(directory, tag + '.log')
-#     fh = logging.FileHandler(path)
-#     fh.setFormatter(formatter)
-
-#     logger.addHandler(fh)
-
-# class SafeStreamHandler(logging.StreamHandler):
-#     def emit(self, record):
-#         try:
-#             super().emit(record)
-#         except BrokenPipeError:
-#             self.flush()
-#             logging.getLogger().removeHandler(self)
-
-# def setup_logger(config: dict, directory, tag: str):
-#     logger = logging.getLogger()
-#     logger.setLevel(config['log_level'])
-
-#     formatter = logging.Formatter('%(asctime)s.%(msecs)03d %(levelname)s: %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
-
-#     ch = SafeStreamHandler(stream=sys.stdout)
-#     ch.setFormatter(formatter)
-#     logger.addHandler(ch)
-
-#     path = os.path.join(directory, tag + '.log')
-#     fh = logging.FileHandler(path)
-#     fh.setFormatter(formatter)
-
-#     logger.addHandler(fh)
 
 
 class SafeStreamHandler(logging.StreamHandler):
@@ -298,21 +228,6 @@ def setup_logger(config: dict, directory, tag: str):
     fh.setFormatter(formatter)
 
     logger.addHandler(fh)
-
-
-def setup_simple_logger(path: str = None, log_level=logging.INFO):
-    logger = logging.getLogger()
-    logger.setLevel(log_level)
-    formatter = logging.Formatter("%(message)s")
-
-    ch = logging.StreamHandler(stream=sys.stdout)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
-
-    if path:
-        fh = logging.FileHandler(path, mode="w")
-        fh.setFormatter(formatter)
-        logger.addHandler(fh)
 
 
 class RolloutSaver:
@@ -353,17 +268,6 @@ def init_device(device_str: str) -> torch.device:
     else:
         logging.info("Using CPU")
         return torch.device("cpu")
-
-
-def get_optimizer(name: str, learning_rate: float, parameters: Iterable[torch.Tensor]) -> Optimizer:
-    if name == "adam":
-        amsgrad = False
-    elif name == "amsgrad":
-        amsgrad = True
-    else:
-        raise RuntimeError(f"Unknown optimizer '{name}'")
-
-    return Adam(parameters, lr=learning_rate, amsgrad=amsgrad)
 
 
 def fibonacci_sphere(samples=15):

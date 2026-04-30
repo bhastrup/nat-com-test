@@ -20,7 +20,6 @@ def load_default_configuration(
 def load_old_config(model_path: str = None) -> dict:
     """Loads the config from the log folder. Assumes that logs and models are located next to each other"""
     model_dir = "/".join(model_path.split("/")[:-1])
-    # run_dir = '/'.join(model_dir.split('/')[:-1])
     logs_dir = model_dir.replace("models", "logs")
     results_dir = model_dir.replace("models", "results")
     data_dir = model_dir.replace("models", "data")
@@ -52,35 +51,17 @@ def submit_jobs(
     use_submitit: bool = True,
 ):
     """Sanity check and submit job array"""
-    print(f"parameter_dicts: {parameter_dicts}")
-    # check_for_duplicates(parameter_dicts)
-
     response = input(f"Submit {len(parameter_dicts)} jobs? (y/n) ") if ask_permission else "y"
     if response.lower() == "y":
-        # parameter_dicts = [{key: value for key, value in parameter_dict.items() if value is not None} \
-        #                     for parameter_dict in parameter_dicts]
         if use_submitit:
             jobs = executor.map_array(submit_fn, parameter_dicts)
             for job in jobs:
                 print(f"Submitted job: {job.job_id}")
         else:
             for parameter_dict in parameter_dicts:
-                param_dict = parameter_dict.copy()
-                # param_dict.update({'save_to_wandb': False})
-                submit_fn(param_dict)
+                submit_fn(parameter_dict.copy())
     else:
         print("Aborting.")
-
-
-def check_for_duplicates(parameter_dicts):
-    """Check that all parameter combinations are unique"""
-
-    # Convert each dictionary to a sorted tuple of its items,
-    # with nested dictionaries converted to string representations
-    parameter_tuples = [
-        tuple((k, json.dumps(v, sort_keys=True)) for k, v in sorted(d.items())) for d in parameter_dicts
-    ]
-    assert len(parameter_dicts) == len(set(parameter_tuples)), "Duplicate parameter combinations"
 
 
 def generate_parameter_combinations(

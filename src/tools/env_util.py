@@ -1,7 +1,6 @@
 import logging
 from typing import Tuple, List, Dict
 
-import numpy as np
 import pandas as pd
 
 from src.performance.energetics import EnergyUnit
@@ -148,20 +147,13 @@ class EnvMaker:
             df_filtered = df[(df["n_atoms"] >= n_atoms_min) & (df["n_atoms"] <= n_atoms_max)]
 
             # We sort them by isomer count to keep as many structures in the training set as possible
-            # eval_isomer_count = df_filtered['bag_repr'].value_counts().tail(n_test) # pandas.core.series.Series
-            # print(df_filtered['bag_repr'].value_counts())
-
             # Sorting by isomer count yields highly unsaturated molecules. We want rings also, so we sample rather than taking tail.
             isomer_count = df_filtered["bag_repr"].value_counts()
-            # print(isomer_count)
-
             isomer_count = isomer_count[(isomer_count >= min_isomers) & (isomer_count <= max_isomers)]
-            # print(f"isomer_count after filtering on max_isomers: {isomer_count}")
-            # print(f"n bags: {len(isomer_count)}")
-            # Beware of the case where there are not enough isomers fulfilling the criteria in the filtes above.
+            # Beware of the case where there are not enough isomers fulfilling the criteria in the filters above.
             isomer_count = isomer_count.sample(self.n_formulas_test)  # pandas.core.series.Series
 
-            print(f"eval_isomer_count: {isomer_count}")
+            logging.info(f"eval_isomer_count: {isomer_count}")
             eval_formulas = pd.DataFrame(isomer_count).index.values.tolist()
 
             # Create train and eval sets
@@ -228,26 +220,16 @@ class EnvMaker:
         else:
             raise ValueError(f"Unknown molecule dataset: {self.cf['mol_dataset']}")
 
-        use_prop = False
-        if use_prop:
-            # Proportional sampling of formulas (wrt reference bag sizes)
-            smiles_len_dict = {k: len(v) for k, v in self.get_reference_smiles(train_formulas).items()}
-            train_formulas_prop = [f for f, n in smiles_len_dict.items() for _ in range(n)]
-            f_prop_shuffled = np.random.permutation(train_formulas_prop)
-            online_formulas = [util.string_to_formula(f) for f in f_prop_shuffled]
-        else:
-            online_formulas = [util.string_to_formula(f) for f in train_formulas]
+        online_formulas = [util.string_to_formula(f) for f in train_formulas]
 
         training_envs = []
         for i in range(self.cf["num_envs"]):
-            if use_prop:
-                shuffled_formulas = [online_formulas[i] for i in np.random.permutation(len(online_formulas))]
             training_envs.append(
                 RLEnvironment(
-                    reward=reward,  # rewards[i],
+                    reward=reward,
                     observation_space=self.observation_space,
                     action_space=self.action_space,
-                    formulas=shuffled_formulas if use_prop else online_formulas,
+                    formulas=online_formulas,
                     min_atomic_distance=self.cf["min_atomic_distance"],
                     max_solo_distance=self.cf["max_solo_distance"],
                     min_reward=self.cf["min_reward"],

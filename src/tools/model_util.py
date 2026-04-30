@@ -77,7 +77,6 @@ class ModelIO:
 
         logging.info(f"Loading model: {model_info.path}")
         model = torch.load(f=model_info.path, map_location=device)
-        # model.set_device(device)
 
         return model, model_info.num_steps
 
@@ -104,7 +103,6 @@ class ModelIO:
         torch.save(obj=module, f=path)
 
     def save_if_checkpoint(self, module: AbstractActorCritic, num_steps: int) -> None:
-        # TODO: Somewhere, we should read model folder to see if user have updated checkpoint list
         if num_steps in self._checkpoints:
             cp_num = str(self._checkpoints.index(num_steps))
             filename = self.tag + self._checkpoints_string + cp_num + self._steps_string + str(num_steps) + self._suffix

@@ -11,7 +11,7 @@ import pandas as pd
 
 from src.tools import util
 from src.performance.energetics import XTBOptimizer, EnergyUnit
-from src.performance.reward_metrics_rings import get_max_view_positions
+from src.performance.utils import get_max_view_positions
 
 
 import subprocess

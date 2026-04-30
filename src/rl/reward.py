@@ -8,7 +8,7 @@ from ase import Atoms, Atom
 from src.data.reference_dataloader import ReferenceDataLoader
 from src.performance.energetics import EnergyUnit, EnergyConverter, XTBOptimizer
 from src.performance.metrics import MoleculeAnalyzer
-from src.performance.reward_metrics_rings import plane_penalty, center_of_mass_penalty
+
 from src.tools.util import symbols_to_str_formula
 
 
@@ -34,8 +34,6 @@ class InteractionReward(MolecularReward):
         "rew_valid",
         "rew_basin",
         "rew_rae",
-        "rew_ring_plane",
-        "rew_ring_sphere",
         "rew_dipole",
     ]
 
@@ -44,8 +42,6 @@ class InteractionReward(MolecularReward):
         "rew_atomisation": "_atomisation",
         "rew_valid": "_validity_rew",
         "rew_basin": "_basin_dist_rew",
-        "ring_plane": "_ring_plane_rew",
-        "ring_sphere": "_ring_sphere_rew",
         "rew_dipole": "_dipole_rew",
     }
 
@@ -222,14 +218,6 @@ class InteractionReward(MolecularReward):
             return 0.05
         else:
             return 0.0
-
-    def _ring_plane_rew(self, args: Dict) -> float:
-        atoms = args["atoms"]
-        return plane_penalty(atoms.get_positions(), weights=atoms.get_atomic_numbers())
-
-    def _ring_sphere_rew(self, args: Dict) -> float:
-        atoms = args["atoms"]
-        return center_of_mass_penalty(atoms.get_positions(), weights=atoms.get_atomic_numbers())
 
     # Energy calculation methods
     def _calculate_energy(self, atoms: Atoms) -> float:

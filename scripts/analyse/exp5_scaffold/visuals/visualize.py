@@ -9,7 +9,7 @@ from ase import Atoms
 from ase.io import read
 import pandas as pd
 
-from src.performance.reward_metrics_rings import get_max_view_positions
+from src.performance.utils import get_max_view_positions
 
 
 import subprocess

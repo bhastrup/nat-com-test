@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 from ase import Atoms
 from ase.io import read
 
-from src.performance.reward_metrics_rings import get_max_view_positions
+from src.performance.utils import get_max_view_positions
 
 from scripts.analyse.exp5_scaffold.visuals.visualize import (
     submit_job,

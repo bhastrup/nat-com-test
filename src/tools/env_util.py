@@ -177,29 +177,23 @@ class EnvMaker:
 
         all_benchmark_energies = benchmark_energies_train.copy()
         all_benchmark_energies.update(benchmark_energies_eval)
+        safe_xtb = self.cf.get("safe_xtb", False)
         if "rew_rae" in self.cf["reward_coefs"]:
             rewards = RaeReward(
                 reward_coefs=self.cf["reward_coefs"],
                 relax_steps_final=self.cf["relax_steps_final"],
                 benchmark_energies=all_benchmark_energies,
                 energy_unit=self.cf["energy_unit"],
+                xtb_mp=safe_xtb,
             )
             self.training_reward = rewards
         else:
-            rewards = [
-                InteractionReward(
-                    reward_coefs=self.cf["reward_coefs"],
-                    relax_steps_final=self.cf["relax_steps_final"],
-                    energy_unit=self.cf["energy_unit"],
-                )
-                for _ in range(self.cf["num_envs"])
-            ]
             reward = InteractionReward(
                 reward_coefs=self.cf["reward_coefs"],
                 relax_steps_final=self.cf["relax_steps_final"],
                 energy_unit=self.cf["energy_unit"],
                 n_workers=self.cf["num_envs"],
-                xtb_mp=self.cf["safe_xtb"] if "safe_xtb" in self.cf else False,
+                xtb_mp=safe_xtb,
             )
             eval_reward = InteractionReward(
                 reward_coefs=self.cf["reward_coefs"],
@@ -216,7 +210,7 @@ class EnvMaker:
         if self.cf["mol_dataset"] == "TMQM":
             RLEnvironment = tmqmEnv
         elif self.cf["mol_dataset"] == "QM7" or self.cf["mol_dataset"] == "QM9":
-            RLEnvironment = HeavyFirst if self.cf["calc_rew"] else HeavyFirstNoReward
+            RLEnvironment = HeavyFirst if self.cf.get("calc_rew", True) else HeavyFirstNoReward
         else:
             raise ValueError(f"Unknown molecule dataset: {self.cf['mol_dataset']}")
 

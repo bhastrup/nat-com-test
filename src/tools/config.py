@@ -70,7 +70,7 @@ def default_config() -> dict:
         hydrogen_delay=False,
         no_hydrogen_focus=False,
         relax_steps_final=0,
-        safe_xtb=False,
+        safe_xtb=True,
         # --- Reward ---
         reward_coefs={"rew_atomisation": 1.0},
         # --- Agent (PaiNN) ---
@@ -96,6 +96,7 @@ def default_config() -> dict:
         # --- Evaluation ---
         eval_freq=1500,
         eval_freq_fast=100,
+        launch_eval_new_job=False,  # True submits eval as a separate SLURM job
         # --- Logging ---
         log_level="INFO",
         save_rollouts="none",  # 'none' | 'train' | 'eval' | 'all'

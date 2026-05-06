@@ -220,18 +220,20 @@ class InteractionReward(MolecularReward):
             return 0.0
 
     # Energy calculation methods
-    def _calculate_energy(self, atoms: Atoms) -> float:
+    def _calculate_energy(self, atoms: Atoms) -> Optional[float]:
         if len(atoms) == 0:
             return 0.0
-        energy = self.calc.calc_potential_energy(atoms)
-        return energy if energy else 0.0
+        return self.calc.calc_potential_energy(atoms)
 
     def _calculate_atomic_energy(self, atom: Union[Atom, Atoms]) -> float:
         atom = atom[0] if isinstance(atom, Atoms) else atom
         if atom.symbol not in self.atom_energies:
             atoms = Atoms()
             atoms.append(atom)
-            self.atom_energies[atom.symbol] = self._calculate_energy(atoms)
+            energy = self._calculate_energy(atoms)
+            if energy is None:
+                return 0.0  # xTB failed for single atom; fallback, not cached so it retries next call
+            self.atom_energies[atom.symbol] = energy
         return self.atom_energies[atom.symbol]
 
     def _sum_of_atomic_energies(self, atoms: Atoms) -> float:

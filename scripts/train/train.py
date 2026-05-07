@@ -5,7 +5,6 @@ from src.tools import util
 from src.performance.energetics import str_to_EnergyUnit
 from src.tools.model_util import get_model
 from src.tools.env_util import EnvMaker
-from src.performance.single_cpkt.evaluator import EvaluatorIO, SingleCheckpointEvaluator
 from src.performance.cumulative.discovery_logger import CumulativeDiscoveryTracker
 from src.rl.losses import EntropySchedule, RewardCoefficientSchedule
 from scripts.train.training_loop import training_loop
@@ -31,10 +30,8 @@ def train(config: dict) -> None:
 
     # Load data and environments
     env_maker = EnvMaker(cf=config, split_method=config["split_method"])
-    training_envs, eval_envs, eval_envs_big = env_maker.make_envs()
+    training_envs, eval_envs, _ = env_maker.make_envs()
     observation_space, action_space = env_maker.get_spaces()
-    benchmark_energies = env_maker.ref_data.get_mean_energies()
-    eval_formulas = util.get_str_formulas_from_vecenv(eval_envs)
 
     # Build model
     model, start_num_iter, model_handler, var_counts = get_model(
@@ -55,19 +52,7 @@ def train(config: dict) -> None:
         start_num_iter=start_num_iter,
     )
 
-    # Build evaluator
-    evaluator = SingleCheckpointEvaluator(
-        eval_envs=eval_envs_big,
-        reference_smiles=env_maker.get_reference_smiles(eval_formulas),
-        benchmark_energies=benchmark_energies,
-        io_handler=EvaluatorIO(base_dir=config["results_dir"]),
-        wandb_run=logger.wandb_run,
-        num_episodes_const=None,
-        prop_factor=1,
-        calc_dipole=True if "reward_coefs" in config and "rew_dipole" in config["reward_coefs"] else False,
-    )
-
-    if "entropy_schedule" in config_ft:
+    if config_ft.get("entropy_schedule"):
         es = config_ft["entropy_schedule"]
         entropy_schedule = EntropySchedule(
             start_value=es["start_value"],
@@ -79,7 +64,7 @@ def train(config: dict) -> None:
         entropy_schedule = None
 
     reward_coef_schedule = None
-    if "reward_coef_schedule" in config_ft:
+    if config_ft.get("reward_coef_schedule"):
         rcs = config_ft["reward_coef_schedule"]
         reward_coef_schedule = RewardCoefficientSchedule(
             schedules=rcs["schedules"],
@@ -99,15 +84,12 @@ def train(config: dict) -> None:
             device=device,
             model_handler=model_handler,
             save_freq=config["save_freq"],
-            eval_freq=config["eval_freq"],
-            eval_envs=eval_envs,
             config=config,
             config_ft=config_ft,
             train_envs_online=training_envs,
             rl_algo_online=config["rl_algo_online"],
             logger=logger,
             info_saver=util.InfoSaver(directory=config["results_dir"], tag=tag),
-            evaluator=evaluator,
             entropy_schedule=entropy_schedule,
             reward_coef_schedule=reward_coef_schedule,
             reward=training_reward,

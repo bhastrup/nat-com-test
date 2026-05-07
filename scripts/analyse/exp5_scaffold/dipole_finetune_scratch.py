@@ -16,7 +16,7 @@ from src.tools.launch_utils import (
 def main() -> None:
 
     wandb_group = (
-        "A-30k-cap-0.5"  # Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
+        "A-REPO-CLEAN"  # Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
     )
 
     # Section A: Config and optional rerun
@@ -76,7 +76,7 @@ def main() -> None:
     config.update(
         dict(
             # Wandb
-            save_to_wandb=True,
+            save_to_wandb=False,
             entity=os.environ.get(
                 "WANDB_ENTITY", ""
             ),  # Set via: export WANDB_ENTITY=your_username  (or set save_to_wandb=False)

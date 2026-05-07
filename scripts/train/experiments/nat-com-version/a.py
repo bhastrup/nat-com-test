@@ -49,12 +49,12 @@ from src.tools.launch_utils import (
 def main() -> None:
 
     wandb_group = (
-        "Agent-A"  # Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
+        "Agent-A-finaltest"  # Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
     )
 
     # Section A: RERUNS   -   In case you need to extend a training (e.g. due to a crash), provide the exact model checkpoint here
     #                         and tell it to use the old config file.
-    load_model = None  # 'RUNS_FOLDER/EXPERIMENT_NAME/seed_1/models/CHECKPOINT_NAME.model'
+    load_model = "runs/nat-com-training/A/seed_0/models/pretrain_run-0_CP-12_steps-30000.model" # "model_objects/A/seed_0/_steps-30000.model"  # 'RUNS_FOLDER/EXPERIMENT_NAME/seed_1/models/CHECKPOINT_NAME.model'
     load_latest = False  # False
     use_old_config = False  # True
 
@@ -107,7 +107,7 @@ def main() -> None:
     config.update(
         dict(
             # Wandb
-            save_to_wandb=True,
+            save_to_wandb=False,
             entity=os.environ.get(
                 "WANDB_ENTITY", ""
             ),  # Set via: export WANDB_ENTITY=your_username  (or set save_to_wandb=False)
@@ -122,7 +122,7 @@ def main() -> None:
             energy_unit="eV",
             # Environment
             min_reward=-3,
-            safe_xtb=False,
+            safe_xtb=True,
             # Specify reward coefficients
             reward_coefs={"rew_atomisation": 1.0},  # A
             # reward_coefs = {'rew_formation': 1.0} 							                        # F

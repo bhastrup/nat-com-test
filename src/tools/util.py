@@ -245,6 +245,17 @@ class RolloutSaver:
             pickle.dump(obj, f)
 
 
+class _NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return super().default(obj)
+
+
 class InfoSaver:
     def __init__(self, directory: str, tag: str):
         self.directory = directory
@@ -255,7 +266,7 @@ class InfoSaver:
         path = os.path.join(self.directory, self.tag + "_" + name + self._suffix)
         logging.debug(f"Saving info: {path}")
         with open(path, mode="a") as f:
-            f.write(json.dumps(obj))
+            f.write(json.dumps(obj, cls=_NumpyEncoder))
             f.write("\n")
 
 

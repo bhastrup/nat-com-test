@@ -11,8 +11,8 @@ Preprint (Version 1) available on [Research Square](https://doi.org/10.21203/rs.
 
 <table>
   <tr>
-    <td><img src="resources/image_grid.png" width="100%"></td>
-    <td><img src="resources/atomcomposer.png" width="100%"></td>
+    <td><img src="resources/image_grid.png" height="300"></td>
+    <td><img src="resources/atomcomposer.png" height="300"></td>
   </tr>
 </table>
 

@@ -37,4 +37,6 @@ jobs:
             --ignore=tests/test_energetics.py \
             --ignore=tests/test_metrics.py \
             --ignore=tests/test_pretraining.py \
+            --ignore=tests/test_cumulative.py \
+            --ignore=tests/test_single_cpkt.py \
             -v

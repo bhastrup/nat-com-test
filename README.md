@@ -47,7 +47,7 @@ mamba env create -f env.yaml
 Once the installation is complete, activate the environment:
 ```bash
 eval "$(mamba shell hook --shell bash)"
-mamba activate rl-env
+mamba activate atomcomposer
 ```
 
 ### 6. Verify Installation
@@ -69,7 +69,7 @@ echo "export PYTHONPATH=\$(pwd)" > $CONDA_PREFIX/etc/conda/activate.d/env_vars.s
 mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
 echo "unset PYTHONPATH" > $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 ```
-and reactivate the *rl-env*.
+and reactivate the *atomcomposer*.
 
 </details>
 

@@ -4,7 +4,7 @@ A Streamlit-based interface for interactive molecule generation with trained RL 
 
 ## Launch
 
-Run from the project root (with `rl-env` activated):
+Run from the project root (with `atomcomposer` activated):
 
 ```bash
 streamlit run app_store/About.py

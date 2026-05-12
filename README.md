@@ -145,7 +145,7 @@ This plots validity rate, mean return, and atomization energy vs training steps,
 <details>
 <summary><b>Analysis scripts (isomer discovery campaigns)</b></summary>
 
-Analysis scripts are available in the `scripts/analyse/` folder, subdivided into:
+The `scripts/analyse/` folder contains analysis scripts organized by experiment. The three main ones corresponding to the paper's research questions are:
 
 - **exp1:** Single-bag evaluation (Q1 in the paper).
 - **exp2:** Multi-bag evaluations on hold-out formulas (Q2 in the paper).

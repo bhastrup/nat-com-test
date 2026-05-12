@@ -181,14 +181,8 @@ Contributions welcome.
 
 - **Confusing `config_ft` structure.** The online RL (PPO) parameters live inside `config["config_ft"]` — a name inherited from an earlier pretraining→finetuning workflow that was not used in the final paper. In the paper, all agents are trained from scratch (*tabula rasa*). The nesting and the name are confusing; we plan to flatten the config structure in a future refactor.
 
-### Code quality
-
-- **Mixed logging styles.** Core modules in `src/` use a mix of `print()` and the `logging` module. We plan to standardise on `logging` throughout.
-
 ### Planned (post-submission)
 
 - **Integrate the advanced `Trainer` class.** A more modular `Trainer` architecture exists in a development branch and is better suited for extension. We plan to migrate to it once all tests are in place, to avoid introducing subtle changes to training dynamics.
-
-- **CI/CD pipeline.** Add GitHub Actions to run the test suite and linter on every push.
 
 </details>

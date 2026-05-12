@@ -10,6 +10,8 @@ Run from the project root (with `rl-env` activated):
 streamlit run app_store/About.py
 ```
 
+![Web app screenshot](../resources/web-app.png)
+
 ## Pages
 
 ### About

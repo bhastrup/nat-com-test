@@ -13,6 +13,7 @@ from src.performance.cumulative.investigator import (
 # MolCandidate / FormulaData
 # ---------------------------------------------------------------------------
 
+
 class TestMolCandidate(TestCase):
     def setUp(self):
         self.candidate = MolCandidate(
@@ -55,9 +56,7 @@ class TestFormulaData(TestCase):
 
     def test_add_molecule(self):
         fd = FormulaData()
-        candidate = MolCandidate(
-            num_env_steps=100, elements=[6], pos=np.zeros((1, 3)), reward=0.5, energy=-2.0
-        )
+        candidate = MolCandidate(num_env_steps=100, elements=[6], pos=np.zeros((1, 3)), reward=0.5, energy=-2.0)
         fd.molecules["C"] = [candidate]
         self.assertIn("C", fd.molecules)
         self.assertEqual(len(fd.molecules["C"]), 1)
@@ -80,6 +79,7 @@ class TestFormulaData(TestCase):
 # ---------------------------------------------------------------------------
 # CummulativeInvestigator._aggregate_discovery_metrics
 # ---------------------------------------------------------------------------
+
 
 class TestAggregateDiscoveryMetrics(TestCase):
     def test_basic_aggregation(self):
@@ -131,6 +131,7 @@ class TestAggregateDiscoveryMetrics(TestCase):
 # ---------------------------------------------------------------------------
 # select_top_n_formulas
 # ---------------------------------------------------------------------------
+
 
 class TestSelectTopNFormulas(TestCase):
     def setUp(self):

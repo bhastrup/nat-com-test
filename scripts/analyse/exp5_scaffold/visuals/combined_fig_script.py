@@ -181,7 +181,6 @@ def default_eval_formulas() -> List[str]:
     ]
 
 
-
 def build_eval_formulas_pretty() -> List[str]:
     formulas = default_eval_formulas()
     # In the text string, flip the order of hydrogens and carbon to match convention.

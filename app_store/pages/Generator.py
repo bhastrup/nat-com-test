@@ -1,4 +1,3 @@
-
 import streamlit as st
 
 from app_store.pages.tools.images.show_logo import show_logo

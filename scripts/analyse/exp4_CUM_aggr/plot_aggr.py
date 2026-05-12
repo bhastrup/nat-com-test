@@ -6,7 +6,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 
-
 def parse_cmd():
     parser = argparse.ArgumentParser(description=".")
     parser.add_argument("filenames", nargs="+", help="List of filenames")

@@ -48,13 +48,11 @@ from src.tools.launch_utils import (
 
 def main() -> None:
 
-    wandb_group = (
-        "Agent-A-finaltest"  # Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
-    )
+    wandb_group = "Agent-A-finaltest"  # Specify the name of this training, e.g. indicate which agent is used: A, AV, AFV, FV, F etc.
 
     # Section A: RERUNS   -   In case you need to extend a training (e.g. due to a crash), provide the exact model checkpoint here
     #                         and tell it to use the old config file.
-    load_model = "runs/nat-com-training/A/seed_0/models/pretrain_run-0_CP-12_steps-30000.model" # "model_objects/A/seed_0/_steps-30000.model"  # 'RUNS_FOLDER/EXPERIMENT_NAME/seed_1/models/CHECKPOINT_NAME.model'
+    load_model = "runs/nat-com-training/A/seed_0/models/pretrain_run-0_CP-12_steps-30000.model"  # "model_objects/A/seed_0/_steps-30000.model"  # 'RUNS_FOLDER/EXPERIMENT_NAME/seed_1/models/CHECKPOINT_NAME.model'
     load_latest = False  # False
     use_old_config = False  # True
 

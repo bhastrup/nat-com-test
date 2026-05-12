@@ -108,7 +108,6 @@ def training_loop(
         if model_handler and (total_num_iter % save_freq == 0):
             model_handler.save(ac, num_steps=total_num_iter)
 
-
         total_num_iter += 1
         if logger:
             logger.increment_total_num_iter()

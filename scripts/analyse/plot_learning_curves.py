@@ -148,7 +148,6 @@ def plot(
                 continue
 
             # Plot individual seeds as thin lines, mean as thick line
-            all_steps = seed_curves[0][0]
             for steps, smoothed in seed_curves:
                 ax.plot(steps, smoothed, alpha=0.3, linewidth=0.8, color=color)
 
@@ -168,7 +167,7 @@ def plot(
         ax.set_xlabel("Environment steps")
         ax.set_ylabel(METRICS.get(metric, metric))
         ax.set_title(METRICS.get(metric, metric))
-        ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x/1e6:.1f}M"))
+        ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda x, _: f"{x / 1e6:.1f}M"))
         ax.legend(fontsize=8)
         ax.grid(True, alpha=0.3)
 

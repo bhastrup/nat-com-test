@@ -34,6 +34,7 @@ def _xtb_worker_loop(conn, method: str) -> None:
     run in this child — preventing corruption of the parent's shared resources.
     """
     import atexit
+
     atexit._clear()
 
     while True:

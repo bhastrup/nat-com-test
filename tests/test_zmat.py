@@ -59,9 +59,7 @@ class TestDihedral(TestCase):
         # Skip ±π endpoints: -π and π represent the same angle, so get_dihedral
         # may return π when the input was -π.
         for dihedral in np.linspace(-np.pi, np.pi, 100)[1:-1]:
-            p3 = position_point(
-                self.p0, self.p1, self.p2, distance=1.0, angle=np.pi / 2, dihedral=dihedral + 2 * np.pi
-            )
+            p3 = position_point(self.p0, self.p1, self.p2, distance=1.0, angle=np.pi / 2, dihedral=dihedral + 2 * np.pi)
             measured = get_dihedral(self.p0, self.p1, self.p2, p3)
             self.assertAlmostEqual(measured, dihedral, places=5)
 

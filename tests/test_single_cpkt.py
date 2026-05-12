@@ -15,6 +15,7 @@ from src.performance.single_cpkt.evaluator import get_num_episodes
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_df(n_valid=3, n_nan_energy=1, with_rings=False):
     """Return a small synthetic results DataFrame."""
     n = n_valid + n_nan_energy
@@ -47,6 +48,7 @@ def _make_df(n_valid=3, n_nan_energy=1, with_rings=False):
 # make_serializable
 # ---------------------------------------------------------------------------
 
+
 class TestMakeSerializable(TestCase):
     def test_converts_np_int64(self):
         d = {"a": np.int64(5), "b": "hello", "c": 3.14}
@@ -65,6 +67,7 @@ class TestMakeSerializable(TestCase):
 # ---------------------------------------------------------------------------
 # single_formula_metrics
 # ---------------------------------------------------------------------------
+
 
 class TestSingleFormulaMetrics(TestCase):
     def setUp(self):
@@ -147,6 +150,7 @@ class TestSingleFormulaMetrics(TestCase):
 # get_global_metrics
 # ---------------------------------------------------------------------------
 
+
 class TestGetGlobalMetrics(TestCase):
     def setUp(self):
         # Two formulas with known sizes
@@ -185,6 +189,7 @@ class TestGetGlobalMetrics(TestCase):
 # ---------------------------------------------------------------------------
 # get_num_episodes
 # ---------------------------------------------------------------------------
+
 
 class TestGetNumEpisodes(TestCase):
     def setUp(self):

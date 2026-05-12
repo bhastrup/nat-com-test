@@ -73,9 +73,7 @@ def partial_canvas_selector():
     values = [atoms.get_chemical_formula() for atoms in atom_list]  # st.session_state.loaded_mols.values()]
     options = [f"{dataset_name}, {str(k)}, {v}" for dataset_name, k, v in zip(mol_dataset_names, mol_ids, values)]
 
-    selected_mol = st.selectbox(
-        "Select molecule:", options=options, index=0, key="mol_selector"
-    )
+    selected_mol = st.selectbox("Select molecule:", options=options, index=0, key="mol_selector")
     selected_mol_dataset_name = selected_mol.split(",")[0]
     selected_mol_id = int(selected_mol.split(",")[1])
     # atoms = st.session_state.loaded_mols[selected_mol_id]
@@ -197,7 +195,6 @@ def partial_canvas_selector():
                 st.session_state.loaded_envs[name] = envs
             else:
                 st.write(f"Env {name} is already loaded.")
-
 
 
 class PartialCanvasEnvFixed(AbstractMolecularEnvironment):
@@ -386,7 +383,9 @@ def make_molgym_env(eval_formulas: List = None, num_envs: int = 1, mol_dataset: 
 
     if mol_dataset == "QM7":
         if eval_formulas is None:
-            raise NotImplementedError("Automatic formula loading from pretraining data is not supported; pass eval_formulas explicitly.")
+            raise NotImplementedError(
+                "Automatic formula loading from pretraining data is not supported; pass eval_formulas explicitly."
+            )
         zs = [0, 1, 6, 7, 8, 16]
         canvas_size = 23
     else:

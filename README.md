@@ -3,7 +3,7 @@
 
 This repository contains the training and analysis code used in the study:
 
-**Rediscovering Chemical Space from First Principles with Reinforcement Learning**  
+**AtomComposer: Rediscovering Chemical Space from First Principles with Reinforcement Learning**  
 *Bjarke Hastrup, François Cornet, Tejs Vegge, and Arghya Bhowmik*  
 Under review at *Nature Communications*.  
 Preprint (Version 1) available on [Research Square](https://doi.org/10.21203/rs.3.rs-6900238/v1).

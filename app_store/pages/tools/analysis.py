@@ -138,7 +138,6 @@ def display_results_tabs():
             playground_results_tab(pg)
 
 
-
 def playground_results_tab(pg):
 
     # write_reference_energies_into_pg(pg)

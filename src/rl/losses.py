@@ -11,8 +11,6 @@ from src.rl.buffer import get_batch_generator, collect_data_batch, compute_mean_
 from src.tools.util import compute_gradient_norm, to_numpy
 
 
-
-
 def compute_loss(
     ac: AbstractActorCritic,
     data: dict,
@@ -59,7 +57,6 @@ def compute_loss(
     )
 
     return loss, info
-
 
 
 # Train policy with multiple steps of gradient descent
